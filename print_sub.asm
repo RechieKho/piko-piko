@@ -40,7 +40,7 @@ str_sub_data:
 	and ax, 0xf ; select the lower 4 bits
 	add ax, 0x30 
 	cmp ax, 0x3a 
-	jl %%done
+	jb %%done
 	add ax, 0x27
 	%%done:
 %endmacro

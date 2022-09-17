@@ -285,7 +285,7 @@ console_read_line:
 			pop bx
 
 			cmp cx, dx 
-			jle .reject_handle ; cx at the begining
+			jbe .reject_handle ; cx at the begining
 			CURSOR_BACKWARD
 			jmp .loop
 
@@ -304,7 +304,7 @@ console_read_line:
 
 			sub ax, dx ; ax = cursor pos relative to begining
 			cmp al, ch
-			jge .reject_handle
+			jae .reject_handle
 
 			CURSOR_FORWARD
 			jmp .loop
@@ -320,7 +320,7 @@ console_read_line:
 			pop bx
 
 			cmp cx, dx 
-			jle .reject_handle ; invalid cursor pos
+			jbe .reject_handle ; invalid cursor pos
 			
 			sub cx, dx
 			mov ah, cl

@@ -11,7 +11,7 @@
 %include "print_sub.asm"
 
 ; --- macros ---
-%define DSTR_MAX 0x7f
+%define DSTR_MAX 0xff
 
 ; initialize dstr header
 ; %1 <- max length of the string (excluding the header)
@@ -84,7 +84,7 @@ dstr_print:
 	add bx, 2 ; bx = begining of string
 .loop: 
 	cmp ch, 0 
-	jle .end
+	jbe .end
 	PRINT_CHAR [bx]
 	inc bx
 	dec ch
@@ -105,7 +105,7 @@ dstr_print_sub:
 	add bx, dx ; bx = begining of sub str
 
 	cmp ah, cl 
-	jl .use_given
+	jb .use_given
 	mov ah, cl ; the end exceed max, use max instead
 	.use_given:
 	sub ah, al ; ah = length of character to be printed
@@ -132,7 +132,7 @@ dstr_erase:
 	cmp ch, 0 
 	je .empty_err ; empty string, not entertained 
 	cmp ah, ch 
-	jge .invalid_index_err
+	jae .invalid_index_err
 
 	; displace characters backward 
 	pusha ; > START DISPLACE <
@@ -182,10 +182,10 @@ dstr_insert:
 	DSTR_GET_INFO ; cl = max; ch = length
 	
 	cmp ch, cl 
-	jge .max_err ; already max out
+	jae .max_err ; already max out
 
 	cmp ah, ch
-	jg .invalid_index_err ; index is bigger than the length
+	ja .invalid_index_err ; index is bigger than the length
 
 	; displace character forward
 	pusha ; > START DISPLACE <
