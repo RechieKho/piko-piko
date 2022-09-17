@@ -104,9 +104,9 @@ dstr_print_sub:
 	movzx dx, al 
 	add bx, dx ; bx = begining of sub str
 
-	cmp ah, cl 
-	jb .use_given
-	mov ah, cl ; the end exceed max, use max instead
+	cmp ah, ch
+	jbe .use_given
+	mov ah, ch ; the end exceed length, use length instead
 	.use_given:
 	sub ah, al ; ah = length of character to be printed
 .loop:
@@ -200,7 +200,9 @@ dstr_insert:
 		mov bx, ds 
 		mov es, bx 
 
+		std
 		rep movsb
+		cld
 	popa ; > END DISPLACE <
 
 	; insert character 
