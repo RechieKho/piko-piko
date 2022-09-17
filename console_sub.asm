@@ -110,7 +110,20 @@
 %endmacro
 
 ; move cursor backward
-%define CURSOR_BACKWARD PRINT_CHAR 0x08 ; backspace
+%macro CURSOR_BACKWARD 0
+	pusha 
+		GET_CURSOR 
+		cmp dl, 0
+		je %%retract_row
+			dec dl
+		jmp %%retract_end
+		%%retract_row:
+			dec dh 
+			mov dl, (CONSOLE_WIDTH - 1)
+		%%retract_end:
+		SET_CURSOR
+	popa
+%endmacro 
 
 ; mov cursor forward 
 %macro CURSOR_FORWARD 0
@@ -122,6 +135,7 @@
 		jmp %%advance_end
 		%%advance_row:
 			inc dh 
+			mov dl, 0
 		%%advance_end:
 		SET_CURSOR
 	popa
