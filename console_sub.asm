@@ -305,12 +305,30 @@ console_read_line:
 		push bx
 			GET_CURSOR
 			CONSOLE_RC2IDX dh, dl
-			mov dx, bx ; dx = initial index
+			mov dx, bx ; dx = starting index
 		pop bx
 	.loop:
 		CONSOLE_READ_CHAR
+
+		; get cursor's index on console
+		push bx
+		push dx 
+			GET_CURSOR
+			CONSOLE_RC2IDX dh, dl
+			mov cx, bx ; cx = current index
+		pop dx 
+		pop bx
+
+		; initial information 
+		; ah = scan code 
+		; al = ascii character 
+		; bx = dstr buffer
+		; cx = current cursor index (when a keystroke detected)
+		; dx = starting cursor index
 		
 		; classify 
+		cmp cx, dx 
+		jb .reject_handle ; invalid cursor index
 		cmp ax, KEY_ENTER
 		je .handle_enter
 		cmp ax, KEY_LEFT
@@ -325,122 +343,95 @@ console_read_line:
 			jmp .loop_end
 
 		.handle_left:
-			push bx
-			push dx 
-				GET_CURSOR
-				CONSOLE_RC2IDX dh, dl
-				mov cx, bx ; cx = current index
-			pop dx 
-			pop bx
-
 			cmp cx, dx 
-			jbe .reject_handle ; cx at the begining
+			je .reject_handle ; cursor at the begining
 			CURSOR_BACKWARD
 			jmp .loop
 
 		.handle_right:
-			push bx
-			push dx 
-				GET_CURSOR
-				CONSOLE_RC2IDX dh, dl
-				mov ax, bx ; ax = current index
-			pop dx 
-			pop bx
-
-			DSTR_GET_INFO ; cl = max; ch = length 
-			cmp ax, dx 
-			jl .reject_handle ; invalid cursor pos
-
+			mov ax, cx ; ax = current cursor index
 			sub ax, dx ; ax = cursor pos relative to begining
+			DSTR_GET_INFO ; cl = max; ch = length 
 			cmp al, ch
 			jae .reject_handle
 
 			CURSOR_FORWARD
 			jmp .loop
 
-		.handle_bs:
-			; update buffer
-			push bx
-			push dx 
-				GET_CURSOR
-				CONSOLE_RC2IDX dh, dl
-				mov cx, bx ; cx = current index
-			pop dx 
-			pop bx
-
-			cmp cx, dx 
-			jbe .reject_handle ; invalid cursor pos
-			
-			push cx
-			sub cx, dx
-			mov ah, cl
-			dec ah ; ah = index of character to be erased, which is right before cursor
-			call dstr_erase 
-			jc .reject_handle
-			pop cx
-
-			; update screen
-			CURSOR_BACKWARD
-			push bx
-				mov si, bx
-				mov bx, cx 
-				dec bx
-				mov ch, ah 
-				mov al, ch 
-				mov ah, DSTR_MAX
-				call console_write_dstr_sub_idx
-
-				; clear the last character
-				mov bx, si
+		; update the console 
+		; ah <- starting dstr index 
+		; bx <- dstr buffer
+		; cx <- starting console index to be updated
+		.handle_update_console:
+			; clear the character after dstr
+			pusha
 				DSTR_GET_INFO ; cl = max ; ch = length 
 				xor bx, bx
 				movzx bx, ch
 				add bx, dx
 				mov al, 0
 				call console_write_char_idx
+			popa
+			; write dstr to console
+			push bx
+				mov si, bx
+				mov bl, ah 
+				mov al, bl
+				mov bx, cx 
+				mov ah, DSTR_MAX
+				call console_write_dstr_sub_idx
 			pop bx
-
 			jmp .loop
+
+		; erase character in buffer (& jmp to handle_update_console)
+		; ah <- index of character to be erased 
+		; bx <- dstr buffer
+		; cx <- starting console index to be updated
+		.handle_erase:
+			call dstr_erase 
+			jc .reject_handle
+			jmp .handle_update_console
+
+		; insert character into buffer (& jmp to handle_update_console) 
+		; ah <- index of character to be inserted
+		; al <- character to be inserted
+		; bx <- dstr buffer 
+		; cx <- starting console index to be updated
+		.handle_insert: 
+			call dstr_insert 
+			jc .reject_handle
+			jmp .handle_update_console
+
+		.handle_bs:
+			cmp cx, dx 
+			je .reject_handle ; cursor index at begining
 			
+			CURSOR_BACKWARD
+
+			push cx 
+			sub cx, dx 
+			mov ah, cl 
+			dec ah ; ah = index of character to be erased, which is right before cursor
+			pop cx 
+			dec cx
+			jmp .handle_erase
 
 		.handle_normal:
 			cmp al, 0 
 			je .reject_handle ; invalid ascii character
-			; get current cursor info
-			push bx
-			push dx
-				GET_CURSOR
-				CONSOLE_RC2IDX dh, dl
-				mov cx, bx ; cx = current index
-			pop dx
-			pop bx
 
-			cmp cx, dx 
-			jl .reject_handle ; invalid cursor pos
-			
-			; update buffer
+			CURSOR_FORWARD
+
 			push cx
 			sub cx, dx
 			mov ah, cl ; ah = index of character to be inserted
-			call dstr_insert
-			jc .reject_handle
 			pop cx ; cx still is current index
 
-			; update screen
-			CURSOR_FORWARD
-			push bx
-				mov si, bx
-				mov bx, cx 
-				mov ch, ah 
-				mov al, ch 
-				mov ah, DSTR_MAX
-				call console_write_dstr_sub_idx
-			pop bx
-
-			jmp .loop
+			jmp .handle_insert
 
 
 		.reject_handle:
+			clc
 			PRINT_CHAR 0x07 ; ring a bell 
 			jmp .loop
 
