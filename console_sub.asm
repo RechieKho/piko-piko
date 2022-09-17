@@ -298,7 +298,7 @@ console_write_dstr_sub_idx:
 	ret
 
 ; read line from console
-; bx <- (initiated) dstr for storing output
+; bx <- (initiated) dstr buffer for storing output
 console_read_line: 
 	pusha
 		DSTR_CLEAR
@@ -354,7 +354,6 @@ console_read_line:
 			DSTR_GET_INFO ; cl = max; ch = length 
 			cmp al, ch
 			jae .reject_handle
-
 			CURSOR_FORWARD
 			jmp .loop
 
@@ -387,47 +386,43 @@ console_read_line:
 		; ah <- index of character to be erased 
 		; bx <- dstr buffer
 		; cx <- starting console index to be updated
-		.handle_erase:
+		.handle_erase_front:
 			call dstr_erase 
 			jc .reject_handle
+			CURSOR_BACKWARD
 			jmp .handle_update_console
 
-		; insert character into buffer (& jmp to handle_update_console) 
+		; insert (in front of cursor) character into buffer (& jmp to handle_update_console) 
 		; ah <- index of character to be inserted
 		; al <- character to be inserted
 		; bx <- dstr buffer 
 		; cx <- starting console index to be updated
-		.handle_insert: 
+		.handle_insert_front: 
 			call dstr_insert 
 			jc .reject_handle
+			CURSOR_FORWARD
 			jmp .handle_update_console
 
 		.handle_bs:
 			cmp cx, dx 
 			je .reject_handle ; cursor index at begining
-			
-			CURSOR_BACKWARD
-
 			push cx 
 			sub cx, dx 
 			mov ah, cl 
 			dec ah ; ah = index of character to be erased, which is right before cursor
 			pop cx 
 			dec cx
-			jmp .handle_erase
+			jmp .handle_erase_front
 
 		.handle_normal:
 			cmp al, 0 
 			je .reject_handle ; invalid ascii character
-
-			CURSOR_FORWARD
-
 			push cx
 			sub cx, dx
 			mov ah, cl ; ah = index of character to be inserted
 			pop cx ; cx still is current index
 
-			jmp .handle_insert
+			jmp .handle_insert_front
 
 
 		.reject_handle:
