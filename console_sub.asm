@@ -263,6 +263,40 @@ console_write_dstr:
 	popa
 	ret
 
+; write substring of dstr to location using index 
+; al <- start (inclusive) 
+; ah <- end (exclusive)
+; si <- address of dstr header
+; bx <- index
+console_write_dstr_sub_idx:
+	pusha 
+		push bx
+		mov bx, si
+		DSTR_GET_INFO ; cl = max; ch = length 
+		pop bx
+		add si, 2
+		movzx dx, al 
+		add si, dx ; si = begining of substring
+
+
+		cmp ah, ch 
+		jbe .use_given 
+		mov ah, ch ; the end exceed length, use length instead 
+		.use_given:
+		sub ah, al ; ah = length of character to be print
+		.loop:
+			cmp ah, 0 
+			je .loop_end
+				mov al, [si]
+				call console_write_char_idx
+			inc si
+			inc bx
+			dec ah
+			jmp .loop
+		.loop_end:
+	popa 
+	ret
+
 ; read line from console
 ; bx <- (initiated) dstr for storing output
 console_read_line: 
@@ -336,18 +370,25 @@ console_read_line:
 			cmp cx, dx 
 			jbe .reject_handle ; invalid cursor pos
 			
+			push cx
 			sub cx, dx
 			mov ah, cl
 			dec ah ; ah = index of character to be erased, which is right before cursor
 			call dstr_erase 
 			jc .reject_handle
+			pop cx
 
 			; update screen
 			CURSOR_BACKWARD
 			push bx
 				mov si, bx
-				mov bx, dx
-				call console_write_dstr_idx
+				mov bx, cx 
+				dec bx
+				mov ch, ah 
+				mov al, ch 
+				mov ah, DSTR_MAX
+				call console_write_dstr_sub_idx
+
 				; clear the last character
 				mov bx, si
 				DSTR_GET_INFO ; cl = max ; ch = length 
@@ -377,17 +418,22 @@ console_read_line:
 			jl .reject_handle ; invalid cursor pos
 			
 			; update buffer
+			push cx
 			sub cx, dx
 			mov ah, cl ; ah = index of character to be inserted
 			call dstr_insert
 			jc .reject_handle
+			pop cx ; cx still is current index
 
 			; update screen
 			CURSOR_FORWARD
 			push bx
 				mov si, bx
-				mov bx, dx
-				call console_write_dstr_idx
+				mov bx, cx 
+				mov ch, ah 
+				mov al, ch 
+				mov ah, DSTR_MAX
+				call console_write_dstr_sub_idx
 			pop bx
 
 			jmp .loop
