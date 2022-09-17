@@ -301,6 +301,7 @@ console_write_dstr_sub_idx:
 ; bx <- (initiated) dstr for storing output
 console_read_line: 
 	pusha
+		DSTR_CLEAR
 		push bx
 			GET_CURSOR
 			CONSOLE_RC2IDX dh, dl

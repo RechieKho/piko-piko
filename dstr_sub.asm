@@ -30,6 +30,16 @@
 ; ch -> length of dstr 
 %define DSTR_GET_INFO mov word cx, [bx]
 
+; clear dstr 
+; bx <- address of dstr header
+%macro DSTR_CLEAR 0 
+	pusha 
+		DSTR_GET_INFO
+		mov ch, 0 
+		mov word [bx], cx
+	popa
+%endmacro
+
 ; append to dstr 
 ; %1 <- character to be appended
 ; bx <- address of dstr header
