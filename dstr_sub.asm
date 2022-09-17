@@ -139,24 +139,20 @@ dstr_erase:
 		mov di, bx 
 		add di, 2
 		movzx dx, ah 
-		add di, dx ; dx = address of character to be erased 
+		add di, dx ; di = address of character to be erased 
 
 		mov si, di 
 		inc si ; si = address right after character to be erased 
 
-		sub ch, ah ; ch = number of character to be displaced
+		sub ch, ah
 		dec ch
-		
-		.displace_loop:
-			cmp ch, 0 
-			je .displace_end
-			mov al, [si] 
-			mov byte [di], al
-			inc si 
-			inc di
-			dec ch 
-			jmp .displace_loop
-		.displace_end:
+		movzx bx, ch 
+		mov cx, bx ; cx = number of character to be displaced 
+
+		mov bx, ds
+		mov es, bx
+
+		rep movsb
 	popa ; > STOP DISPLACE <  
 
 	; update state 
@@ -197,20 +193,14 @@ dstr_insert:
 		mov di, si
 		inc di ; di = address right after end of dstr
 
-		sub ch, ah ; ch = number of characters to be displaced
+		sub ch, ah
+		movzx bx, ch 
+		mov cx, bx ; cx = number of characters to be displaced 
 
-		.displace_loop:
-			cmp ch, 0 
-			je .displace_end
+		mov bx, ds 
+		mov es, bx 
 
-			mov al, [si] ; al = character displaced
-			mov byte [di], al ; displace character 
-
-			dec si
-			dec di
-			dec ch
-			jmp .displace_loop
-		.displace_end:
+		rep movsb
 	popa ; > END DISPLACE <
 
 	; insert character 
