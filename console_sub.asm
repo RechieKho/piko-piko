@@ -118,7 +118,10 @@
 			dec dl
 		jmp %%retract_end
 		%%retract_row:
-			dec dh 
+			cmp dh, 0
+			je %%skip_advance
+				dec dh 
+			%%skip_advance:
 			mov dl, (CONSOLE_WIDTH - 1)
 		%%retract_end:
 		SET_CURSOR
@@ -134,9 +137,24 @@
 			inc dl
 		jmp %%advance_end
 		%%advance_row:
-			inc dh 
+			cmp dh, (CONSOLE_HEIGHT-1)
+			je %%skip_advance
+				inc dh 
+			%%skip_advance:
 			mov dl, 0
 		%%advance_end:
+		SET_CURSOR
+	popa
+%endmacro 
+
+; mov cursor upward
+%macro CURSOR_UPWARD 0
+	pusha 
+		GET_CURSOR 
+		cmp dh, 0
+		je %%end
+			dec dh 
+		%%end:
 		SET_CURSOR
 	popa
 %endmacro 
@@ -157,6 +175,43 @@
 %endmacro 
 
 ; --- subroutine ---
+; scroll console upward 
+; bl <- displacelment
+console_scroll_up:
+	pusha 
+	push ds 
+	push es 
+		mov al, CONSOLE_WIDTH * 2
+		mul bl 
+		mov si, ax 
+		xor di, di 
+		mov cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT * 2)
+		sub cx, ax
+		mov ax, CONSOLE_DUMP_SEG
+		mov es, ax 
+		mov ds, ax 
+		rep movsb 
+
+		; clear the rest of the row
+		mov al, CONSOLE_HEIGHT
+		sub al, bl 
+		mov dl, (2 * CONSOLE_WIDTH)
+		mul dl
+		mov si, ax ; si = begining of slots to be cleared
+		mov al, bl 
+		mov dl, (2 * CONSOLE_WIDTH)
+		mul dl 
+		mov cx, si ; cx = number of slots to be cleared
+		.clear_loop:
+			mov word [si], 0x00
+			add si, 2
+			loop .clear_loop
+			
+	pop es
+	pop ds 
+	popa 
+	ret
+
 ; write character & attribute to location using index 
 ; al <- character 
 ; ah <- attribute
@@ -371,6 +426,17 @@ console_read_line:
 				mov al, 0
 				call console_write_char_idx
 			popa
+			; scroll if required
+			cmp cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
+			jb .no_scroll
+			push bx 
+				;mov bl, 1
+				;call console_scroll_up ; should have just use PRINT_NL instead 
+				PRINT_NL
+				sub dx, CONSOLE_WIDTH
+				sub cx, CONSOLE_WIDTH 
+			pop bx	
+			.no_scroll:
 			; write dstr to console
 			push bx
 				mov si, bx
