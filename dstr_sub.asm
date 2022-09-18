@@ -30,6 +30,17 @@
 ; ch -> length of dstr 
 %define DSTR_GET_INFO mov word cx, [bx]
 
+; get length of dstr 
+; bx <- address of dstr header 
+; cx -> length of dstr 
+%macro DSTR_GET_LENGTH 0 
+	push ax 
+		DSTR_GET_INFO
+		movzx ax, ch 
+		mov cx, ax ; cx = length
+	pop ax
+%endmacro
+
 ; clear dstr 
 ; bx <- address of dstr header
 %macro DSTR_CLEAR 0 
