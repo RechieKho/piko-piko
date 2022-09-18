@@ -20,7 +20,9 @@
 kernel_data:
 .greeting:
 	db "Welcome to piko-piko!", 0
-	.input_buffer: resb (DSTR_MAX + 2)
+	.input_buffer: 
+		resw 1 ; dstr_header
+		resb DSTR_MAX ; dstr_content
 
 	; --- subroutines ---
 
@@ -28,15 +30,12 @@ main:
 	CONSOLE_INIT
 
 	;     print greeting
-	;mov  bx, kernel_data.greeting
-	;call print_str
-	;PRINT_NL
+	mov  bx, kernel_data.greeting
+	call print_str
+	PRINT_NL
 
 	mov bx, kernel_data.input_buffer
 	DSTR_INIT
-
-	call dstr_print
-	PRINT_NL
 
 .loop:
 	;    get user input
