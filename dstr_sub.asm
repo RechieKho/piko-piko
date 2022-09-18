@@ -14,7 +14,7 @@
 %define DSTR_MAX 0xff
 
 ; initialize dstr header
-; %1 <- max length of the string (excluding the header)
+; %1 <- max length of the string (excluding the header) {!bx}
 ; bx <- address of dstr header
 %macro DSTR_INIT 0-1 DSTR_MAX
 	push bx
@@ -138,6 +138,34 @@ dstr_print_sub:
 	dec ah 
 	jmp .loop
 .end:
+	popa
+	ret
+
+; check whether dstr is equal 
+; si <- address of first dstr header
+; di <- address of second dstr header
+; cf -> set if dstr are not equal 
+dstr_equal:
+	pusha 
+		mov word cx, [si] ; cl = max; ch = length
+		mov word dx, [di] ; dl = max; dh = length 
+		cmp dh, ch 
+		jne .not_equal
+		movzx cx, dh ; cx = length of both dstr 
+		add si, 2 ; displace to the string
+		add di, 2 ; displace to the string
+		.loop: 
+			mov byte al, [si]
+			mov byte bl, [di]
+			cmp al, bl
+			jne .not_equal
+			inc si 
+			inc si
+			loop .loop
+		jmp .equal
+	.not_equal:
+		stc
+	.equal:
 	popa
 	ret
 
