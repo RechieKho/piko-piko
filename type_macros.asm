@@ -16,6 +16,6 @@
 	; Note that kernel stack and memory is right after its code
 	; low .....| code | stack | memory |.....| storage |..... high
 
-	%define STORAGE_BEGIN_SEG 0xbeef
+	%define STORAGE_BEGIN_SEG 0xdead
 
 	%endif ; _TYPEDEF_MACROS_ASM_
