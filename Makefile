@@ -11,7 +11,8 @@ kernel.bin: kernel.asm \
 		disk_sub.asm \
 		console_sub.asm \
 		print_sub.asm \
-		dstr_sub.asm \
+		ls8_sub.asm \
+		ls16_sub.asm \
 		type_macros.asm
 	nasm -dKERNEL_CODE_SECTOR_COUNT=${KERNEL_CODE_SECTOR_COUNT} -fbin $< -o $@
 
@@ -19,7 +20,8 @@ boot.bin: boot.asm \
 		disk_sub.asm \
 		console_sub.asm \
 		print_sub.asm \
-		dstr_sub.asm \
+		ls8_sub.asm \
+		ls16_sub.asm \
 		type_macros.asm
 	nasm -dKERNEL_CODE_SECTOR_COUNT=${KERNEL_CODE_SECTOR_COUNT} -fbin $< -o $@
 

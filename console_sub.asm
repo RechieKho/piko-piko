@@ -4,7 +4,7 @@
 	; NOTE: YOU MUST CONSOLE_INIT BEFORE USING ANYTHING IN THIS MODULE
 
 	;        --- modules ---
-	%include "dstr_sub.asm"
+	%include "ls16_sub.asm"
 
 	;       --- macro ---
 	%define CONSOLE_VIDEO_MODE 0x03
@@ -298,87 +298,82 @@ console_paint:
 	popa
 	ret
 
-	; write dstr to location using index
-	; si <- address of dstr header
+	; write ls16 to location using index
+	; si <- address of ls16 header
 	; bx <- index
 
-console_write_dstr_idx:
+console_write_ls16_idx:
 	pusha
-	push bx
+	mov cx, CONSOLE_DUMP_SEG
+	mov es, cx
+	shl bx, 1
+	mov di, bx ; di = offset for video dump
 	mov  bx, si
-	DSTR_GET_INFO ; cl = max; ch = length
-	pop  bx
+	LS16_GET_COUNT ; cx = count
 	add  si, 2; si = start of string
-
-.loop:
-	cmp  ch, 0
-	je   .loop_end
-	mov  al, [si]
-	call console_write_char_idx
-	inc  si
-	inc  bx
-	dec  ch
-	jmp  .loop
-
-.loop_end:
+	rep movsw
 	popa
 	ret
 
-	; write dstr to location
-	; si <- address of dstr header
+	; write ls16 to location
+	; si <- address of ls16 header
 	; cl <- row
 	; ch <- column
 
-console_write_dstr:
+console_write_ls16:
 	pusha
 	CONSOLE_RC2IDX cl, ch
-	call console_write_dstr_idx
+	call console_write_ls16_idx
 	popa
 	ret
 
-	; write substring of dstr to location using index
+	; write subset of ls16 to location using index
 	; al <- start (inclusive)
 	; ah <- end (exclusive)
-	; si <- address of dstr header
+	; si <- address of ls16 header
 	; bx <- index
 
-console_write_dstr_sub_idx:
+console_write_ls16_sub_idx:
 	pusha
-	push  bx
+	mov cx, CONSOLE_DUMP_SEG
+	mov es, cx 
+	shl bx, 1
+	mov di, bx ; di = offset for console dump
 	mov   bx, si
-	DSTR_GET_INFO ; cl = max; ch = length
-	pop   bx
+	LS16_GET_INFO ; cl = max; ch = length
 	add   si, 2
 	movzx dx, al
+	shl dx, 1
 	add   si, dx; si = begining of substring
-
 	cmp ah, ch
 	jbe .use_given
 	mov ah, ch; the end exceed length, use length instead
-
 .use_given:
-	sub ah, al; ah = length of character to be print
+	sub ah, al
+	movzx cx, ah ; cx = length of character to be print
+	rep movsw 
+	popa
+	ret
 
-.loop:
-	cmp  ah, 0
-	je   .loop_end
-	mov  al, [si]
-	call console_write_char_idx
-	inc  si
-	inc  bx
-	dec  ah
-	jmp  .loop
-
-.loop_end:
+	; write subset of ls16 to location
+	; al <- start (inclusive)
+	; ah <- end (exclusive)
+	; cl <- row 
+	; ch <- column
+	; si <- address of ls16 header
+console_write_ls16_sub:
+	pusha
+	CONSOLE_RC2IDX cl, ch
+	call console_write_ls16_sub_idx
 	popa
 	ret
 
 	; read line from console
-	; bx <- (initiated) dstr buffer for storing output
+	; bx <- (initiated) ls16 buffer for storing output
 
 console_read_line:
 	pusha
-	DSTR_CLEAR
+	LS16_CLEAR
 	push bx
 	GET_CURSOR
 	CONSOLE_RC2IDX dh, dl
@@ -400,7 +395,7 @@ console_read_line:
 	; initial information
 	; ah = scan code
 	; al = ascii character
-	; bx = dstr buffer
+	; bx = ls16 buffer
 	; cx = current cursor index (when a keystroke detected)
 	; dx = starting cursor index
 
@@ -429,21 +424,21 @@ console_read_line:
 .handle_right:
 	mov ax, cx; ax = current cursor index
 	sub ax, dx; ax = cursor pos relative to begining
-	DSTR_GET_INFO ; cl = max; ch = length
+	LS16_GET_INFO ; cl = max; ch = length
 	cmp al, ch
 	jae .reject_handle
 	CURSOR_FORWARD
 	jmp .loop
 
 	; update the console
-	; ah <- starting dstr index
-	; bx <- dstr buffer
+	; ah <- starting ls16 index
+	; bx <- ls16 buffer
 	; cx <- starting console index to be updated
 
 .handle_update_console:
-	;     clear the character after dstr
+	;     clear the character after ls16
 	pusha
-	DSTR_GET_INFO ; cl = max ; ch = length
+	LS16_GET_INFO ; cl = max ; ch = length
 	xor   bx, bx
 	movzx bx, ch
 	add   bx, dx
@@ -462,36 +457,45 @@ console_read_line:
 	pop   bx
 
 .no_scroll:
-	;    write dstr to console
+	;    write ls16 to console
 	push bx
 	mov  si, bx
 	mov  bl, ah
 	mov  al, bl
 	mov  bx, cx
-	mov  ah, DSTR_MAX
-	call console_write_dstr_sub_idx
+	mov  ah, LS16_MAX
+	call console_write_ls16_sub_idx
 	pop  bx
 	jmp  .loop
 
 	; erase character in buffer (& jmp to handle_update_console)
 	; ah <- index of character to be erased
-	; bx <- dstr buffer
+	; bx <- ls16 buffer
 	; cx <- starting console index to be updated
 
 .handle_erase_front:
-	call dstr_erase
+	push dx
+	mov dh, ah
+	call ls16_erase
+	pop dx
 	jc   .reject_handle
 	CURSOR_BACKWARD
 	jmp  .handle_update_console
 
 	; insert (in front of cursor) character into buffer (& jmp to handle_update_console)
-	; ah <- index of character to be inserted
 	; al <- character to be inserted
-	; bx <- dstr buffer
+	; ah <- index of character to be inserted
+	; bx <- ls16 buffer
 	; cx <- starting console index to be updated
 
 .handle_insert_front:
-	call dstr_insert
+	push dx
+	push ax
+	mov dh, ah 
+	mov ah, 0
+	call ls16_insert
+	pop ax
+	pop dx
 	jc   .reject_handle
 	CURSOR_FORWARD
 	jmp  .handle_update_console

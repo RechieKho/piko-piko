@@ -13,7 +13,7 @@
 
 	;        --- modules ---
 	%include "console_sub.asm"
-	%include "dstr_sub.asm"
+	%include "ls16_sub.asm"
 
 	; --- data ---
 
@@ -21,8 +21,8 @@ kernel_data:
 .greeting:
 	db "Welcome to piko-piko!", 0
 	.input_buffer: 
-		resw 1 ; dstr_header
-		resb DSTR_MAX ; dstr_content
+		resw 1 ; ls16 header (max and length)
+		resb LS16_MAX ; ls16 content
 
 	; --- subroutines ---
 
@@ -35,13 +35,11 @@ main:
 	PRINT_NL
 
 	mov bx, kernel_data.input_buffer
-	DSTR_INIT
+	LS16_INIT
 
 .loop:
 	;    get user input
 	call console_read_line
-	PRINT_NL
-	call dstr_print
 	PRINT_NL
 	jmp  .loop
 
