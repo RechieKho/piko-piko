@@ -25,6 +25,11 @@ boot.bin: boot.asm \
 		type_macros.asm
 	nasm -dKERNEL_CODE_SECTOR_COUNT=${KERNEL_CODE_SECTOR_COUNT} -fbin $< -o $@
 
+dev-graphics: piko-piko.bin
+	qemu-system-x86_64 \
+		-m ${QEMU_RAM_SIZE} \
+		-drive file=piko-piko.bin,format=raw
+
 dev: piko-piko.bin
 	qemu-system-x86_64 \
 		-display curses \
