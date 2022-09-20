@@ -12,15 +12,18 @@
 	%define CONSOLE_WIDTH 80
 	%define CONSOLE_HEIGHT 25
 
-	%define NORMAL 0x00
+	%define BLACK 0x00
 	%define BLUE 0x01
 	%define GREEN 0x02
 	%define CYAN 0x03
 	%define RED 0x04
 	%define MAGENTA 0x05
 	%define YELLOW 0x06
-	%define BOLD 0x08
-	; BOLD + COLOR = BOLD_COLOR
+  %define GREY 0x07
+	%define BRIGHT 0x08
+  %define WHITE (BRIGHT + GREY)
+	; BRIGHT + COLOR = BRIGHT COLOR
+  ; BRIGHT itself is light grey
 
 	%define KEY_ESC 0x011b
 	%define KEY_1 0x0231
@@ -492,7 +495,7 @@ console_read_line:
 	push dx
 	push ax
 	mov  dh, ah
-	mov  ah, 0
+	mov  ah, GREY
 	call ls16_insert
 	pop  ax
 	pop  dx
