@@ -12,38 +12,15 @@
 	%define CONSOLE_WIDTH 80
 	%define CONSOLE_HEIGHT 25
 
-	%define BLACK_FG 0x00
-	%define BLACK_BG 0x00
-	%define D_BLUE_FG 0x01
-	%define D_BLUE_BG 0x10
-	%define D_GREEN_FG 0x02
-	%define D_GREEN_BG 0x20
-	%define D_CYAN_FG 0x03
-	%define D_CYAN_BG 0x30
-	%define D_RED_FG 0x04
-	%define D_RED_BG 0x40
-	%define D_MAGENTA_FG 0x05
-	%define D_MAGENTA_BG 0x50
-	%define D_YELLOW_FG 0x06
-	%define D_YELLOW_BG 0x60
-	%define L_GREY_BG 0x07
-	%define L_GREY_FG 0x70
-	%define D_GREY_BG 0x08
-	%define D_GREY_FG 0x80
-	%define L_BLUE_FG 0x09
-	%define L_BLUE_BG 0x90
-	%define L_GREEN_FG 0x0a
-	%define L_GREEN_BG 0xa0
-	%define L_CYAN_FG 0x0b
-	%define L_CYAN_BG 0xb0
-	%define L_RED_BG 0x0c
-	%define L_RED_FG 0xc0
-	%define L_MAGENTA_FG 0x0d
-	%define L_MAGENTA_BG 0xd0
-	%define L_YELLOW_FG 0x0e
-	%define L_YELLOW_BG 0xe0
-	%define WHITE_FG 0x0f
-	%define WHITE_BG 0xf0
+	%define NORMAL 0x00
+	%define BLUE 0x01
+	%define GREEN 0x02
+	%define CYAN 0x03
+	%define RED 0x04
+	%define MAGENTA 0x05
+	%define YELLOW 0x06
+	%define BOLD 0x08
+	; BOLD + COLOR = BOLD_COLOR
 
 	%define KEY_ESC 0x011b
 	%define KEY_1 0x0231
