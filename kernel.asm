@@ -20,24 +20,26 @@
 kernel_data:
 .greeting:
 	db "Welcome to piko-piko!", 0
-	.input_buffer: 
-		resw 1 ; ls16 header (max and length)
-		resb LS16_MAX ; ls16 content
+
+.input_buffer:
+	resw 1; ls16 header (max and length)
+	resw LS16_MAX; ls16 content
 
 	; --- subroutines ---
 
 main:
 	CONSOLE_INIT
 
-	;     print greeting
+	;    print greeting
 	mov  bx, kernel_data.greeting
 	call print_str
 	PRINT_NL
 
-	mov bx, kernel_data.input_buffer
+	mov di, kernel_data.input_buffer
 	LS16_INIT
 
 .loop:
+	mov  si, kernel_data.input_buffer
 	;    get user input
 	call console_read_line
 	PRINT_NL

@@ -2,8 +2,8 @@
 %define _LS8_SUB_ASM_
 
 	; ls8 - list of 8 bits
-	; structure diagram: 
-	; | max (1 byte) | count (1 byte) | elements (1 byte each element) |
+	; structure diagram:
+	; | max (1B) | count (1B) | elements (1B each element) |
 
 	;        --- modules ---
 	%include "print_sub.asm"
@@ -11,25 +11,25 @@
 	;       --- macros ---
 	%define LS8_MAX 0xff
 
-	;      initialize ls8 header
-	;      %1 <- max count of the element (excluding the header) {!bx}
-	;      bx <- address of ls8 header
+	;      initialize ls8
+	;      %1 <- max count of the element (excluding the header) {1B, !di}
+	;      di <- address of ls8
 	%macro LS8_INIT 0-1 LS8_MAX
-	push   bx
-	mov    byte [bx], %1
-	inc    bx
-	mov    byte [bx], 0
-	pop    bx
+	push   di
+	mov    byte [di], %1
+	inc    di
+	mov    byte [di], 0
+	pop    di
 	%endmacro
 
-	;       get info from ls8 header
-	;       bx <- address of ls8 header
+	;       get info from ls8
+	;       si <- address of ls8
 	;       cl -> max count of ls8
 	;       ch -> count of ls8
-	%define LS8_GET_INFO mov word cx, [bx]
+	%define LS8_GET_INFO mov word cx, [si]
 
 	;      get count of ls8
-	;      bx <- address of ls8 header
+	;      si <- address of ls8
 	;      cx -> count of ls8
 	%macro LS8_GET_COUNT 0
 	push   ax
@@ -40,83 +40,79 @@
 	%endmacro
 
 	;      clear ls8
-	;      bx <- address of ls8 header
+	;      si <- address of ls8
 	%macro LS8_CLEAR 0
 	pusha
 	LS8_GET_INFO
 	mov    ch, 0
-	mov    word [bx], cx
+	mov    word [si], cx
 	popa
 	%endmacro
 
 	;      append to ls8
-	;      %1 <- element to be appended
-	;      bx <- address of ls8 header
+	;      %1 <- element to be appended {1B, !al}
+	;      si <- address of ls8
 	%macro LS8_APPEND 1
 	pusha
-	inc    bx
-	mov    byte ah, [bx]
-	mov    al, %1
+	inc    si
+	mov    byte dh, [si]
 	dec    bx
+	mov    al, %1
 	call   ls8_insert
 	popa
 	%endmacro
 
 	;      prepend to ls8
-	;      %1 <- element to be prepend
-	;      bx <- address of ls8 header
+	;      %1 <- element to be prepend {1B, !al}
+	;      si <- address of ls8
 	%macro LS8_PREPEND 1
 	pusha
 	mov    al, %1
-	mov    ah, 0
+	mov    dh, 0
 	call   ls8_insert
 	popa
 	%endmacro
 
 	;      pop last element of ls8
-	;      bx <- address of ls8 header
+	;      si <- address of ls8
 	%macro LS8_POP_LAST 0
 	pusha
-	inc    bx
-	mov    byte ah, [bx]
-	dec    ah
-	dec    bx
+	inc    si
+	mov    byte dh, [si]
+	dec    dh
+	dec    si
 	call   ls8_erase
 	popa
 	%endmacro
 
 	;      pop first element of ls8
-	;      bx <- address of ls8 header
+	;      si <- address of ls8
 	%macro LS8_POP_FIRST 0
 	pusha
-	mov    ah, 0
+	mov    dh, 0
 	call   ls8_erase
 	popa
 	%endmacro
 
 	; --- subroutine ---
 	; print ls8 as ascii to console
-	; bx <- address of ls8 header
+	; si <- address of ls8
 
 ls8_print_ascii:
 	pusha
 	LS8_GET_COUNT ; cx = count
-	add bx, 2; bx = begining of element
+	add si, 2; si = begining of element
+
 .loop:
-	PRINT_CHAR [bx]
-	inc bx
+	PRINT_CHAR [si]
+	inc  si
 	loop .loop
 	popa
 	ret
 
-	; print subelement of ls8 to console
-	; al <- start (inclusive)
-	; ah <- end (exclusive)
-	; bx <- address of ls8 header
-
 	; check whether ls8s are equal
-	; si <- address of first ls8 header
-	; di <- address of second ls8 header
+	; si <- address of first ls8
+	; di <- address of second ls8
 	; cf -> set if ls8s are not equal
 
 ls8_equal:
@@ -147,8 +143,8 @@ ls8_equal:
 	ret
 
 	; erase element from ls8
-	; ah <- index of the element to be erased
-	; bx <- address of ls8 header
+	; dh <- index of the element to be erased
+	; si <- address of ls8
 	; cf -> set if element fail to be inserted (either ls8 is empty or ah (index) is invalid)
 
 ls8_erase:
@@ -158,34 +154,33 @@ ls8_erase:
 	;   check validity
 	cmp ch, 0
 	je  .empty_err; empty element, not entertained
-	cmp ah, ch
+	cmp dh, ch
 	jae .invalid_index_err
 
 	;     displace elements backward
 	pusha ; > START DISPLACE <
-	mov   di, bx
-	add   di, 2
-	movzx dx, ah
-	add   di, dx; di = address of element to be erased
+	add   si, 3
+	movzx ax, dh
+	add   si, ax; si = address right after element to be erased
 
-	mov si, di
-	inc si; si = address right after element to be erased
+	mov di, si
+	dec di; di = address of element to be erased
 
-	sub   ch, ah
+	sub   ch, dh
 	dec   ch
-	movzx bx, ch
-	mov   cx, bx; cx = number of element to be displaced
+	movzx ax, ch
+	mov   cx, ax; cx = number of element to be displaced
 
-	mov bx, ds
-	mov es, bx
+	mov ax, ds
+	mov es, ax
 
 	rep  movsb
 	popa ; > STOP DISPLACE <
 
 	;   update state
 	dec ch
-	inc bx
-	mov byte [bx], ch
+	inc si
+	mov byte [si], ch
 
 	jmp .success
 
@@ -199,8 +194,8 @@ ls8_erase:
 
 	; insert element to ls8
 	; al <- element to be inserted
-	; ah <- index of the element to be inserted
-	; bx <- address of ls8 header
+	; si <- address of ls8
+	; dh <- index of the element to be inserted
 	; cf -> set if element fail to be inserted (either ls8 is full or ah (index) is invalid)
 
 ls8_insert:
@@ -210,15 +205,14 @@ ls8_insert:
 	cmp ch, cl
 	jae .max_err; already max out
 
-	cmp ah, ch
+	cmp dh, ch
 	ja  .invalid_index_err; index is bigger than the count
 
 	;     displace element forward
 	pusha ; > START DISPLACE <
-	mov   si, bx
-	movzx dx, ch
-	inc   dx; skip header
-	add   si, dx; si = address of end of ls8
+	movzx bx, ch
+	inc   bx; skip header
+	add   si, bx; si = address of end of ls8
 
 	mov di, si
 	inc di; di = address right after end of ls8
@@ -236,17 +230,17 @@ ls8_insert:
 	popa ; > END DISPLACE <
 
 	;     insert element
-	push  bx
-	add   bx, 2
-	movzx dx, ah
-	add   bx, dx
-	mov   byte [bx], al
-	pop   bx
+	push  si
+	add   si, 2
+	movzx bx, ah
+	add   si, bx
+	mov   byte [si], al
+	pop   si
 
 	;   update state
 	inc ch
-	inc bx; set to address of count
-	mov byte [bx], ch; update count
+	inc si; set to address of count
+	mov byte [si], ch; update count
 
 	jmp .success
 

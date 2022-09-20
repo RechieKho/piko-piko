@@ -2,8 +2,8 @@
 %define _LS16_SUB_ASM_
 
 	; ls16 - list of 16 bits
-	; structure diagram: 
-	; | max (1 byte) | count (1 byte) | elements (2 byte each element) |
+	; structure diagram:
+	; | max (1B) | count (1B) | elements (2B each element) |
 
 	;        --- modules ---
 	%include "print_sub.asm"
@@ -11,25 +11,25 @@
 	;       --- macros ---
 	%define LS16_MAX 0xff
 
-	;      initialize ls16 header
-	;      %1 <- max count of the element (excluding the header) {!bx}
-	;      bx <- address of ls16 header
+	;      initialize ls16
+	;      %1 <- max count of the element (excluding the header) {1B, !di}
+	;      di <- address of ls16
 	%macro LS16_INIT 0-1 LS16_MAX
-	push   bx
-	mov    byte [bx], %1
-	inc    bx
-	mov    byte [bx], 0
-	pop    bx
+	push   di
+	mov    byte [di], %1
+	inc    di
+	mov    byte [di], 0
+	pop    di
 	%endmacro
 
-	;       get info from ls16 header
-	;       bx <- address of ls16 header
+	;       get info from ls16
+	;       si <- address of ls16
 	;       cl -> max count of ls16
 	;       ch -> count of ls16
-	%define LS16_GET_INFO mov word cx, [bx]
+	%define LS16_GET_INFO mov word cx, [si]
 
 	;      get count of ls16
-	;      bx <- address of ls16 header
+	;      si <- address of ls16
 	;      cx -> count of ls16
 	%macro LS16_GET_COUNT 0
 	push   ax
@@ -40,31 +40,31 @@
 	%endmacro
 
 	;      clear ls16
-	;      bx <- address of ls16 header
+	;      si <- address of ls16
 	%macro LS16_CLEAR 0
 	pusha
 	LS16_GET_INFO
 	mov    ch, 0
-	mov    word [bx], cx
+	mov    word [si], cx
 	popa
 	%endmacro
 
 	;      append to ls16
-	;      %1 <- element to be appended
-	;      bx <- address of ls16 header
+	;      %1 <- element to be appended {2B, !ax}
+	;      si <- address of ls16
 	%macro LS16_APPEND 1
 	pusha
-	inc    bx
-	mov    byte dh, [bx]
+	inc    si
+	mov    byte dh, [si]
+	dec    si
 	mov    ax, %1
-	dec    bx
 	call   ls16_insert
 	popa
 	%endmacro
 
 	;      prepend to ls16
-	;      %1 <- element to be prepend
-	;      bx <- address of ls16 header
+	;      %1 <- element to be prepend {2B, !ax}
+	;      si <- address of ls16
 	%macro LS16_PREPEND 1
 	pusha
 	mov    ax, %1
@@ -74,19 +74,19 @@
 	%endmacro
 
 	;      pop last element of ls16
-	;      bx <- address of ls16 header
+	;      si <- address of ls16
 	%macro LS16_POP_LAST 0
 	pusha
-	inc    bx
-	mov    byte dh, [bx]
+	inc    si
+	mov    byte dh, [si]
 	dec    dh
-	dec    bx
+	dec    si
 	call   ls16_erase
 	popa
 	%endmacro
 
 	;      pop first element of ls16
-	;      bx <- address of ls16 header
+	;      si <- address of ls16
 	%macro LS16_POP_FIRST 0
 	pusha
 	mov    dh, 0
@@ -95,14 +95,9 @@
 	%endmacro
 
 	; --- subroutine ---
-	; print subelement of ls16 to console
-	; al <- start (inclusive)
-	; ah <- end (exclusive)
-	; bx <- address of ls16 header
-
 	; check whether ls16s are equal
-	; si <- address of first ls16 header
-	; di <- address of second ls16 header
+	; si <- address of first ls16
+	; di <- address of second ls16
 	; cf -> set if ls16s are not equal
 
 ls16_equal:
@@ -133,8 +128,8 @@ ls16_equal:
 	ret
 
 	; erase element from ls16
-	; bx <- address of ls16 header
 	; dh <- index of the element to be erased
+	; si <- address of ls16 header
 	; cf -> set if element fail to be inserted (either ls16 is empty or ah (index) is invalid)
 
 ls16_erase:
@@ -149,30 +144,29 @@ ls16_erase:
 
 	;     displace elements backward
 	pusha ; > START DISPLACE <
-	mov   di, bx
-	add   di, 2
+	add   si, 4
 	movzx ax, dh
-	shl ax, 1
-	add   di, ax ; di = address of element to be erased
+	shl   ax, 1
+	add   si, ax; si = address right after element to be erased
 
-	mov si, di
-	add si, 2 ; si = address right after element to be erased
+	mov di, si
+	sub di, 2; di = address of element to be erased
 
 	sub   ch, dh
 	dec   ch
-	movzx bx, ch
-	mov   cx, bx; cx = number of element to be displaced
+	movzx ax, ch
+	mov   cx, ax; cx = number of element to be displaced
 
-	mov bx, ds
-	mov es, bx
+	mov ax, ds
+	mov es, ax
 
 	rep  movsw
 	popa ; > STOP DISPLACE <
 
 	;   update state
 	dec ch
-	inc bx
-	mov byte [bx], ch
+	inc si
+	mov byte [si], ch
 
 	jmp .success
 
@@ -186,8 +180,8 @@ ls16_erase:
 
 	; insert element to ls16
 	; ax <- element to be inserted
-	; bx <- address of ls16 header
 	; dh <- index of the element to be inserted
+	; si <- address of ls16 header
 	; cf -> set if element fail to be inserted (either ls16 is full or ah (index) is invalid)
 
 ls16_insert:
@@ -202,20 +196,16 @@ ls16_insert:
 
 	;     displace element forward
 	pusha ; > START DISPLACE <
-	push dx
-	mov   si, bx
-	movzx dx, ch
-	inc   dx; skip header
-	shl dx, 1 
-	add   si, dx ; si = address of end of ls16
-	pop dx
+	movzx bx, ch
+	shl   bx, 1
+	add   si, bx; si = address of end of ls16
 
 	mov di, si
-	add di, 2 ; di = address right after end of ls16
+	add di, 2; di = address right after end of ls16
 
 	sub   ch, dh
 	movzx bx, ch
-	mov   cx, bx ; cx = number of elements to be displaced
+	mov   cx, bx; cx = number of elements to be displaced
 
 	mov bx, ds
 	mov es, bx
@@ -226,20 +216,18 @@ ls16_insert:
 	popa ; > END DISPLACE <
 
 	;     insert element
-	push cx
-	push  bx
-	add   bx, 2
-	movzx cx, dh
-	shl cx, 1
-	add   bx, cx
-	mov   word [bx], ax
-	pop   bx
-	pop cx
+	push  si
+	add   si, 2
+	movzx bx, dh
+	shl   bx, 1
+	add   si, bx
+	mov   word [si], ax
+	pop   si
 
 	;   update state
 	inc ch
-	inc bx; set to address of count
-	mov byte [bx], ch; update count
+	inc si; set to address of count
+	mov byte [si], ch; update count
 
 	jmp .success
 
