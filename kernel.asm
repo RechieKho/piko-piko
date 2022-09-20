@@ -19,7 +19,28 @@
 
 kernel_data:
 .greeting:
-	db "Welcome to piko-piko!", 0
+	db "W", (BOLD)
+	db "e", (BOLD)
+	db "l", (BOLD)
+	db "c", (BOLD)
+	db "o", (BOLD)
+	db "m", (BOLD)
+	db "e", (BOLD)
+	db " ", (BOLD)
+	db "t", (BOLD)
+	db "o", (BOLD)
+	db " ", (BOLD)
+	db "p", (BOLD + YELLOW)
+	db "i", (BOLD + RED)
+	db "k", (BOLD + GREEN)
+	db "o", (BOLD + BLUE)
+	db "-", (BOLD)
+	db "p", (BOLD + CYAN)
+	db "i", (BOLD + MAGENTA)
+	db "k", (BOLD + GREEN)
+	db "o", (BOLD + YELLOW)
+	db "!", (BOLD)
+	dw 0
 
 .input_buffer:
 	resw 1; ls16 header (max and length)
@@ -31,8 +52,9 @@ main:
 	CONSOLE_INIT
 
 	;    print greeting
-	mov  bx, kernel_data.greeting
-	call print_str
+	mov si, kernel_data.greeting
+	xor cx, cx
+	call console_write_colored_str
 	PRINT_NL
 
 	mov di, kernel_data.input_buffer

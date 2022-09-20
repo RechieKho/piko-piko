@@ -345,6 +345,37 @@ console_write_ls16_sub:
 	popa
 	ret
 
+	; write colored string to location using index 
+	; bx <- index
+	; si <- colored string
+console_write_colored_str_idx:
+	pusha 
+	mov ax, CONSOLE_DUMP_SEG
+	mov es, ax 
+	shl bx, 1 
+	.loop:
+		mov word ax, [si]
+		cmp ax, 0 
+		je .loop_end
+		mov word [es:bx], ax
+		add bx, 2
+		add si, 2
+		jmp .loop
+	.loop_end:
+	popa 
+	ret
+
+	; write colored string to location
+	; cl <- row 
+	; ch <- column 
+	; si <- colored string
+console_write_colored_str:
+	pusha
+	CONSOLE_RC2IDX cl, ch
+	call console_write_colored_str_idx
+	popa
+	ret
+
 	; read line from console
 	; si <- ls16 for storing output
 
