@@ -191,9 +191,13 @@ console_scroll_up:
 	mov cx, si; cx = number of slots to be cleared
 
 .clear_loop:
+	cmp cx, 0 
+	je .clear_loop_end
 	mov  word [si], 0x00
 	add  si, 2
-	loop .clear_loop
+	dec cx
+	jmp .clear_loop
+.clear_loop_end:
 
 	pop es
 	pop ds

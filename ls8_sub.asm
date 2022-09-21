@@ -104,9 +104,13 @@ ls8_print_ascii:
 	add si, 2; si = begining of element
 
 .loop:
+	cmp cx, 0 
+	je .loop_end
 	PRINT_CHAR [si]
 	inc  si
-	loop .loop
+	dec cx 
+	jmp .loop
+.loop_end:
 	popa
 	ret
 
@@ -126,14 +130,16 @@ ls8_equal:
 	add   di, 2; displace to the element
 
 .loop:
+	cmp cx, 0 
+	je .equal
 	mov  byte al, [si]
 	mov  byte bl, [di]
 	cmp  al, bl
 	jne  .not_equal
 	inc  si
 	inc  di
-	loop .loop
-	jmp  .equal
+	dec cx 
+	jmp .loop
 
 .not_equal:
 	stc
