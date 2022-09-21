@@ -52,8 +52,8 @@ main:
 	CONSOLE_INIT
 
 	;    print greeting
-	mov si, kernel_data.greeting
-	xor cx, cx
+	mov  si, kernel_data.greeting
+	xor  cx, cx
 	call console_write_colored_str
 	PRINT_NL
 

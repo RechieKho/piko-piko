@@ -19,11 +19,11 @@
 	%define RED 0x04
 	%define MAGENTA 0x05
 	%define YELLOW 0x06
-  %define GREY 0x07
+	%define GREY 0x07
 	%define BRIGHT 0x08
-  %define WHITE (BRIGHT + GREY)
-	; BRIGHT + COLOR = BRIGHT COLOR
-  ; BRIGHT itself is light grey
+	%define WHITE (BRIGHT + GREY)
+	;       BRIGHT + COLOR = BRIGHT COLOR
+	;       BRIGHT itself is light grey
 
 	%define KEY_ESC 0x011b
 	%define KEY_1 0x0231
@@ -191,12 +191,13 @@ console_scroll_up:
 	mov cx, si; cx = number of slots to be cleared
 
 .clear_loop:
-	cmp cx, 0 
-	je .clear_loop_end
-	mov  word [si], 0x00
-	add  si, 2
+	cmp cx, 0
+	je  .clear_loop_end
+	mov word [si], 0x00
+	add si, 2
 	dec cx
 	jmp .clear_loop
+
 .clear_loop_end:
 
 	pop es
@@ -352,30 +353,34 @@ console_write_ls16_sub:
 	popa
 	ret
 
-	; write colored string to location using index 
+	; write colored string to location using index
 	; bx <- index
 	; si <- colored string
+
 console_write_colored_str_idx:
-	pusha 
+	pusha
 	mov ax, CONSOLE_DUMP_SEG
-	mov es, ax 
-	shl bx, 1 
-	.loop:
-		mov word ax, [si]
-		cmp ax, 0 
-		je .loop_end
-		mov word [es:bx], ax
-		add bx, 2
-		add si, 2
-		jmp .loop
-	.loop_end:
-	popa 
+	mov es, ax
+	shl bx, 1
+
+.loop:
+	mov word ax, [si]
+	cmp ax, 0
+	je  .loop_end
+	mov word [es:bx], ax
+	add bx, 2
+	add si, 2
+	jmp .loop
+
+.loop_end:
+	popa
 	ret
 
 	; write colored string to location
-	; cl <- row 
-	; ch <- column 
+	; cl <- row
+	; ch <- column
 	; si <- colored string
+
 console_write_colored_str:
 	pusha
 	CONSOLE_RC2IDX cl, ch
