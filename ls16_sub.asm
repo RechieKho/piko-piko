@@ -111,14 +111,14 @@ ls16_equal:
 	add   di, 2; displace to the element
 
 .loop:
-	cmp cx, 0 
-	je .equal
-	mov  word ax, [si]
-	mov  word bx, [di]
-	cmp  ax, bx
-	jne  .not_equal
-	inc  si
-	inc  di
+	cmp cx, 0
+	je  .equal
+	mov word ax, [si]
+	mov word bx, [di]
+	cmp ax, bx
+	jne .not_equal
+	add si, 2
+	add di, 2
 	dec cx
 	jmp .loop
 
