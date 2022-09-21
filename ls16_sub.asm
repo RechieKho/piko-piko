@@ -252,10 +252,14 @@ ls16_take_lower:
 	LS8_CLEAR
 	add di, 2
 .loop: 
+	cmp cx, 0 
+	je .loop_end
 	mov word bx, [di]
 	LS8_APPEND bl
 	add di, 2
-	loop .loop
+	dec cx 
+	jmp .loop
+.loop_end:
 	popa 
 	ret
 
