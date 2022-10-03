@@ -50,7 +50,7 @@
 	;      %1 <- lower part of element to be appended {2B, !ax}
 	;      %2 <- upper part of element to be appended {2B, !bx}
 	;      si <- address of ls32
-	%macro LS32_APPEND 1
+	%macro LS32_APPEND 2
 	pusha
 	inc    si
 	mov    byte dh, [si]
