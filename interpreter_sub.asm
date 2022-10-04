@@ -1,5 +1,5 @@
-%ifndef _BASIC_SUB_ASM_
-%define _BASIC_SUB_ASM_
+%ifndef _INTERPRETER_SUB_ASM_
+%define _INTERPRETER_SUB_ASM_
 
 	;        --- modules ---
 	%include "ls32_sub.asm"
@@ -9,7 +9,7 @@
 
 	; --- data ---
 
-basic_data:
+interpreter_data:
 .marks:
 	;    a ls32. each slot stores address to the begining of sub-string and the length
 	resw 1
@@ -24,9 +24,9 @@ basic_data:
 	; --- subroutines ---
 	; print marks
 
-basic_print_marks:
+interpreter_print_marks:
 	pusha
-	mov si, basic_data.marks
+	mov si, interpreter_data.marks
 	LS32_GET_COUNT ; cx = count of marks
 	add si, 2; si = begining of marks
 	PRINT_CHAR '['
@@ -52,12 +52,12 @@ basic_print_marks:
 	popa
 	ret
 
-	; mark the sub-strings in the string (ls8) given, output into basic_data.marks
+	; mark the sub-strings in the string (ls8) given, output into interpreter_data.marks
 	; si <- address of string (ls8)
 
-basic_mark:
+interpreter_mark:
 	pusha
-	mov di, basic_data.marks
+	mov di, interpreter_data.marks
 	LS32_INIT
 	LS8_GET_COUNT ; cx = count of chars
 	add si, 2; si = begining of string
@@ -80,7 +80,7 @@ basic_mark:
 
 .str_end:
 	push si
-	mov  si, basic_data.marks
+	mov  si, interpreter_data.marks
 	mov  ax, bx
 	LS32_APPEND dx, ax
 	pop  si
@@ -93,20 +93,20 @@ basic_mark:
 .not_processing_str:
 
 	push si; >> BEGIN SWITCH <<
-	mov  si, basic_data.splitting_chars
+	mov  si, interpreter_data.splitting_chars
 	call str_has_char
 	jc   .is_splitting_char
-	mov  si, basic_data.standalone_chars
+	mov  si, interpreter_data.standalone_chars
 	call str_has_char
 	jc   .is_standalone_char
-	mov  si, basic_data.str_chars
+	mov  si, interpreter_data.str_chars
 	call str_has_char
 	jc   .is_str_char
 	inc  dx
 	jmp  .switch_end
 
 .is_splitting_char:
-	mov  si, basic_data.marks
+	mov  si, interpreter_data.marks
 	;    write into marks
 	cmp  dx, 0
 	je   .empty_mark
@@ -123,7 +123,7 @@ basic_mark:
 	jmp .switch_end
 
 .is_standalone_char:
-	mov  si, basic_data.marks
+	mov  si, interpreter_data.marks
 	;    write sub-string before standalone char into marks
 	cmp  dx, 0
 	je   .mark_standalone_char
@@ -146,7 +146,7 @@ basic_mark:
 	jmp  .switch_end
 
 .is_str_char:
-	mov  si, basic_data.marks
+	mov  si, interpreter_data.marks
 	;    write sub-string before str char into marks
 	cmp  dx, 0
 	je   .start_str
@@ -180,7 +180,7 @@ basic_mark:
 .loop_end:
 	cmp dx, 0
 	je  .cleaned_buffer
-	mov si, basic_data.marks
+	mov si, interpreter_data.marks
 	mov ax, bx
 	LS32_APPEND dx, bx
 
@@ -188,4 +188,4 @@ basic_mark:
 	popa
 	ret
 
-%endif ; _BASIC_SUB_ASM_
+%endif ; _INTERPRETER_SUB_ASM_

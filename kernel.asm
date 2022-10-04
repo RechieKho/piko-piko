@@ -15,7 +15,7 @@
 	%include "console_sub.asm"
 	%include "ls16_sub.asm"
 	%include "ls8_sub.asm"
-	%include "basic_sub.asm"
+	%include "interpreter_sub.asm"
 
 	; --- data ---
 
@@ -75,9 +75,9 @@ main:
 	mov  di, kernel_data.raw_buffer
 	call ls16_take_lower
 	mov  si, kernel_data.raw_buffer
-	call basic_mark
+	call interpreter_mark
 	PRINT_NL
-	call basic_print_marks
+	call interpreter_print_marks
 	PRINT_NL
 	jmp  .loop
 
