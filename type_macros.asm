@@ -10,7 +10,7 @@
 	%define KERNEL_CODE_SECTOR_COUNT 2
 	%endif
 	%define KERNEL_CODE_SIZE KERNEL_CODE_SECTOR_COUNT * 512
-	%define KERNEL_STACK_SIZE 0x1000
+	%define KERNEL_STACK_SIZE 0x2000
 	%define KERNEL_MEMORY_SIZE 0x1000
 
 	; Note that kernel stack and memory is right after its code

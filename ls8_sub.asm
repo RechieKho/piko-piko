@@ -56,7 +56,7 @@
 	pusha
 	inc    si
 	mov    byte dh, [si]
-	dec    bx
+	dec    si
 	mov    al, %1
 	call   ls8_insert
 	popa
@@ -224,7 +224,7 @@ ls8_insert:
 	mov di, si
 	inc di; di = address right after end of ls8
 
-	sub   ch, ah
+	sub   ch, dh
 	movzx bx, ch
 	mov   cx, bx; cx = number of elements to be displaced
 
@@ -239,7 +239,7 @@ ls8_insert:
 	;     insert element
 	push  si
 	add   si, 2
-	movzx bx, ah
+	movzx bx, dh
 	add   si, bx
 	mov   byte [si], al
 	pop   si

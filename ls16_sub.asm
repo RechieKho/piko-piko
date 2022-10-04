@@ -242,25 +242,28 @@ ls16_insert:
 	popa
 	ret
 
-	; take lower byte and turn it into a ls8 
-	; si <- address of ls16 
-	; di <- address of ls8 
+	; take lower byte and turn it into a ls8
+	; si <- address of ls16
+	; di <- address of ls8
+
 ls16_take_lower:
-	pusha 
+	pusha
 	LS16_GET_COUNT ; cx = count
-	xchg si, di ; di = ls16 ; si = ls8
+	xchg si, di; di = ls16; si = ls8
 	LS8_CLEAR
-	add di, 2
-.loop: 
-	cmp cx, 0 
-	je .loop_end
+	add  di, 2
+
+.loop:
+	cmp cx, 0
+	je  .loop_end
 	mov word bx, [di]
 	LS8_APPEND bl
 	add di, 2
-	dec cx 
+	dec cx
 	jmp .loop
+
 .loop_end:
-	popa 
+	popa
 	ret
 
 %endif ; _LS16_SUB_ASM_

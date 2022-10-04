@@ -14,6 +14,8 @@
 	;        --- modules ---
 	%include "console_sub.asm"
 	%include "ls16_sub.asm"
+	%include "ls8_sub.asm"
+	%include "basic_sub.asm"
 
 	; --- data ---
 
@@ -46,6 +48,10 @@ kernel_data:
 	resw 1; ls16 header (max and length)
 	resw LS16_MAX; ls16 content
 
+.raw_buffer:
+	resw 1; ls8 header (max and length)
+	resb LS8_MAX; ls16 content
+
 	; --- subroutines ---
 
 main:
@@ -59,11 +65,19 @@ main:
 
 	mov di, kernel_data.input_buffer
 	LS16_INIT
+	mov di, kernel_data.raw_buffer
+	LS8_INIT
 
 .loop:
 	mov  si, kernel_data.input_buffer
 	;    get user input
 	call console_read_line
+	mov  di, kernel_data.raw_buffer
+	call ls16_take_lower
+	mov  si, kernel_data.raw_buffer
+	call basic_mark
+	PRINT_NL
+	call basic_print_marks
 	PRINT_NL
 	jmp  .loop
 

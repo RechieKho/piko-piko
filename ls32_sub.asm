@@ -47,28 +47,28 @@
 	%endmacro
 
 	;      append to ls32
-	;      %1 <- lower part of element to be appended {2B, !ax}
+	;      %1 <- lower part of element to be appended {2B, !ax, !bx}
 	;      %2 <- upper part of element to be appended {2B, !bx}
 	;      si <- address of ls32
 	%macro LS32_APPEND 2
 	pusha
+	mov    bx, %2
+	mov    ax, %1
 	inc    si
 	mov    byte dh, [si]
 	dec    si
-	mov    ax, %1
-	mov bx, %2
 	call   ls32_insert
 	popa
 	%endmacro
 
 	;      prepend to ls32
-	;      %1 <- lower part of element to be prepend {2B, !ax}
+	;      %1 <- lower part of element to be prepend {2B, !ax, !bx}
 	;      %2 <- upper part of element to be prepend {2B, !bx}
 	;      si <- address of ls32
 	%macro LS32_PREPEND 2
 	pusha
+	mov    bx, %2
 	mov    ax, %1
-	mov bx, %2
 	mov    dh, 0
 	call   ls32_insert
 	popa
@@ -108,17 +108,17 @@ ls32_equal:
 	cmp   dh, ch
 	jne   .not_equal
 	movzx cx, dh
-	shl cx, 2; cx = count of words stored in both ls32
+	shl   cx, 2; cx = count of words stored in both ls32
 	add   si, 2; displace to the element
 	add   di, 2; displace to the element
 
 .loop:
-	cmp cx, 0 
-	je .equal
-	mov  word ax, [si]
-	mov  word bx, [di]
-	cmp  ax, bx
-	jne  .not_equal
+	cmp cx, 0
+	je  .equal
+	mov word ax, [si]
+	mov word bx, [di]
+	cmp ax, bx
+	jne .not_equal
 	add si, 2
 	add di, 2
 	dec cx
@@ -223,13 +223,13 @@ ls32_insert:
 	;     insert element
 	push  si
 	add   si, 2
-	push ax
+	push  ax
 	movzx ax, dh
 	shl   ax, 2
 	add   si, ax
-	pop ax
+	pop   ax
 	mov   word [si], ax
-	add si, 2
+	add   si, 2
 	mov   word [si], bx
 	pop   si
 
