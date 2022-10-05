@@ -71,14 +71,14 @@ main:
 .loop:
 	mov  si, kernel_data.input_buffer
 	;    get user input
+	PRINT_CHAR '>'
+	PRINT_CHAR ' '
 	call console_read_line
+	PRINT_NL
 	mov  di, kernel_data.raw_buffer
 	call ls16_take_lower
 	mov  si, kernel_data.raw_buffer
-	call interpreter_mark
-	PRINT_NL
-	call interpreter_print_marks
-	PRINT_NL
+	call interpreter_execute
 	jmp  .loop
 
 	;      Checks for kernel memories

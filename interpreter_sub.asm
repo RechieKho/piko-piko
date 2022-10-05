@@ -6,6 +6,7 @@
 	%include "ls8_sub.asm"
 	%include "str_sub.asm"
 	%include "print_sub.asm"
+	%include "commands_sub.asm"
 
 	; --- data ---
 
@@ -20,6 +21,14 @@ interpreter_data:
 	db   "~()", 0
 	.str_chars: ; character that initiate or terminate strings
 	db   0x22, 0x27, 0x60, 0
+
+.commands_table:
+	;  address to the command name and its corresponding function
+	dw say_command_name, say_command
+	dw 0
+
+.invalid_command_err_str:
+	db "Invalid command.", 0
 
 	; --- subroutines ---
 	; print marks
@@ -49,6 +58,84 @@ interpreter_print_marks:
 
 .loop_end:
 	PRINT_CHAR ']'
+	popa
+	ret
+
+	; execute command string
+	; si <- address of string (ls8)
+
+interpreter_execute:
+	pusha
+	call interpreter_mark
+	mov  si, interpreter_data.marks
+	LS32_GET_COUNT
+	cmp  cx, 0
+	je   .end; No argument, just end it.
+
+	add si, 2
+	mov word cx, [si]; cx = length of first argument
+	add si, 2
+	mov word dx, [si]
+	mov si, dx; si = address of first argument
+	mov bx, interpreter_data.commands_table
+
+.loop_commands_table:
+	mov word di, [bx]; di = command name from commands table
+	cmp di, 0
+	je  .invalid_command_err
+
+	;    compare first token with command name
+	;    si <- address of first argument [retained]
+	;    cx <- length of first argument [retained]
+	;    di <- command name
+	push si
+	push cx
+
+.loop_cmp_command_char:
+	mov byte al, [di]; al = current character of command name
+	cmp al, 0
+	je  .cmp_command_length
+	cmp cx, 0
+	je  .loop_end
+	mov byte ah, [si]; ah = current character of first argument
+	cmp al, ah
+	jne .loop_end
+	inc di
+	inc si
+	dec cx
+	jmp .loop_cmp_command_char
+
+.cmp_command_length:
+	cmp  cx, 0
+	jne  .loop_end
+	;    First argument have the same length and same character sequence
+	;    execute command function and end.
+	pop  cx
+	pop  si
+	add  bx, 2
+	mov  si, interpreter_data.marks
+	mov  di, [bx]
+	pusha
+	;PRINT_WORD di
+	;PRINT_CHAR ' '
+	;PRINT_WORD say_command
+	call di; call function
+	popa
+	jmp  .end
+
+.loop_end:
+	pop cx
+	pop si
+	add bx, 4
+	jmp .loop_commands_table
+
+.invalid_command_err:
+	;    print error
+	mov  bx, interpreter_data.invalid_command_err_str
+	call print_err
+	PRINT_NL
+
+.end:
 	popa
 	ret
 
