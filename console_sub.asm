@@ -459,8 +459,10 @@ console_read_line:
 	xor   bx, bx
 	movzx bx, ch
 	add   bx, dx
-	mov   al, 0
-	call  console_write_char_idx
+	push ax
+	xor ax, ax
+	call  console_write_idx
+	pop ax
 	popa
 	;     scroll if required
 	cmp   cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
@@ -504,7 +506,7 @@ console_read_line:
 	push dx
 	push ax
 	mov  dh, ah
-	mov  ah, GREY
+	mov  ah, YELLOW
 	call ls16_insert
 	pop  ax
 	pop  dx
