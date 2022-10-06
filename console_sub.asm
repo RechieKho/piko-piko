@@ -45,6 +45,8 @@
 	%define KEY_RIGHT 0x4d00
 	%define KEY_DOWN 0x5000
 
+	%define CONSOLE_READ_LINE_COLOR YELLOW
+
 	;      initialize console
 	%macro CONSOLE_INIT 0
 	pusha
@@ -506,7 +508,7 @@ console_read_line:
 	push dx
 	push ax
 	mov  dh, ah
-	mov  ah, YELLOW
+	mov  ah, CONSOLE_READ_LINE_COLOR
 	call ls16_insert
 	pop  ax
 	pop  dx
