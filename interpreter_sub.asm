@@ -25,6 +25,7 @@ interpreter_data:
 .commands_table:
 	;  address to the command name and its corresponding function
 	dw say_command_name, say_command
+  dw shutdown_command_name, shutdown_command
 	dw 0
 
 .invalid_command_err_str:

@@ -8,7 +8,28 @@
 	%include "print_sub.asm"
 	%include "ls32_sub.asm"
 
-	; -- commands ---
+  ; --- data ---
+commands_data:
+.shutdown_str:
+  db "Shutting down...", 0
+
+	; --- commands ---
+
+shutdown_command_name:
+  db "shutdown", 0 
+
+shutdown_command:
+  mov bx, commands_data.shutdown_str 
+  call print_str
+  mov ax, 0x5307
+  mov cx, 3
+  mov bx, 1 
+  int 0x15
+  .halt:
+    cli
+    hlt
+    jmp .halt
+  ret
 
 say_command_name:
 	db "say", 0
