@@ -3,17 +3,17 @@
 
 ; Utilities for dealing with memory 
 
-; set the memory with value 
+; set the word(s) with value 
 ; ax <- value 
 ; es:bx <- start address 
 ; cx <- count 
-memset:
+wordset:
 	pusha 
 .loop:
 	cmp cx, 0 
 	je .loop_end 
 	mov word [es:bx], ax 
-	inc bx
+	add bx, 2
 	dec cx 
 	jmp .loop
 .loop_end:

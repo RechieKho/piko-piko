@@ -194,7 +194,7 @@ console_scroll_up:
 	mov cx, si; cx = number of slots to be cleared
 	mov bx, si 
 	xor ax, ax 
-	call memset
+	call wordset
 	pop es
 	pop ds
 	popa
@@ -443,11 +443,10 @@ console_read_line:
 	cmp cx, dx
 	jb  .reject_handle; invalid cursor index
 
-	; initial information
-	; ah = scan code
-	; al = ascii character
+	; ah = scan code {update per loop}
+	; al = ascii character {update per loop}
+	; cx = current cursor index (during a keystroke detected) {update per loop}
 	; si = ls16 buffer
-	; cx = current cursor index (when a keystroke detected)
 	; dx = starting cursor index
 
 	;   classify
@@ -464,12 +463,18 @@ console_read_line:
 .handle_enter:
 	jmp .loop_end
 
+; cx <- current cursor index 
+; dx <- starting cursor index
 .handle_left:
 	cmp cx, dx
 	je  .reject_handle; cursor at the begining
 	CURSOR_BACKWARD
 	jmp .loop
 
+; cx <- current cursor index 
+; dx <- starting cursor index
+; ~cx
+; ~ax
 .handle_right:
 	mov ax, cx; ax = current cursor index
 	sub ax, dx; ax = cursor pos relative to begining
@@ -479,93 +484,37 @@ console_read_line:
 	CURSOR_FORWARD
 	jmp .loop
 
-	; update the console
-	; ah <- starting ls16 index
-	; cx <- starting console index to be updated
-	; si <- ls16 buffer
-
-.handle_update_console:
-	;     clear the character after ls16
-	pusha
-	LS16_GET_INFO ; cl = max ; ch = length
-	xor   bx, bx
-	movzx bx, ch
-	add   bx, dx
-	push ax
-	xor ax, ax
-	call  console_write_idx
-	pop ax
-	popa
-	;     scroll if required
-	cmp   cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
-	jb    .no_scroll
-	;mov  bl, 1
-	;call console_scroll_up; should have just use PRINT_NL instead
-	PRINT_NL
-	sub   dx, CONSOLE_WIDTH
-	sub   cx, CONSOLE_WIDTH
-
-.no_scroll:
-	;    write ls16 to console
-	mov  bl, ah
-	mov  al, bl
-	mov  bx, cx
-	mov  ah, LS16_MAX
-	call console_write_ls16_sub_idx
-	jmp  .loop
-
-	; erase character in buffer (& jmp to handle_update_console)
-	; ah <- index of character to be erased
-	; cx <- starting console index to be updated
-	; si <- ls16 buffer
-
-.handle_erase_front:
-	push dx
-	mov  dh, ah
-	call ls16_erase
-	pop  dx
-	jc   .reject_handle
-	CURSOR_BACKWARD
-	jmp  .handle_update_console
-
-	; insert (in front of cursor) character into buffer (& jmp to handle_update_console)
-	; al <- character to be inserted
-	; ah <- index of character to be inserted
-	; cx <- starting console index to be updated
-	; si <- ls16 buffer
-
-.handle_insert_front:
-	push dx
-	push ax
-	mov  dh, ah
-	mov  ah, CONSOLE_READ_LINE_COLOR
-	call ls16_insert
-	pop  ax
-	pop  dx
-	jc   .reject_handle
-	CURSOR_FORWARD
-	jmp  .handle_update_console
-
 .handle_bs:
 	cmp  cx, dx
 	je   .reject_handle; cursor index at begining
-	push cx
-	sub  cx, dx
-	mov  ah, cl
-	dec  ah; ah = index of character to be erased, which is right before cursor
-	pop  cx
-	dec  cx
-	jmp  .handle_erase_front
+	call _clear_input_line
+	pusha
+	sub cx, dx 
+	dec cx ; cx = index of character to be erased, right before cursor 
+	mov dh, cl 
+	call ls16_erase 
+	popa 
+	call _update_input_line
+	jc .reject_handle
+	CURSOR_BACKWARD
+	jmp .loop
 
+; ax <- scancode 
+; cx <- current cursor index
+; dx <- starting cursor index
 .handle_normal:
 	cmp  al, 0
 	je   .reject_handle; invalid ascii character
-	push cx
-	sub  cx, dx
-	mov  ah, cl; ah = index of character to be inserted
-	pop  cx; cx still is current index
-
-	jmp .handle_insert_front
+	pusha
+	sub  cx, dx ; cx = index of character to be inserted
+	mov dh, cl
+	mov ah, CONSOLE_READ_LINE_COLOR
+	call ls16_insert
+	popa
+	call _update_input_line
+	jc .reject_handle
+	CURSOR_FORWARD
+	jmp .loop
 
 .reject_handle:
 	clc
@@ -601,7 +550,6 @@ _update_input_line:
 ; dx <- starting index
 _clear_input_line:
 	pusha 
-	push es
 	LS16_GET_COUNT ; cx = count 
 	mov bx, dx 
 	; limit cx, not beyond the video dump 
@@ -610,12 +558,13 @@ _clear_input_line:
 	jb .within_video_dump 
 	mov cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
 .within_video_dump:
-	sub cx, bx 
+	sub cx, bx
+	push es
 	mov dx, CONSOLE_DUMP_SEG
 	mov es, dx 
 	shl bx, 1
 	xor ax, ax
-	call memset
+	call wordset
 	pop es 
 	popa
 	ret
