@@ -207,12 +207,15 @@ console_scroll_up:
 
 console_write_idx:
 	pusha
+	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
+	ja .end ; exceed video dump
 	push es
+	shl bx, 1; multiply by 2, skipping attribute
 	mov cx, CONSOLE_DUMP_SEG
 	mov es, cx
-	shl bx, 1; multiply by 2, skipping attribute
 	mov word [es:bx], ax
 	pop es
+.end:
 	popa
 	ret
 
@@ -235,12 +238,15 @@ console_write:
 
 console_write_char_idx:
 	pusha
+	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
+	ja .end ; exceed video dump
 	push es
+	shl bx, 1; multiply by 2, skipping attribute
 	mov cx, CONSOLE_DUMP_SEG
 	mov es, cx
-	shl bx, 1; multiply by 2, skipping attribute
 	mov byte [es:bx], al
 	pop es
+.end:
 	popa
 	ret
 
@@ -262,13 +268,16 @@ console_write_char:
 
 console_paint_idx:
 	pusha
+	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
+	ja .end ; exceed video dump
 	push es
+	shl bx, 1; multiply by 2, skipping attribute
 	mov cx, CONSOLE_DUMP_SEG
 	mov es, cx
-	shl bx, 1; multiply by 2, skipping attribute
 	inc bx
 	mov byte [es:bx], ah
 	pop es
+.end:
 	popa
 	ret
 
@@ -290,12 +299,19 @@ console_paint:
 
 console_write_ls16_idx:
 	pusha
-	push es
-	mov cx, CONSOLE_DUMP_SEG
-	mov es, cx
-	shl bx, 1
-	mov di, bx; di = offset for video dump
 	LS16_GET_COUNT ; cx = count
+	mov ax, bx 
+	add ax, cx 
+	cmp ax, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
+	jb .within_video_dump
+	mov cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
+	sub cx, bx
+.within_video_dump:
+	push es
+	mov dx, CONSOLE_DUMP_SEG
+	mov es, dx
+	mov di, bx; di = offset for video dump
+	shl di, 1
 	add si, 2; si = start of string
 	rep movsw
 	pop es
@@ -322,25 +338,34 @@ console_write_ls16:
 
 console_write_ls16_sub_idx:
 	pusha
-	push es
-	mov   cx, CONSOLE_DUMP_SEG
-	mov   es, cx
-	shl   bx, 1
-	mov   di, bx; di = offset for console dump
+	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
+	ja .end
 	LS16_GET_INFO ; cl = max; ch = length
-	add   si, 2
+	sub   ah, al
+	cmp   ah, ch
+	jbe   .valid_length
+	mov   ah, ch; the end exceed length, use length instead
+	sub ah, al
+.valid_length:
+	movzx cx, ah
+	add cx, bx
+	cmp cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
+	jb .within_video_dump
+	mov cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
+.within_video_dump:
+	sub cx, bx; cx = length of character to be print
+	mov   di, bx
+	shl di, 1 ; di = offset for console dump
 	movzx bx, al
 	shl   bx, 1
+	add   si, 2
 	add   si, bx; si = begining of substring
-	cmp   ah, ch
-	jbe   .use_given
-	mov   ah, ch; the end exceed length, use length instead
-
-.use_given:
-	sub   ah, al
-	movzx cx, ah; cx = length of character to be print
+	push es
+	mov   dx, CONSOLE_DUMP_SEG
+	mov   es, dx
 	rep   movsw
 	pop es
+.end:
 	popa
 	ret
 
@@ -559,7 +584,6 @@ _clear_input_line:
 	push es
 	LS16_GET_COUNT ; cx = count 
 	mov bx, dx 
-	shl bx, 1 
 	; limit cx, not beyond the video dump 
 	add cx, bx 
 	cmp cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
@@ -569,6 +593,7 @@ _clear_input_line:
 	sub cx, bx 
 	mov dx, CONSOLE_DUMP_SEG
 	mov es, dx 
+	shl bx, 1
 	xor ax, ax
 	call memset
 	pop es 
