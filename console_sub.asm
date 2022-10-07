@@ -5,6 +5,7 @@
 
 	;        --- modules ---
 	%include "ls16_sub.asm"
+	%include "mem_sub.asm"
 
 	;       --- macro ---
 	%define CONSOLE_VIDEO_MODE 0x03
@@ -191,17 +192,9 @@ console_scroll_up:
 	mov dl, (2 * CONSOLE_WIDTH)
 	mul dl
 	mov cx, si; cx = number of slots to be cleared
-
-.clear_loop:
-	cmp cx, 0
-	je  .clear_loop_end
-	mov word [si], 0x00
-	add si, 2
-	dec cx
-	jmp .clear_loop
-
-.clear_loop_end:
-
+	mov bx, si 
+	xor ax, ax 
+	call memset
 	pop es
 	pop ds
 	popa
@@ -543,6 +536,30 @@ console_read_line:
 	jmp .loop
 
 .loop_end:
+	popa
+	ret
+
+; clear region in console that is written with ls16 user input  buffer 
+; si <- ls16 buffer
+; dx <- starting index
+_clear_input_line:
+	pusha 
+	push es
+	LS16_GET_COUNT ; cx = count 
+	mov bx, dx 
+	shl bx, 1 
+	; limit cx, not beyond the video dump 
+	add cx, bx 
+	cmp cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
+	jb .within_video_dump 
+	mov cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
+.within_video_dump:
+	sub cx, bx 
+	mov dx, CONSOLE_DUMP_SEG
+	mov es, dx 
+	xor ax, ax
+	call memset
+	pop es 
 	popa
 	ret
 

@@ -1,0 +1,23 @@
+%ifndef MEM_SUB_ASM
+%define MEM_SUB_ASM 
+
+; Utilities for dealing with memory 
+
+; set the memory with value 
+; ax <- value 
+; es:bx <- start address 
+; cx <- count 
+memset:
+	pusha 
+.loop:
+	cmp cx, 0 
+	je .loop_end 
+	mov word [es:bx], ax 
+	inc bx
+	dec cx 
+	jmp .loop
+.loop_end:
+	popa 
+	ret
+
+%endif ;MEM_SUB_ASM
