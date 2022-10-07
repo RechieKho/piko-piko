@@ -53,6 +53,9 @@ kernel_data:
 	resb LS8_MAX; ls16 content
 
 	; --- subroutines ---
+; a function that do nothing
+pass:
+	ret
 
 main:
 	CONSOLE_INIT
@@ -73,6 +76,7 @@ main:
 	;    get user input
 	PRINT_CHAR '>'
 	PRINT_CHAR ' '
+	mov bx, pass
 	call console_read_line
 	PRINT_NL
 	mov  di, kernel_data.raw_buffer

@@ -422,23 +422,30 @@ console_write_colored_str:
 
 	; read line from console
 	; si <- ls16 for storing output
+	; bx <- painter function that colorize the the input
+	; 		arguments:
+	; 		si <- ls16 buffer 
 
 console_read_line:
 	pusha
 	LS16_CLEAR
+	push bx
 	GET_CURSOR
 	CONSOLE_RC2IDX dh, dl
 	mov dx, bx; dx = starting index
+	pop bx
 
 .loop:
 	CONSOLE_READ_CHAR
 
 	;    get cursor's index on console
+	push bx
 	push dx
 	GET_CURSOR
 	CONSOLE_RC2IDX dh, dl
 	mov  cx, bx; cx = current index
 	pop  dx
+	pop bx
 
 	cmp cx, dx
 	jb  .reject_handle; invalid cursor index
@@ -448,6 +455,7 @@ console_read_line:
 	; cx = current cursor index (during a keystroke detected) {update per loop}
 	; si = ls16 buffer
 	; dx = starting cursor index
+	; bx = painter function
 
 	;   classify
 	cmp ax, KEY_ENTER
@@ -494,6 +502,7 @@ console_read_line:
 	mov dh, cl 
 	call ls16_erase 
 	popa 
+	call bx
 	call _update_input_line
 	jc .reject_handle
 	CURSOR_BACKWARD
@@ -511,6 +520,7 @@ console_read_line:
 	mov ah, CONSOLE_READ_LINE_COLOR
 	call ls16_insert
 	popa
+	call bx
 	call _update_input_line
 	jc .reject_handle
 	CURSOR_FORWARD
