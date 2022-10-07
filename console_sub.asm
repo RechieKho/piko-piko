@@ -207,10 +207,12 @@ console_scroll_up:
 
 console_write_idx:
 	pusha
+	push es
 	mov cx, CONSOLE_DUMP_SEG
 	mov es, cx
 	shl bx, 1; multiply by 2, skipping attribute
 	mov word [es:bx], ax
+	pop es
 	popa
 	ret
 
@@ -233,10 +235,12 @@ console_write:
 
 console_write_char_idx:
 	pusha
+	push es
 	mov cx, CONSOLE_DUMP_SEG
 	mov es, cx
 	shl bx, 1; multiply by 2, skipping attribute
 	mov byte [es:bx], al
+	pop es
 	popa
 	ret
 
@@ -258,11 +262,13 @@ console_write_char:
 
 console_paint_idx:
 	pusha
+	push es
 	mov cx, CONSOLE_DUMP_SEG
 	mov es, cx
 	shl bx, 1; multiply by 2, skipping attribute
 	inc bx
 	mov byte [es:bx], ah
+	pop es
 	popa
 	ret
 
@@ -284,6 +290,7 @@ console_paint:
 
 console_write_ls16_idx:
 	pusha
+	push es
 	mov cx, CONSOLE_DUMP_SEG
 	mov es, cx
 	shl bx, 1
@@ -291,6 +298,7 @@ console_write_ls16_idx:
 	LS16_GET_COUNT ; cx = count
 	add si, 2; si = start of string
 	rep movsw
+	pop es
 	popa
 	ret
 
@@ -314,6 +322,7 @@ console_write_ls16:
 
 console_write_ls16_sub_idx:
 	pusha
+	push es
 	mov   cx, CONSOLE_DUMP_SEG
 	mov   es, cx
 	shl   bx, 1
@@ -331,6 +340,7 @@ console_write_ls16_sub_idx:
 	sub   ah, al
 	movzx cx, ah; cx = length of character to be print
 	rep   movsw
+	pop es
 	popa
 	ret
 
@@ -354,6 +364,7 @@ console_write_ls16_sub:
 
 console_write_colored_str_idx:
 	pusha
+	push es
 	mov ax, CONSOLE_DUMP_SEG
 	mov es, ax
 	shl bx, 1
@@ -368,6 +379,7 @@ console_write_colored_str_idx:
 	jmp .loop
 
 .loop_end:
+	pop es
 	popa
 	ret
 
