@@ -528,8 +528,10 @@ console_read_line:
 ; update region in console with ls16 user input buffer
 ; si <- ls16 buffer 
 ; dx <- starting index
+; dx -> updated starting index (if scroll)
 _update_input_line:
-	pusha 
+	push cx
+	push bx 
 	LS16_GET_COUNT ; cx = count
 	add cx, dx 
 	mov bl, 0 ; bl = lines to be scrolled 
@@ -537,12 +539,14 @@ _update_input_line:
 	cmp cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
 	jb .count_loop_end
 	inc bl 
+	sub dx, CONSOLE_WIDTH
 	sub cx, CONSOLE_WIDTH
 .count_loop_end:
 	call console_scroll_up
 	mov bx, dx 
 	call console_write_ls16_idx
-	popa 
+	pop bx 
+	pop cx
 	ret
 
 ; clear region in console that is written with ls16 user input buffer 
