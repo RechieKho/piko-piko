@@ -46,7 +46,7 @@
 	%define KEY_RIGHT 0x4d00
 	%define KEY_DOWN 0x5000
 
-	%define CONSOLE_READ_LINE_COLOR YELLOW
+	%define CONSOLE_READ_LINE_DEFAULT_COLOR YELLOW
 
 	;      initialize console
 	%macro CONSOLE_INIT 0
@@ -517,7 +517,7 @@ console_read_line:
 	pusha
 	sub  cx, dx ; cx = index of character to be inserted
 	mov dh, cl
-	mov ah, CONSOLE_READ_LINE_COLOR
+	mov ah, CONSOLE_READ_LINE_DEFAULT_COLOR
 	call ls16_insert
 	popa
 	call bx

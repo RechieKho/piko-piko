@@ -76,7 +76,7 @@ main:
 	;    get user input
 	PRINT_CHAR '>'
 	PRINT_CHAR ' '
-	mov bx, pass
+	mov bx, interpreter_paint
 	call console_read_line
 	PRINT_NL
 	mov  di, kernel_data.raw_buffer

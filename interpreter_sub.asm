@@ -4,9 +4,16 @@
 	;        --- modules ---
 	%include "ls32_sub.asm"
 	%include "ls8_sub.asm"
+	%include "ls16_sub.asm"
 	%include "str_sub.asm"
 	%include "print_sub.asm"
 	%include "commands_sub.asm"
+	%include "console_sub.asm"
+
+	; --- macros ---
+	%define KEYWORD_COLOR (BRIGHT + RED)
+	%define STRING_COLOR (GREEN)
+	%define SYMBOL_COLOR (WHITE)
 
 	; --- data ---
 
@@ -275,5 +282,67 @@ interpreter_mark:
 .cleaned_buffer:
 	popa
 	ret
+
+; paint the ls16 buffer
+; si <- ls16 buffer
+interpreter_paint:
+	pusha 
+	LS16_GET_COUNT ; cx = count 
+	mov di, si 
+	add di, 2 ; di = begining of buffer
+	xor bl, bl ; bl = current str char 
+
+.loop: 
+	cmp cx, 0 
+	je .loop_end
+
+	mov byte al, [di]; al = current character
+
+	cmp bl, 0
+	je .not_processing_str
+	cmp bl, al 
+	jne .not_str_end 
+	xor bl, bl
+.not_str_end:
+	push di
+	inc di ; move to attribute 
+	mov byte [di], STRING_COLOR
+	pop di
+	jmp .continue
+
+.not_processing_str:
+
+	push di ; >> BEGIN SWITCH <<
+	mov si, interpreter_data.standalone_chars
+	call str_has_char
+	jc .is_standalone_char
+	mov si, interpreter_data.str_chars 
+	call str_has_char 
+	jc .is_str_char
+	jmp .switch_end
+
+.is_standalone_char:
+	inc di ; move to attribute
+	mov byte [di], SYMBOL_COLOR
+	jmp .switch_end
+
+.is_str_char:
+	mov bl, al
+	inc di ; move to attribute 
+	mov byte [di], STRING_COLOR
+	jmp .switch_end
+
+.switch_end:
+	clc
+	pop di ; >> END SWITCH <<
+	
+.continue:
+	add di, 2
+	dec cx 
+	jmp .loop
+.loop_end:
+	popa 
+	ret
+
 
 %endif ; _INTERPRETER_SUB_ASM_
