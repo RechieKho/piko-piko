@@ -58,18 +58,20 @@ pass:
 	ret
 
 main:
+	; initialization
 	CONSOLE_INIT
+	COMMANDS_INIT
+
+	mov di, kernel_data.input_buffer
+	LS16_INIT
+	mov di, kernel_data.raw_buffer
+	LS8_INIT
 
 	;    print greeting
 	mov  si, kernel_data.greeting
 	xor  cx, cx
 	call console_write_colored_str
 	PRINT_NL
-
-	mov di, kernel_data.input_buffer
-	LS16_INIT
-	mov di, kernel_data.raw_buffer
-	LS8_INIT
 
 .loop:
 	mov  si, kernel_data.input_buffer
