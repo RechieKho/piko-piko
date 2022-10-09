@@ -210,7 +210,7 @@ ls8_set:
 	LS8_GET_INFO ; cl = max
 	cmp dl, cl 
 	ja .exceed_max
-	mov cl, dl 
+	mov ch, dl 
 	mov word [si], cx 
 	add si, 2 
 	xchg si, di 

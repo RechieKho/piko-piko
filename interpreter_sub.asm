@@ -33,6 +33,7 @@ interpreter_data:
 	;  address to the command name and its corresponding function
 	dw say_command_name, say_command
 	dw set_command_name, set_command
+	dw dump_command_name, dump_command
 	dw shutdown_command_name, shutdown_command
 	dw 0
 

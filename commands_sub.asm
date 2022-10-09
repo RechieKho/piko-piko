@@ -24,12 +24,13 @@
 ; initiate variables 
 %macro VAR_INIT 0 
 	pusha
-	mov si, commands_data.variables
+	mov di, commands_data.variables
 	mov cx, VARIABLE_COUNT
 %%loop:
 	LS8_INIT (VARIABLE_SIZE - 1)
-	add si, VARIABLE_SIZE
-	loop %%loop
+	add di, VARIABLE_SIZE
+	dec cx
+	jnz %%loop
 	popa
 %endmacro 
 
@@ -49,6 +50,50 @@ commands_data:
 	resb (VARIABLE_SIZE * VARIABLE_COUNT)
 
 	; --- commands ---
+
+dump_command_name:
+	db "dump", 0 
+
+; 1 <- nth variable 
+dump_command:
+	pusha 
+	LS32_GET_COUNT ; cx = args count 
+	cmp cx, 2 
+	jne .invalid_arg_num_err
+	add si, 6 
+	mov word cx, [si]
+	add si, 2 
+	mov word bx, [si]
+	mov si, bx
+	call strn_to_uint ; dx -> nth variable
+	jc .invalid_uint_err
+	cmp dx, VARIABLE_COUNT
+	jae .invalid_variable_err
+	mov al, VARIABLE_SIZE
+	mul dl
+	mov si, commands_data.variables 
+	add si, ax ; si = variable address 
+	LS8_GET_COUNT ; cx = variable length 
+	mov bx, si 
+	add bx, 2
+	call print_n_str
+	jmp .end
+.invalid_variable_err:
+	mov bx, commands_data.invalid_variable_err_str
+	call print_err 
+	jmp .end
+.invalid_uint_err:
+	clc
+	mov bx, commands_data.invalid_uint_err_str
+	call print_err 
+	jmp .end
+.invalid_arg_num_err:
+	mov bx, commands_data.invalid_arg_num_err_str
+	call print_err
+.end:
+	PRINT_NL
+	popa 
+	ret
 
 set_command_name:
 	db "set", 0 
@@ -81,7 +126,7 @@ set_command:
 	add si, 2
 	mov word bx, [si]
 	mov si, bx 
-	cmp ch, 0 
+	cmp ch, 0
 	jne .value_too_long_err
 	xchg si, di
 	call ls8_set 
