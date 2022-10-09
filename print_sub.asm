@@ -137,4 +137,11 @@ print_err:
 	popa
 	ret
 
+	; print error in one line 
+	; bx <- err message 
+print_err_ln:
+	call print_err
+	PRINT_NL 
+	ret
+
 %endif ; _PRINT_SUB_ASM_

@@ -77,21 +77,21 @@ dump_command:
 	mov bx, si 
 	add bx, 2
 	call print_n_str
+	PRINT_NL
 	jmp .end
 .invalid_variable_err:
 	mov bx, commands_data.invalid_variable_err_str
-	call print_err 
+	call print_err_ln 
 	jmp .end
 .invalid_uint_err:
 	clc
 	mov bx, commands_data.invalid_uint_err_str
-	call print_err 
+	call print_err_ln 
 	jmp .end
 .invalid_arg_num_err:
 	mov bx, commands_data.invalid_arg_num_err_str
-	call print_err
+	call print_err_ln
 .end:
-	PRINT_NL
 	popa 
 	ret
 
@@ -136,22 +136,21 @@ set_command:
 .value_too_long_err:
 	clc
 	mov bx, commands_data.value_too_long_err_str
-	call print_err 
+	call print_err_ln 
 	jmp .end
 .invalid_variable_err:
 	mov bx, commands_data.invalid_variable_err_str
-	call print_err 
+	call print_err_ln 
 	jmp .end
 .invalid_uint_err:
 	clc
 	mov bx, commands_data.invalid_uint_err_str
-	call print_err 
+	call print_err_ln 
 	jmp .end
 .invalid_arg_num_err:
 	mov bx, commands_data.invalid_arg_num_err_str
-	call print_err
+	call print_err_ln
 .end:
-	PRINT_NL
 	popa
 	ret
 
