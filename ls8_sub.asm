@@ -199,6 +199,33 @@ ls8_erase:
 	popa
 	ret
 
+; set the whole ls8 
+; si <- address of ls8 
+; di <- address of data 
+; cl <- count 
+; cf -> set if fail to be set (count exceed max)
+ls8_set:
+	pusha 
+	mov dl, cl ; dl = count 
+	LS8_GET_INFO ; cl = max
+	cmp dl, cl 
+	ja .exceed_max
+	mov cl, dl 
+	mov word [si], cx 
+	add si, 2 
+	xchg si, di 
+	mov bx, ds
+	mov es, bx
+	movzx cx, dl
+	cld
+	rep movsb
+	jmp .end
+.exceed_max:
+	stc
+.end:
+	popa 
+	ret
+
 	; insert element to ls8
 	; al <- element to be inserted
 	; si <- address of ls8
