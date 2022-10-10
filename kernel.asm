@@ -87,10 +87,15 @@ main:
 	call interpreter_execute
 	jmp  .loop
 
-	;      Checks for kernel memories
+	; --- checks ---
 	%if    ($-$$) > KERNEL_CODE_SIZE
-	%error "Kernel is bigger than " %+  KERNEL_SIZE %+ "."
+	%error "Kernel is bigger than expected."
 	%endif
-	%if    ((KERNEL_CODE_BEGIN_SEG << 4) + KERNEL_CODE_SIZE + KERNEL_STACK_SIZE + KERNEL_MEMORY_SIZE) > (STORAGE_BEGIN_SEG << 4)
-	%error "Kernel memory is overlapping the storage memory."
+
+	%assign KERNEL_FINAL_ADDR ((KERNEL_CODE_BEGIN_SEG << 4) + KERNEL_CODE_SIZE + KERNEL_STACK_SIZE)
+	%if    KERNEL_FINAL_ADDR > (STORAGE_BEGIN_SEG << 4)
+	%error "Kernel is overlapping the storage memory."
+	%endif
+	%if KERNEL_FINAL_ADDR > (CONSOLE_DUMP_SEG << 4)
+	%error "Kernel is overlapping video dump."
 	%endif
