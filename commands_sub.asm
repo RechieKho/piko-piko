@@ -85,7 +85,7 @@ pop_stack_command:
 
 	mov word di, [commands_data.stack_pointer]
 	cmp di, commands_data.stack 
-	jbe .stack_empty_err
+	jbe commands_err.stack_empty_err
 
 	push cx 
 	mov word cx, [si]
@@ -95,10 +95,10 @@ pop_stack_command:
 	xchg bx, si
 	call strn_to_uint
 	pop cx
-	jc .invalid_uint_err
+	jc commands_err.invalid_uint_err
 	xchg bx, si
 	cmp dx, VARIABLE_COUNT
-	jae .invalid_variable_err 
+	jae commands_err.invalid_variable_err 
 	mov al, VARIABLE_SIZE 
 	mul dl 
 
@@ -118,18 +118,6 @@ pop_stack_command:
 	dec cx 
 	jmp .pop_loop 
 
-.stack_empty_err:
-	mov bx, commands_data.stack_empty_err_str 
-	call print_err_ln 
-	jmp .end
-.invalid_variable_err: 
-	mov bx, commands_data.invalid_variable_err_str
-	call print_err_ln
-	jmp .end
-.invalid_uint_err:
-	clc
-	mov bx, commands_data.invalid_uint_err_str
-	call print_err_ln 
 .end:
 	popa 
 	ret
@@ -152,7 +140,7 @@ push_stack_command:
 
 	mov word di, [commands_data.stack_pointer] ; di = pointer to top of the stack
 	cmp di, commands_data.stack_pointer
-	jae .stack_full_err
+	jae commands_err.stack_full_err
 
 	push cx
 	mov word cx, [si]
@@ -162,10 +150,10 @@ push_stack_command:
 	xchg bx, si
 	call strn_to_uint
 	pop cx
-	jc .invalid_uint_err
+	jc commands_err.invalid_uint_err
 	xchg bx, si
 	cmp dx, VARIABLE_COUNT
-	jae .invalid_variable_err
+	jae commands_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
 	mul dl
 
@@ -184,18 +172,6 @@ push_stack_command:
 	dec cx 
 	jmp .push_loop
 
-.stack_full_err:
-	mov bx, commands_data.stack_full_err_str
-	call print_err_ln
-	jmp .end
-.invalid_variable_err:
-	mov bx, commands_data.invalid_variable_err_str
-	call print_err_ln 
-	jmp .end 
-.invalid_uint_err:
-	clc 
-	mov bx, commands_data.invalid_uint_err_str 
-	call print_err_ln 
 .end:
 	popa 
 	ret
@@ -208,16 +184,16 @@ dump_command:
 	pusha 
 	LS32_GET_COUNT ; cx = args count 
 	cmp cx, 2 
-	jne .invalid_arg_num_err
+	jne commands_err.invalid_arg_num_err
 	add si, 6 
 	mov word cx, [si]
 	add si, 2 
 	mov word bx, [si]
 	mov si, bx
 	call strn_to_uint ; dx -> nth variable
-	jc .invalid_uint_err
+	jc commands_err.invalid_uint_err
 	cmp dx, VARIABLE_COUNT
-	jae .invalid_variable_err
+	jae commands_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
 	mul dl
 	mov si, commands_data.variables 
@@ -227,19 +203,6 @@ dump_command:
 	add bx, 2
 	call print_n_str
 	PRINT_NL
-	jmp .end
-.invalid_variable_err:
-	mov bx, commands_data.invalid_variable_err_str
-	call print_err_ln 
-	jmp .end
-.invalid_uint_err:
-	clc
-	mov bx, commands_data.invalid_uint_err_str
-	call print_err_ln 
-	jmp .end
-.invalid_arg_num_err:
-	mov bx, commands_data.invalid_arg_num_err_str
-	call print_err_ln
 .end:
 	popa 
 	ret
@@ -253,7 +216,7 @@ set_command:
 	pusha 
 	LS32_GET_COUNT ; cx = args count 
 	cmp  cx, 3
-	jne .invalid_arg_num_err
+	jne commands_err.invalid_arg_num_err
 
 	add si, 6 
 	mov word cx, [si]
@@ -261,10 +224,10 @@ set_command:
 	mov word bx, [si]
 	xchg bx, si 
 	call strn_to_uint ; dx -> nth variable
-	jc .invalid_uint_err
+	jc commands_err.invalid_uint_err
 	xchg bx, si 
 	cmp dx, VARIABLE_COUNT
-	jae .invalid_variable_err
+	jae commands_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
 	mul dl
 	mov di, commands_data.variables 
@@ -276,30 +239,10 @@ set_command:
 	mov word bx, [si]
 	mov si, bx 
 	cmp ch, 0
-	jne .value_too_long_err
+	jne commands_err.value_too_long_err
 	xchg si, di
 	call ls8_set 
-	jc .value_too_long_err
-
-	jmp .end
-.value_too_long_err:
-	clc
-	mov bx, commands_data.value_too_long_err_str
-	call print_err_ln 
-	jmp .end
-.invalid_variable_err:
-	mov bx, commands_data.invalid_variable_err_str
-	call print_err_ln 
-	jmp .end
-.invalid_uint_err:
-	clc
-	mov bx, commands_data.invalid_uint_err_str
-	call print_err_ln 
-	jmp .end
-.invalid_arg_num_err:
-	mov bx, commands_data.invalid_arg_num_err_str
-	call print_err_ln
-.end:
+	jc commands_err.value_too_long_err
 	popa
 	ret
 
@@ -349,6 +292,33 @@ say_command:
 	PRINT_NL
 	popa
 	ret
+
+; --- subroutine --- 
+; There is so many repeating lines of code for handling err so I just put it all in one place.
+commands_err:
+.value_too_long_err:
+	mov bx, commands_data.value_too_long_err_str
+	jmp .end
+.invalid_arg_num_err:
+	mov bx, commands_data.invalid_arg_num_err_str
+	jmp .end
+.stack_full_err:
+	mov bx, commands_data.stack_full_err_str
+	jmp .end
+.stack_empty_err:
+	mov bx, commands_data.stack_empty_err_str 
+	jmp .end
+.invalid_variable_err: 
+	mov bx, commands_data.invalid_variable_err_str
+	jmp .end
+.invalid_uint_err:
+	mov bx, commands_data.invalid_uint_err_str
+.end: 
+	clc
+	call print_err_ln 
+	popa 
+	ret
+
 
 ; --- checks ---
 %if (VARIABLE_SIZE > 0xff) || (VARIABLE_COUNT > 0xff)
