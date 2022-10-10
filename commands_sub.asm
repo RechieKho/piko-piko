@@ -15,7 +15,7 @@
 ; --- macros ---
 %define VARIABLE_SIZE 0x40 ; MUST within a byte
 %define VARIABLE_COUNT 0x1a ; MUST within a byte
-
+%define STACK_MAX_VAR (VARIABLE_COUNT * 5) ; number of variable able to store on stack
 
 %macro COMMANDS_INIT 0 
 	VAR_INIT
@@ -36,6 +36,10 @@
 
 ; --- data ---
 commands_data:
+.stack_empty_err_str:
+	db "Stack is empty.", 0
+.stack_full_err_str:
+	db "Stack is full.", 0
 .value_too_long_err_str:
 	db "Value too long.", 0
 .invalid_variable_err_str:
@@ -48,8 +52,153 @@ commands_data:
 	db "Shutting down...", 0
 .variables:
 	resb (VARIABLE_SIZE * VARIABLE_COUNT)
+.stack:
+	resb (STACK_MAX_VAR * VARIABLE_SIZE)
+.stack_pointer:
+	dw .stack
 
 	; --- commands ---
+
+reset_stack_command_name:
+	db "reset_stack", 0
+
+; n <- ignored
+reset_stack_command:
+	mov word [commands_data.stack_pointer], commands_data.stack
+	ret
+
+pop_stack_command_name:
+	db "pop", 0 
+
+; n <- variables to be popped
+pop_stack_command:
+	pusha 
+	LS32_GET_COUNT ; cx = args count 
+	cmp cx, 1 
+	jbe .end 
+	dec cx ; cx = args count exluding the command 
+	add si, 6 ; si i= 1st arg 
+
+.pop_loop:
+	cmp cx, 0 
+	je .end
+
+	mov word di, [commands_data.stack_pointer]
+	cmp di, commands_data.stack 
+	jbe .stack_empty_err
+
+	push cx 
+	mov word cx, [si]
+	add si, 2 
+	mov word bx, [si]
+	add si, 2
+	xchg bx, si
+	call strn_to_uint
+	pop cx
+	jc .invalid_uint_err
+	xchg bx, si
+	cmp dx, VARIABLE_COUNT
+	jae .invalid_variable_err 
+	mov al, VARIABLE_SIZE 
+	mul dl 
+
+	push si 
+	push cx
+	mov si, di 
+	sub si, VARIABLE_SIZE ; si = stack pointer
+	mov word [commands_data.stack_pointer], si
+	mov di, commands_data.variables
+	add di, ax ; di = variable address 
+	mov cx, VARIABLE_SIZE
+	cld 
+	rep movsb
+	pop cx
+	pop si
+
+	dec cx 
+	jmp .pop_loop 
+
+.stack_empty_err:
+	mov bx, commands_data.stack_empty_err_str 
+	call print_err_ln 
+	jmp .end
+.invalid_variable_err: 
+	mov bx, commands_data.invalid_variable_err_str
+	call print_err_ln
+	jmp .end
+.invalid_uint_err:
+	clc
+	mov bx, commands_data.invalid_uint_err_str
+	call print_err_ln 
+.end:
+	popa 
+	ret
+
+push_stack_command_name:
+	db "push", 0 
+
+; n <- variables to be pushed
+push_stack_command:
+	pusha 
+	LS32_GET_COUNT ; cx = args count 
+	cmp cx, 1
+	jbe .end
+	dec cx ; cx = args count excluding the command
+	add si, 6 ; si = 1st arg
+
+.push_loop:
+	cmp cx, 0 
+	je .end
+
+	mov word di, [commands_data.stack_pointer] ; di = pointer to top of the stack
+	cmp di, commands_data.stack_pointer
+	jae .stack_full_err
+
+	push cx
+	mov word cx, [si]
+	add si, 2 
+	mov word bx, [si]
+	add si, 2
+	xchg bx, si
+	call strn_to_uint
+	pop cx
+	jc .invalid_uint_err
+	xchg bx, si
+	cmp dx, VARIABLE_COUNT
+	jae .invalid_variable_err
+	mov al, VARIABLE_SIZE
+	mul dl
+
+
+	push si
+	push cx
+	mov si, commands_data.variables 
+	add si, ax ; si = variable address 
+	mov cx, VARIABLE_SIZE
+	cld 
+	rep movsb 
+	mov word [commands_data.stack_pointer], di 
+	pop cx 
+	pop si
+
+	dec cx 
+	jmp .push_loop
+
+.stack_full_err:
+	mov bx, commands_data.stack_full_err_str
+	call print_err_ln
+	jmp .end
+.invalid_variable_err:
+	mov bx, commands_data.invalid_variable_err_str
+	call print_err_ln 
+	jmp .end 
+.invalid_uint_err:
+	clc 
+	mov bx, commands_data.invalid_uint_err_str 
+	call print_err_ln 
+.end:
+	popa 
+	ret
 
 dump_command_name:
 	db "dump", 0 
