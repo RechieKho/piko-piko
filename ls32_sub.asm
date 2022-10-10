@@ -164,6 +164,7 @@ ls32_erase:
 	mov ax, ds
 	mov es, ax
 
+	cld
 	rep  movsd
 	popa ; > STOP DISPLACE <
 

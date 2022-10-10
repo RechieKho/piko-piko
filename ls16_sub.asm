@@ -163,6 +163,7 @@ ls16_erase:
 	mov ax, ds
 	mov es, ax
 
+	cld
 	rep  movsw
 	popa ; > STOP DISPLACE <
 

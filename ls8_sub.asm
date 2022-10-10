@@ -181,6 +181,7 @@ ls8_erase:
 	mov ax, ds
 	mov es, ax
 
+	cld
 	rep  movsb
 	popa ; > STOP DISPLACE <
 
