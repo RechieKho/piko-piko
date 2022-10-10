@@ -11,7 +11,7 @@
 	%include "console_sub.asm"
 
 	; --- macros ---
-	%define KEYWORD_COLOR (BRIGHT + RED)
+	%define NORMAL_COLOR (YELLOW)
 	%define STRING_COLOR (GREEN)
 	%define SYMBOL_COLOR (WHITE)
 
@@ -321,7 +321,7 @@ interpreter_paint:
 	mov si, interpreter_data.str_chars 
 	call str_has_char 
 	jc .is_str_char
-	jmp .switch_end
+	jmp .is_normal_char
 
 .is_standalone_char:
 	inc di ; move to attribute
@@ -333,6 +333,10 @@ interpreter_paint:
 	inc di ; move to attribute 
 	mov byte [di], STRING_COLOR
 	jmp .switch_end
+
+.is_normal_char:
+	inc di 
+	mov byte [di], NORMAL_COLOR
 
 .switch_end:
 	clc
