@@ -502,6 +502,7 @@ console_read_line:
 	mov dh, cl 
 	call ls16_erase 
 	popa 
+	jc .reject_handle
 	call bx
 	call _update_input_line
 	jc .reject_handle
@@ -520,6 +521,7 @@ console_read_line:
 	mov ah, CONSOLE_READ_LINE_DEFAULT_COLOR
 	call ls16_insert
 	popa
+	jc .reject_handle
 	call bx
 	call _update_input_line
 	jc .reject_handle
