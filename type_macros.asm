@@ -12,18 +12,20 @@
 	%define KERNEL_CODE_SIZE KERNEL_CODE_SECTOR_COUNT * 512
 	%define KERNEL_STACK_SIZE 0x2000
 
+	%assign KERNEL_FINAL_ADDR ((KERNEL_CODE_BEGIN_SEG << 4) + KERNEL_CODE_SIZE + KERNEL_STACK_SIZE)
+
+	%define BUFFER_BEGIN_ADDR (KERNEL_FINAL_ADDR + 1000)
+	%define BUFFER_BEGIN_SEG (BUFFER_BEGIN_ADDR >> 4)
+
 	; Memory mapping: 
 	; high 
-	; ... 
-	; storage 
-	; ... 
+	; ...
 	; video dump 
 	; ... 
+	; buffer
 	; stack 
 	; code
 	; ...
 	; low
-
-	%define STORAGE_BEGIN_SEG 0xdead
 
 	%endif ; _TYPEDEF_MACROS_ASM_

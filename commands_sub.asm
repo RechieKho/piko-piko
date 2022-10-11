@@ -11,14 +11,20 @@
 	%include "ls32_sub.asm"
 	%include "ls8_sub.asm"
 	%include "str_sub.asm"
+	%include "type_macros.asm"
 
 ; --- macros ---
+%define BUFFER_WIDTH 0x2f ; MUST within a byte
+%define BUFFER_HEIGHT 0x400 
+%define BUFFER_SIZE (BUFFER_WIDTH * BUFFER_HEIGHT) 
+
 %define VARIABLE_SIZE 0x40 ; MUST within a byte
 %define VARIABLE_COUNT 0x1a ; MUST within a byte
 %define STACK_MAX_VAR (VARIABLE_COUNT * 5) ; number of variable able to store on stack
 
 %macro COMMANDS_INIT 0 
 	VAR_INIT
+	BUFFER_INIT
 %endmacro
 
 ; initiate variables 
@@ -31,6 +37,20 @@
 	add di, VARIABLE_SIZE
 	dec cx
 	jnz %%loop
+	popa
+%endmacro 
+
+; initiate buffer 
+%macro BUFFER_INIT 0 
+	pusha 
+	push es
+	xor al, al 
+	mov bx, BUFFER_BEGIN_SEG 
+	mov es, bx 
+	xor bx, bx 
+	mov cx, BUFFER_SIZE
+	call byteset
+	pop es
 	popa
 %endmacro 
 
@@ -323,6 +343,12 @@ commands_err:
 ; --- checks ---
 %if (VARIABLE_SIZE > 0xff) || (VARIABLE_COUNT > 0xff)
 	%error "Variable size and count must be a byte."
+%endif
+%if (BUFFER_WIDTH > 0xff) 
+	%error "Buffer width must be a byte."
+%endif
+%if (BUFFER_BEGIN_ADDR + BUFFER_SIZE) >= FREE_END
+	%error "Buffer exceed the end of free memory."
 %endif
 
 %endif ; _COMMANDS_SUB_ASM_

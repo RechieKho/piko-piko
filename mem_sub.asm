@@ -20,4 +20,22 @@ wordset:
 	popa 
 	ret
 
+; set the byte(s) with value 
+; al <- value 
+; es:bx <- start address 
+; cx <- count 
+byteset:
+	pusha 
+.loop:
+	cmp cx, 0 
+	je .loop_end 
+	mov byte [es:bx], al
+	inc bx
+	dec cx 
+	jmp .loop
+.loop_end:
+	popa 
+	ret
+
+
 %endif ;MEM_SUB_ASM

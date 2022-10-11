@@ -46,11 +46,11 @@ kernel_data:
 
 .input_buffer:
 	resw 1; ls16 header (max and length)
-	resw LS16_MAX; ls16 content
+	resw BUFFER_WIDTH; ls16 content
 
 .raw_buffer:
 	resw 1; ls8 header (max and length)
-	resb LS8_MAX; ls16 content
+	resb BUFFER_WIDTH; ls16 content
 
 	; --- subroutines ---
 ; a function that do nothing
@@ -63,9 +63,9 @@ main:
 	COMMANDS_INIT
 
 	mov di, kernel_data.input_buffer
-	LS16_INIT
+	LS16_INIT BUFFER_WIDTH
 	mov di, kernel_data.raw_buffer
-	LS8_INIT
+	LS8_INIT BUFFER_WIDTH
 
 	;    print greeting
 	mov  si, kernel_data.greeting
@@ -92,10 +92,6 @@ main:
 	%error "Kernel is bigger than expected."
 	%endif
 
-	%assign KERNEL_FINAL_ADDR ((KERNEL_CODE_BEGIN_SEG << 4) + KERNEL_CODE_SIZE + KERNEL_STACK_SIZE)
-	%if    KERNEL_FINAL_ADDR > (STORAGE_BEGIN_SEG << 4)
-	%error "Kernel is overlapping the storage memory."
-	%endif
 	%if KERNEL_FINAL_ADDR > (CONSOLE_DUMP_SEG << 4)
 	%error "Kernel is overlapping video dump."
 	%endif
