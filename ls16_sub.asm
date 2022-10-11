@@ -123,10 +123,14 @@ ls16_equal:
 	dec cx
 	jmp .loop
 
+.equal:
+	clc 
+	jmp .end
+
 .not_equal:
 	stc
 
-.equal:
+.end:
 	popa
 	ret
 
@@ -172,6 +176,7 @@ ls16_erase:
 	inc si
 	mov byte [si], ch
 
+	clc
 	jmp .success
 
 .empty_err:
@@ -233,6 +238,7 @@ ls16_insert:
 	inc si; set to address of count
 	mov byte [si], ch; update count
 
+	clc
 	jmp .success
 
 .max_err:

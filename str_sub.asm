@@ -23,10 +23,14 @@ str_has_char:
 	mov cl, [si]
 	jmp .loop
 
+.no_char:
+	clc 
+	jmp .end
+
 .has_char:
 	stc
 
-.no_char:
+.end:
 	popa
 	ret
 
@@ -46,6 +50,7 @@ strn_is_uint:
 	ja .not_uint
 	dec cx 
 	jnz .loop
+	clc
 	jmp .is_uint
 .not_uint:
 	stc
@@ -65,9 +70,7 @@ strn_to_uint:
 	push si 
 	push di
 	call strn_is_uint
-	jnc .invalid_uint
-	cmp cx, 5 
-	ja .invalid_uint
+	jc .invalid_uint
 	xor bx, bx 
 	xor di, di
 	add si, cx
@@ -97,6 +100,7 @@ strn_to_uint:
 	dec si
 	dec cx 
 	jnz .char_loop
+	clc
 	jmp .success
 .invalid_uint:
 	stc
