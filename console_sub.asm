@@ -163,6 +163,25 @@
 	pop    ax
 	%endmacro
 
+	; convert index for video dump to row and column
+	; %1 <- index {1B, !cx}
+	; dh -> row 
+	; dl -> column
+	%macro CONSOLE_IDX2RC 1
+	push cx
+	xor dx, dx
+	mov cl, %1
+%%counter_loop:
+	cmp cl, CONSOLE_WIDTH
+	jb %%end_counter_loop
+	sub cl, CONSOLE_WIDTH
+	inc dh
+	jmp %%counter_loop
+%%end_counter_loop:
+	mov dl, cl
+	pop cx
+	%endmacro
+
 	; --- subroutine ---
 	; scroll console upward
 	; bl <- displacelment
@@ -383,11 +402,11 @@ console_write_ls16_sub:
 	popa
 	ret
 
-	; write colored string to location using index
+	; write attributed string to location using index
 	; bx <- index
-	; si <- colored string
+	; si <- attributed string
 
-console_write_colored_str_idx:
+console_write_astr_idx:
 	pusha
 	push es
 	mov ax, CONSOLE_DUMP_SEG
@@ -408,16 +427,84 @@ console_write_colored_str_idx:
 	popa
 	ret
 
-	; write colored string to location
+	; write attributed string to location
 	; cl <- row
 	; ch <- column
-	; si <- colored string
+	; si <- attributed string
 
-console_write_colored_str:
+console_write_astr:
 	pusha
 	CONSOLE_RC2IDX cl, ch
-	call console_write_colored_str_idx
+	call console_write_astr_idx
 	popa
+	ret
+
+; write string with n length
+; ah <- attribute 
+; bx <- index
+; cx <- length 
+; si <- string
+console_write_strn_idx:
+	pusha 
+	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
+	ja .end ; exceed video dump 
+	push es 
+	mov dx, CONSOLE_DUMP_SEG
+	mov es, dx 
+	shl bx, 1
+.write_loop:
+	cmp cx, 0 
+	je .write_loop_end
+	mov byte al, [si]
+	mov word [es:bx], ax
+	add bx, 2
+	inc si
+	dec cx 
+	jmp .write_loop
+.write_loop_end:
+	pop es
+.end:
+	popa 
+	ret
+
+; print string with n length 
+; ah <- attribute
+; cx <- length 
+; si <- string 
+console_print_strn:
+	pusha 
+	push cx
+	GET_CURSOR 
+	CONSOLE_RC2IDX dh, dl 
+	pop cx
+	mov dx, bx
+	call console_make_space ; dx = new starting index
+	mov bx, dx
+	call console_write_strn_idx
+	CONSOLE_IDX2RC bl
+	SET_CURSOR
+	popa
+	ret
+
+; give some space for printing text by scolling
+; cx <- length of text will be printed, it will calculate rows to be scrolled for the text
+; dx <- starting index of screen for text to be printed
+; dx -> new starting index after scroll
+console_make_space:
+	push cx 
+	push bx
+	add cx, dx
+	xor bl, bl ; bl = lines to be scrolled
+.count_loop: 
+	cmp cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
+	jb .count_loop_end
+	inc bl 
+	sub dx, CONSOLE_WIDTH
+	sub cx, CONSOLE_WIDTH
+.count_loop_end:
+	call console_scroll_up
+	pop bx 
+	pop cx
 	ret
 
 	; read line from console
@@ -545,16 +632,7 @@ _update_input_line:
 	push cx
 	push bx 
 	LS16_GET_COUNT ; cx = count
-	add cx, dx 
-	mov bl, 0 ; bl = lines to be scrolled 
-.count_loop:
-	cmp cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
-	jb .count_loop_end
-	inc bl 
-	sub dx, CONSOLE_WIDTH
-	sub cx, CONSOLE_WIDTH
-.count_loop_end:
-	call console_scroll_up
+	call console_make_space
 	mov bx, dx 
 	call console_write_ls16_idx
 	pop bx 

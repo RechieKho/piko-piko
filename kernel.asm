@@ -70,7 +70,7 @@ main:
 	;    print greeting
 	mov  si, kernel_data.greeting
 	xor  cx, cx
-	call console_write_colored_str
+	call console_write_astr
 	PRINT_NL
 
 .loop:
