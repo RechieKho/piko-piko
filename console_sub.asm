@@ -164,20 +164,20 @@
 	%endmacro
 
 	; convert index for video dump to row and column
-	; %1 <- index {1B, !cx}
+	; %1 <- index {2B, !cx}
 	; dh -> row 
 	; dl -> column
 	%macro CONSOLE_IDX2RC 1
 	push cx
 	xor dx, dx
-	mov cl, %1
+	mov cx, %1
 %%counter_loop:
-	cmp cl, CONSOLE_WIDTH
-	jb %%end_counter_loop
-	sub cl, CONSOLE_WIDTH
+	cmp cx, CONSOLE_WIDTH
+	jb %%counter_loop_end
+	sub cx, CONSOLE_WIDTH
 	inc dh
 	jmp %%counter_loop
-%%end_counter_loop:
+%%counter_loop_end:
 	mov dl, cl
 	pop cx
 	%endmacro
@@ -439,6 +439,63 @@ console_write_astr:
 	popa
 	ret
 
+; write uint (always 5 digits) to location by index
+; ah <- attribute 
+; bx <- index 
+; dx <- number
+console_write_uint_idx:
+	pusha 
+	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
+	ja .end
+	xchg ax, dx ; ax = number ; dh = attribute
+	push es
+	mov cx, CONSOLE_DUMP_SEG
+	mov es, cx
+	add bx, 4 ; displace to index for the last digit
+	shl bx, 1
+	mov cx, 5 
+.loop: 
+	push cx 
+	push dx
+	xor dx, dx
+	mov cx, 10 
+	div cx 
+	mov cx, dx 
+	pop dx
+	mov dl, cl
+	add dl, '0'
+	mov word [es:bx], dx
+	pop cx
+	sub bx, 2
+	dec cx 
+	jnz .loop
+	pop es
+.end:
+	popa 
+	ret
+
+; print uint
+; ah <- attribute 
+; dx <- number 
+console_print_uint:
+	pusha 
+	push dx 
+	GET_CURSOR
+	CONSOLE_RC2IDX dh, dl ; bx = index
+	pop dx 
+	push dx
+	mov dx, bx
+	mov cx, 5
+	call console_make_space
+	mov bx, dx 
+	pop dx
+	call console_write_uint_idx
+	add bx, 5
+	CONSOLE_IDX2RC bx
+	SET_CURSOR
+	popa 
+	ret
+
 ; write string with n length
 ; ah <- attribute 
 ; bx <- index
@@ -481,7 +538,7 @@ console_print_strn:
 	call console_make_space ; dx = new starting index
 	mov bx, dx
 	call console_write_strn_idx
-	CONSOLE_IDX2RC bl
+	CONSOLE_IDX2RC bx
 	SET_CURSOR
 	popa
 	ret
@@ -501,6 +558,7 @@ console_make_space:
 	inc bl 
 	sub dx, CONSOLE_WIDTH
 	sub cx, CONSOLE_WIDTH
+	jmp .count_loop
 .count_loop_end:
 	call console_scroll_up
 	pop bx 
