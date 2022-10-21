@@ -23,9 +23,9 @@ interpreter_data:
 	resw 1
 	resd LS32_MAX
 	.splitting_chars: ; characters that splits string into sub-strings (separator)
-	db   " ", 0
+	db   " ", 0x00, 0
 	.standalone_chars: ; character that is always alone
-	db   "~()", 0
+	db   "=", 0
 	.str_chars: ; character that initiate or terminate strings
 	db   0x22, 0x27, 0x60, 0
 
@@ -37,6 +37,8 @@ interpreter_data:
 	dw push_stack_command_name, push_stack_command
 	dw pop_stack_command_name, pop_stack_command
 	dw reset_stack_command_name, reset_stack_command
+	dw set_row_command_name, set_row_command
+	dw list_buffer_command_name, list_buffer_command
 	dw shutdown_command_name, shutdown_command
 	dw 0
 

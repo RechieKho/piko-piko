@@ -16,16 +16,34 @@
 
 	%define BUFFER_BEGIN_ADDR (KERNEL_FINAL_ADDR + 1000)
 	%define BUFFER_BEGIN_SEG (BUFFER_BEGIN_ADDR >> 4)
+	%define BUFFER_COUNT 3 ; {1B}
+	%define BUFFER_SEG_PER_ROW 2 ; width in segment unit, segment per row
+	%define BUFFER_SECT_PER_COL 5 ; height in (disk) sector unit, sector per column 
+	%define BUFFER_WIDTH (BUFFER_SEG_PER_ROW << 4)
+	%define BUFFER_HEIGHT (BUFFER_SECT_PER_COL * 512)
+	%define BUFFER_SIZE (BUFFER_WIDTH * BUFFER_HEIGHT) 
+	%define BUFFER_SEG_COUNT (BUFFER_SIZE >> 4) 
+	%define BUFFER_SEC_COUNT (BUFFER_SIZE / 512)
 
 	; Memory mapping: 
 	; high 
 	; ...
 	; video dump 
 	; ... 
-	; buffer
+	; buffer(s)
 	; stack 
 	; code
 	; ...
 	; low
+
+; --- checks ---
+%if (BUFFER_WIDTH > 0xff) && (BUFFER_COUNT > 0xff)
+	%error "Buffer width and count must be a byte."
+%elif (BUFFER_SEG_PER_ROW > 0xff) 
+	%error "Buffer's segment per row must be a byte."
+%endif
+%if (BUFFER_BEGIN_ADDR + BUFFER_SIZE * BUFFER_COUNT) >= FREE_END
+	%error "Buffer exceed the end of free memory."
+%endif
 
 	%endif ; _TYPEDEF_MACROS_ASM_

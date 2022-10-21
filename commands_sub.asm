@@ -12,12 +12,9 @@
 	%include "ls8_sub.asm"
 	%include "str_sub.asm"
 	%include "type_macros.asm"
+	%include "console_sub.asm"
 
 ; --- macros ---
-%define BUFFER_WIDTH 0x2f ; MUST within a byte
-%define BUFFER_HEIGHT 0x400 
-%define BUFFER_SIZE (BUFFER_WIDTH * BUFFER_HEIGHT) 
-
 %define VARIABLE_SIZE 0x40 ; MUST within a byte
 %define VARIABLE_COUNT 0x1a ; MUST within a byte
 %define STACK_MAX_VAR (VARIABLE_COUNT * 5) ; number of variable able to store on stack
@@ -44,12 +41,20 @@
 %macro BUFFER_INIT 0 
 	pusha 
 	push es
-	xor al, al 
-	mov bx, BUFFER_BEGIN_SEG 
-	mov es, bx 
-	xor bx, bx 
-	mov cx, BUFFER_SIZE
+	xor al, al
+	xor bx, bx
+	mov dx, (BUFFER_SEC_COUNT * BUFFER_COUNT)
+	mov si, BUFFER_BEGIN_SEG 
+	mov cx, 512
+%%set_loop:
+	cmp dx, 0 
+	je %%set_loop_end
+	mov es, si
 	call byteset
+	add si, (512 >> 4)
+	dec dx 
+	jmp %%set_loop
+%%set_loop_end:
 	pop es
 	popa
 %endmacro 
@@ -64,6 +69,8 @@ commands_data:
 	db "Value too long.", 0
 .invalid_variable_err_str:
 	db "Invalid variable.", 0
+.invalid_buffer_row_err_str:
+	db "Invalid buffer row.", 0
 .invalid_arg_num_err_str:
 	db "Invalid number of arguments.", 0
 .invalid_uint_err_str:
@@ -76,8 +83,182 @@ commands_data:
 	resb (STACK_MAX_VAR * VARIABLE_SIZE)
 .stack_pointer:
 	dw .stack
+.active_buffer:
+	dw BUFFER_BEGIN_SEG
 
 	; --- commands ---
+set_row_command_name:
+	db "=", 0 
+
+; 1 <- row to be set
+; n <- new row
+set_row_command:
+	pusha 
+	LS32_GET_COUNT ; cx = args count 
+	cmp cx, 1 ; no args
+	je commands_err.invalid_arg_num_err
+	
+	mov ax, cx ; ax = args count (temp)
+	add si, 6 
+	mov word cx, [si]
+	add si, 2 
+	mov word bx, [si]
+	xchg bx, si 
+	call strn_to_uint ; dx = nth row 
+	jc commands_err.invalid_uint_err
+	cmp dx, BUFFER_HEIGHT
+	jae commands_err.invalid_buffer_row_err
+	mov cx, ax ; cx = args count
+	xchg bx, si 
+
+	mov ax, dx 
+	mov dl, BUFFER_SEG_PER_ROW
+	mul dl 
+	add ax, [commands_data.active_buffer] ; ax = buffer seg
+	xor di, di
+
+	push es 
+	mov es, ax 
+
+	; clear the row
+	push cx
+	mov cx, BUFFER_WIDTH
+	xor bx, bx
+	mov al, 0 
+	call byteset
+	pop cx
+
+	xor di, di
+	sub cx, 2
+.set_loop:
+	cmp cx, 0
+	je .set_loop_end 
+
+	push cx 
+	add si, 2 
+	mov word cx, [si] 
+	add si, 2 
+	mov word bx, [si]
+
+.write_loop:
+	cmp di, BUFFER_WIDTH
+	jae .write_loop_end ; the row is fully filled
+	cmp cx, 0 
+	je .write_loop_end
+	mov byte al, [bx]
+	mov byte [es:di], al
+	inc bx 
+	inc di 
+	dec cx 
+	jmp .write_loop
+.write_loop_end:
+	pop cx 
+	inc di 
+	dec cx
+	jmp .set_loop
+.set_loop_end:
+
+	pop es
+	popa 
+	ret
+
+
+list_buffer_command_name:
+	db "lsb", 0
+
+; 1? <- starting row
+; 2? <- count
+list_buffer_command:
+	pusha 
+	LS32_GET_COUNT ; cx = args count 
+	xor dx, dx ; default 1st arg
+	mov ax, 5 ; default 2nd arg
+	cmp cx, 1 ; no args 
+	jbe .list
+	cmp cx, 2 ; have starting row 
+	je .list_with_start
+	cmp cx, 3 ; have count
+	je .list_with_count
+	jmp commands_err.invalid_arg_num_err
+
+.list_with_count:
+	push si 
+	add si, 10 ; the third arg
+	mov word cx, [si]
+	add si, 2
+	mov word bx, [si]
+	mov si, bx
+	call strn_to_uint
+	pop si
+	jc commands_err.invalid_uint_err
+	mov ax, dx ; ax = count
+.list_with_start:
+	add si, 6 ; the second arg 
+	mov word cx, [si]
+	add si, 2 
+	mov word bx, [si]
+	mov si, bx 
+	call strn_to_uint ; dx = starting row
+	jc commands_err.invalid_uint_err
+.list:
+	mov cx, ax ; cx = counter
+	mov bx, dx ; bx = starting row ; dx = current line 
+	mov ah, MAGENTA
+.list_loop:
+	cmp cx, 0 
+	je .list_loop_end 
+	cmp dx, BUFFER_HEIGHT
+	jae .list_loop_end
+
+	call console_print_uint
+	PRINT_CHAR ' '
+	pusha
+	push es
+	push ds
+	; copy from buffer to video dump
+
+	; setup source
+	mov ax, dx 
+	mov cl, BUFFER_SEG_PER_ROW
+	mul cl
+	add ax, [commands_data.active_buffer]
+	mov es, ax
+
+	xor si, si
+
+	; setup destination
+	GET_CURSOR
+	CONSOLE_RC2IDX dh, dl ; bx = index 
+	shl bx, 1
+	mov di, bx
+
+	mov cx, CONSOLE_DUMP_SEG
+	mov ds, cx
+
+	mov cx, BUFFER_WIDTH
+
+	xor ax, ax 
+	mov ah, BRIGHT
+.mov_loop:
+	mov byte al, [es:si]
+	mov word [ds:di], ax
+	inc si 
+	add di, 2
+	dec cx 
+	jnz .mov_loop
+	
+	pop ds
+	pop es
+	popa
+	PRINT_NL
+
+	inc dx
+	dec cx 
+	jmp .list_loop
+.list_loop_end:
+.end:
+	popa 
+	ret
 
 reset_stack_command_name:
 	db "rst", 0
@@ -331,6 +512,9 @@ commands_err:
 .invalid_variable_err: 
 	mov bx, commands_data.invalid_variable_err_str
 	jmp .end
+.invalid_buffer_row_err:
+	mov bx, commands_data.invalid_buffer_row_err_str
+	jmp .end
 .invalid_uint_err:
 	mov bx, commands_data.invalid_uint_err_str
 .end: 
@@ -343,12 +527,6 @@ commands_err:
 ; --- checks ---
 %if (VARIABLE_SIZE > 0xff) || (VARIABLE_COUNT > 0xff)
 	%error "Variable size and count must be a byte."
-%endif
-%if (BUFFER_WIDTH > 0xff) 
-	%error "Buffer width must be a byte."
-%endif
-%if (BUFFER_BEGIN_ADDR + BUFFER_SIZE) >= FREE_END
-	%error "Buffer exceed the end of free memory."
 %endif
 
 %endif ; _COMMANDS_SUB_ASM_
