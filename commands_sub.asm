@@ -69,6 +69,8 @@ commands_data:
 	db "Value too long.", 0
 .invalid_variable_err_str:
 	db "Invalid variable.", 0
+.invalid_buffer_err_str:
+	db "Invalid buffer.", 0
 .invalid_buffer_row_err_str:
 	db "Invalid buffer row.", 0
 .invalid_arg_num_err_str:
@@ -87,6 +89,27 @@ commands_data:
 	dw BUFFER_BEGIN_SEG
 
 	; --- commands ---
+set_active_buffer_command_name:
+	db "stb", 0 
+
+; 1 <- buffer to be set 
+set_active_buffer_command:
+	pusha 
+	LS32_GET_COUNT ; cx = args count 
+	cmp cx, 2 
+	jne commands_err.invalid_arg_num_err
+	add si, 6 
+	call commands_consume_mark_as_uint ; dx = buffer index 
+	jc commands_err.invalid_uint_err
+	cmp dx, BUFFER_COUNT
+	jae commands_err.invalid_buffer_err
+	mov ax, BUFFER_SEG_COUNT
+	mul dx
+	add ax, BUFFER_BEGIN_SEG
+	mov word [commands_data.active_buffer], ax
+	popa 
+	ret 
+
 set_row_command_name:
 	db "=", 0 
 
@@ -493,6 +516,9 @@ commands_err:
 	jmp .end
 .invalid_variable_err: 
 	mov bx, commands_data.invalid_variable_err_str
+	jmp .end
+.invalid_buffer_err:
+	mov bx, commands_data.invalid_buffer_err_str
 	jmp .end
 .invalid_buffer_row_err:
 	mov bx, commands_data.invalid_buffer_row_err_str

@@ -42,6 +42,9 @@
 %elif (BUFFER_SEG_PER_ROW > 0xff) 
 	%error "Buffer's segment per row must be a byte."
 %endif
+%if ((BUFFER_SEG_COUNT * (BUFFER_COUNT - 1)) > 0xffff)
+	%error "There are buffer in which its begin segment is greater than a word, causing invalid segment."
+%endif
 %if (BUFFER_BEGIN_ADDR + BUFFER_SIZE * BUFFER_COUNT) >= FREE_END
 	%error "Buffer exceed the end of free memory."
 %endif
