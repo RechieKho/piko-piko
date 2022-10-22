@@ -131,8 +131,8 @@ set_row_command:
 	mov cx, ax ; cx = args count
 
 	mov ax, dx 
-	mov dl, BUFFER_SEG_PER_ROW
-	mul dl 
+	mov dx, BUFFER_SEG_PER_ROW
+	mul dx 
 	add ax, [commands_data.active_buffer] ; ax = buffer seg
 	xor di, di
 
@@ -225,8 +225,8 @@ list_buffer_command:
 
 	; setup source
 	mov ax, dx 
-	mov cl, BUFFER_SEG_PER_ROW
-	mul cl
+	mov dx, BUFFER_SEG_PER_ROW
+	mul dx
 	add ax, [commands_data.active_buffer]
 	mov es, ax
 
