@@ -37,9 +37,10 @@ interpreter_data:
 	dw push_stack_command_name, push_stack_command
 	dw pop_stack_command_name, pop_stack_command
 	dw reset_stack_command_name, reset_stack_command
-	dw set_active_buffer_command_name, set_active_buffer_command
-	dw set_row_command_name, set_row_command
 	dw list_buffer_command_name, list_buffer_command
+	dw set_row_command_name, set_row_command
+	dw clear_buffer_command_name, clear_buffer_command
+	dw set_active_buffer_command_name, set_active_buffer_command
 	dw shutdown_command_name, shutdown_command
 	dw 0
 

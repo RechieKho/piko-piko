@@ -89,6 +89,30 @@ commands_data:
 	dw BUFFER_BEGIN_SEG
 
 	; --- commands ---
+clear_buffer_command_name:
+	db "clb", 0 
+
+clear_buffer_command:
+	pusha 
+	push es 
+	xor al, al 
+	xor bx, bx 
+	mov dx, BUFFER_SEC_COUNT
+	mov si, [commands_data.active_buffer]
+	mov cx, 512 
+.clear_loop:
+	cmp dx, 0 
+	je .clear_loop_end 
+	mov es, si 
+	call byteset 
+	add si, (512 >> 4)
+	dec dx 
+	jmp .clear_loop
+.clear_loop_end:
+	pop es
+	popa 
+	ret
+
 set_active_buffer_command_name:
 	db "stb", 0 
 
