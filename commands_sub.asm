@@ -60,7 +60,7 @@ commands_data:
 	; --- commands ---
 
 reset_stack_command_name:
-	db "reset_stack", 0
+	db "rst", 0
 
 ; n <- ignored
 reset_stack_command:
@@ -248,7 +248,7 @@ set_command:
 
 
 shutdown_command_name:
-  db "shutdown", 0 
+  db "bye", 0 
 
 shutdown_command:
   mov bx, commands_data.shutdown_str 
