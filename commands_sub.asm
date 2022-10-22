@@ -100,16 +100,12 @@ set_row_command:
 	
 	mov ax, cx ; ax = args count (temp)
 	add si, 6 
-	mov word cx, [si]
-	add si, 2 
-	mov word bx, [si]
-	xchg bx, si 
-	call strn_to_uint ; dx = nth row 
+
+	call commands_consume_mark_as_uint ; dx = uint
 	jc commands_err.invalid_uint_err
 	cmp dx, BUFFER_HEIGHT
 	jae commands_err.invalid_buffer_row_err
 	mov cx, ax ; cx = args count
-	xchg bx, si 
 
 	mov ax, dx 
 	mov dl, BUFFER_SEG_PER_ROW
@@ -135,11 +131,7 @@ set_row_command:
 	je .set_loop_end 
 
 	push cx 
-	add si, 2 
-	mov word cx, [si] 
-	add si, 2 
-	mov word bx, [si]
-
+	call commands_consume_mark
 .write_loop:
 	cmp di, BUFFER_WIDTH
 	jae .write_loop_end ; the row is fully filled
@@ -157,7 +149,6 @@ set_row_command:
 	dec cx
 	jmp .set_loop
 .set_loop_end:
-
 	pop es
 	popa 
 	ret
@@ -184,21 +175,13 @@ list_buffer_command:
 .list_with_count:
 	push si 
 	add si, 10 ; the third arg
-	mov word cx, [si]
-	add si, 2
-	mov word bx, [si]
-	mov si, bx
-	call strn_to_uint
+	call commands_consume_mark_as_uint
 	pop si
 	jc commands_err.invalid_uint_err
 	mov ax, dx ; ax = count
 .list_with_start:
 	add si, 6 ; the second arg 
-	mov word cx, [si]
-	add si, 2 
-	mov word bx, [si]
-	mov si, bx 
-	call strn_to_uint ; dx = starting row
+	call commands_consume_mark_as_uint ; dx = starting row
 	jc commands_err.invalid_uint_err
 .list:
 	mov cx, ax ; cx = counter
@@ -288,16 +271,8 @@ pop_stack_command:
 	cmp di, commands_data.stack 
 	jbe commands_err.stack_empty_err
 
-	push cx 
-	mov word cx, [si]
-	add si, 2 
-	mov word bx, [si]
-	add si, 2
-	xchg bx, si
-	call strn_to_uint
-	pop cx
+	call commands_consume_mark_as_uint ; dx = variable
 	jc commands_err.invalid_uint_err
-	xchg bx, si
 	cmp dx, VARIABLE_COUNT
 	jae commands_err.invalid_variable_err 
 	mov al, VARIABLE_SIZE 
@@ -343,16 +318,8 @@ push_stack_command:
 	cmp di, commands_data.stack_pointer
 	jae commands_err.stack_full_err
 
-	push cx
-	mov word cx, [si]
-	add si, 2 
-	mov word bx, [si]
-	add si, 2
-	xchg bx, si
-	call strn_to_uint
-	pop cx
+	call commands_consume_mark_as_uint ; dx = variable
 	jc commands_err.invalid_uint_err
-	xchg bx, si
 	cmp dx, VARIABLE_COUNT
 	jae commands_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
@@ -387,11 +354,7 @@ dump_command:
 	cmp cx, 2 
 	jne commands_err.invalid_arg_num_err
 	add si, 6 
-	mov word cx, [si]
-	add si, 2 
-	mov word bx, [si]
-	mov si, bx
-	call strn_to_uint ; dx -> nth variable
+	call commands_consume_mark_as_uint ; dx = variable
 	jc commands_err.invalid_uint_err
 	cmp dx, VARIABLE_COUNT
 	jae commands_err.invalid_variable_err
@@ -420,13 +383,8 @@ set_command:
 	jne commands_err.invalid_arg_num_err
 
 	add si, 6 
-	mov word cx, [si]
-	add si, 2 
-	mov word bx, [si]
-	xchg bx, si 
-	call strn_to_uint ; dx -> nth variable
+	call commands_consume_mark_as_uint ; dx = variable
 	jc commands_err.invalid_uint_err
-	xchg bx, si 
 	cmp dx, VARIABLE_COUNT
 	jae commands_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
@@ -434,10 +392,7 @@ set_command:
 	mov di, commands_data.variables 
 	add di, ax ; di = variable address 
 
-	add si, 2
-	mov word cx, [si]
-	add si, 2
-	mov word bx, [si]
+	call commands_consume_mark
 	mov si, bx 
 	cmp ch, 0
 	jne commands_err.value_too_long_err
@@ -478,10 +433,7 @@ say_command:
 	je  .end
 
 	push cx
-	mov  word cx, [si]; cx = length of first argument
-	add  si, 2
-	mov  word bx, [si]; bx = argument
-	add  si, 2
+	call commands_consume_mark
 	call print_n_str
 	pop  cx
 	PRINT_CHAR ' '
@@ -495,6 +447,36 @@ say_command:
 	ret
 
 ; --- subroutine --- 
+; si <- current mark
+; bx -> address of argument 
+; cx -> length of argument
+; si -> next mark
+commands_consume_mark:
+	mov word cx, [si]
+	add si, 2 
+	mov word bx, [si]
+	add si, 2 
+	ret
+
+; si <- current mark 
+; dx -> uint 
+; si -> next mark
+; cf -> set if fail to convert to uint
+commands_consume_mark_as_uint:
+	push cx
+	push bx
+	mov word cx, [si]
+	add si, 2 
+	mov word bx, [si]
+	add si, 2 
+	xchg bx, si 
+	call strn_to_uint
+	xchg bx, si
+	pop bx
+	pop cx 
+	ret
+	
+
 ; There is so many repeating lines of code for handling err so I just put it all in one place.
 commands_err:
 .value_too_long_err:
