@@ -88,9 +88,9 @@ commands_data:
 	dw .stack
 .active_buffer:
 	dw BUFFER_BEGIN_SEG
-.running_buffer:
+.is_running_buffer:
 	db 0 ; 0 = false ; else = true
-.running_buffer_line:
+.buffer_row:
 	times BUFFER_WIDTH db 0
 
 	; --- commands ---
@@ -104,20 +104,21 @@ run_buffer_command:
 	mov es, ax
 	mov ax, BUFFER_BEGIN_SEG ; running first buffer 
 	mov dx, BUFFER_HEIGHT
+	mov byte [commands_data.is_running_buffer], 1
 .loop: 
 	cmp dx, 0 
 	je .loop_end 
-	; copy line from buffer to commands_data.running_buffer_line
+	; copy line from buffer to commands_data.buffer_row
 	push ds
 	xor si, si
-	mov di, commands_data.running_buffer_line
+	mov di, commands_data.buffer_row
 	mov cx, BUFFER_WIDTH
 	mov ds, ax
 	cld
 	rep movsb
 	pop ds
 	; execute it
-	mov si, commands_data.running_buffer_line
+	mov si, commands_data.buffer_row
 	mov cx, BUFFER_WIDTH
 	clc
 	call interpreter_execute_strn
@@ -126,6 +127,7 @@ run_buffer_command:
 	dec dx 
 	jmp .loop
 .loop_end:
+	mov byte [commands_data.is_running_buffer], 0
 	pop es
 	popa
 	ret
