@@ -23,7 +23,7 @@ interpreter_data:
 	resw 1
 	resd LS32_MAX
 	.splitting_chars: ; characters that splits string into sub-strings (separator)
-	db   " ", 0x00, 0
+	db   " ", 0
 	.standalone_chars: ; character that is always alone
 	db   "=", 0
 	.str_chars: ; character that initiate or terminate strings
@@ -41,6 +41,7 @@ interpreter_data:
 	dw set_row_command_name, set_row_command
 	dw clear_buffer_command_name, clear_buffer_command
 	dw set_active_buffer_command_name, set_active_buffer_command
+	dw run_buffer_command_name, run_buffer_command
 	dw shutdown_command_name, shutdown_command
 	dw 0
 
@@ -78,12 +79,25 @@ interpreter_print_marks:
 	popa
 	ret
 
+
 	; execute command string
 	; si <- address of string (ls8)
-
 interpreter_execute:
-	pusha
 	call interpreter_mark
+	call interpreter_execute_mark
+	ret
+
+; execute command strn 
+; si <- address of string
+; cx <- length of string
+interpreter_execute_strn:
+	call interpreter_mark_strn 
+	call interpreter_execute_mark
+	ret
+
+; execute command from interpreter_data.marks
+interpreter_execute_mark:
+	pusha
 	mov  si, interpreter_data.marks
 	LS32_GET_COUNT
 	cmp  cx, 0
@@ -156,15 +170,13 @@ interpreter_execute:
 	popa
 	ret
 
-	; mark the sub-strings in the string (ls8) given, output into interpreter_data.marks
-	; si <- address of string (ls8)
-
-interpreter_mark:
+; mark the subs-strings in the strn given, output into interpreter_data.marks 
+; si <- address of string 
+; cx <- length of string 
+interpreter_mark_strn:
 	pusha
 	mov di, interpreter_data.marks
 	LS32_INIT
-	LS8_GET_COUNT ; cx = count of chars
-	add si, 2; si = begining of string
 	mov bx, si; bx = address of begining of sub-string
 	xor dx, dx; dx = length of sub-string
 	xor ah, ah; ah = current str char
@@ -289,6 +301,17 @@ interpreter_mark:
 	LS32_APPEND dx, bx
 
 .cleaned_buffer:
+	popa
+	ret
+
+	; mark the sub-strings in the string (ls8) given, output into interpreter_data.marks
+	; si <- address of string (ls8)
+
+interpreter_mark:
+	pusha
+	LS8_GET_COUNT ; cx = count of chars
+	add si, 2; si = begining of string
+	call interpreter_mark_strn
 	popa
 	ret
 

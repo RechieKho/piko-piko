@@ -84,6 +84,7 @@ main:
 	mov  di, kernel_data.raw_buffer
 	call ls16_take_lower
 	mov  si, kernel_data.raw_buffer
+	clc
 	call interpreter_execute
 	jmp  .loop
 

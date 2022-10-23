@@ -13,6 +13,7 @@
 	%include "str_sub.asm"
 	%include "type_macros.asm"
 	%include "console_sub.asm"
+	%include "interpreter_sub.asm"
 
 ; --- macros ---
 %define VARIABLE_SIZE 0x40 ; MUST within a byte
@@ -41,7 +42,7 @@
 %macro BUFFER_INIT 0 
 	pusha 
 	push es
-	xor al, al
+	mov al, ' '
 	xor bx, bx
 	mov dx, (BUFFER_SEC_COUNT * BUFFER_COUNT)
 	mov si, BUFFER_BEGIN_SEG 
@@ -87,15 +88,55 @@ commands_data:
 	dw .stack
 .active_buffer:
 	dw BUFFER_BEGIN_SEG
+.running_buffer:
+	db 0 ; 0 = false ; else = true
+.running_buffer_line:
+	times BUFFER_WIDTH db 0
 
 	; --- commands ---
+run_buffer_command_name:
+	db "run", 0 
+
+run_buffer_command:
+	pusha 
+	push es
+	mov ax, ds 
+	mov es, ax
+	mov ax, BUFFER_BEGIN_SEG ; running first buffer 
+	mov dx, BUFFER_HEIGHT
+.loop: 
+	cmp dx, 0 
+	je .loop_end 
+	; copy line from buffer to commands_data.running_buffer_line
+	push ds
+	xor si, si
+	mov di, commands_data.running_buffer_line
+	mov cx, BUFFER_WIDTH
+	mov ds, ax
+	cld
+	rep movsb
+	pop ds
+	; execute it
+	mov si, commands_data.running_buffer_line
+	mov cx, BUFFER_WIDTH
+	clc
+	call interpreter_execute_strn
+	jc .loop_end
+	add ax, BUFFER_SEG_PER_ROW
+	dec dx 
+	jmp .loop
+.loop_end:
+	pop es
+	popa
+	ret
+
 clear_buffer_command_name:
 	db "clb", 0 
 
 clear_buffer_command:
 	pusha 
 	push es 
-	xor al, al 
+	mov al, ' '
 	xor bx, bx 
 	mov dx, BUFFER_SEC_COUNT
 	mov si, [commands_data.active_buffer]
@@ -123,6 +164,7 @@ set_active_buffer_command:
 	cmp cx, 2 
 	jne commands_err.invalid_arg_num_err
 	add si, 6 
+	clc
 	call commands_consume_mark_as_uint ; dx = buffer index 
 	jc commands_err.invalid_uint_err
 	cmp dx, BUFFER_COUNT
@@ -148,6 +190,7 @@ set_row_command:
 	mov ax, cx ; ax = args count (temp)
 	add si, 6 
 
+	clc
 	call commands_consume_mark_as_uint ; dx = uint
 	jc commands_err.invalid_uint_err
 	cmp dx, BUFFER_HEIGHT
@@ -167,7 +210,7 @@ set_row_command:
 	push cx
 	mov cx, BUFFER_WIDTH
 	xor bx, bx
-	mov al, 0 
+	mov al, ' ' 
 	call byteset
 	pop cx
 
@@ -222,12 +265,14 @@ list_buffer_command:
 .list_with_count:
 	push si 
 	add si, 10 ; the third arg
+	clc
 	call commands_consume_mark_as_uint
 	pop si
 	jc commands_err.invalid_uint_err
 	mov ax, dx ; ax = count
 .list_with_start:
 	add si, 6 ; the second arg 
+	clc
 	call commands_consume_mark_as_uint ; dx = starting row
 	jc commands_err.invalid_uint_err
 .list:
@@ -318,6 +363,7 @@ pop_stack_command:
 	cmp di, commands_data.stack 
 	jbe commands_err.stack_empty_err
 
+	clc
 	call commands_consume_mark_as_uint ; dx = variable
 	jc commands_err.invalid_uint_err
 	cmp dx, VARIABLE_COUNT
@@ -365,6 +411,7 @@ push_stack_command:
 	cmp di, commands_data.stack_pointer
 	jae commands_err.stack_full_err
 
+	clc
 	call commands_consume_mark_as_uint ; dx = variable
 	jc commands_err.invalid_uint_err
 	cmp dx, VARIABLE_COUNT
@@ -401,6 +448,7 @@ dump_command:
 	cmp cx, 2 
 	jne commands_err.invalid_arg_num_err
 	add si, 6 
+	clc
 	call commands_consume_mark_as_uint ; dx = variable
 	jc commands_err.invalid_uint_err
 	cmp dx, VARIABLE_COUNT
@@ -430,6 +478,7 @@ set_command:
 	jne commands_err.invalid_arg_num_err
 
 	add si, 6 
+	clc
 	call commands_consume_mark_as_uint ; dx = variable
 	jc commands_err.invalid_uint_err
 	cmp dx, VARIABLE_COUNT
@@ -444,6 +493,7 @@ set_command:
 	cmp ch, 0
 	jne commands_err.value_too_long_err
 	xchg si, di
+	clc
 	call ls8_set 
 	jc commands_err.value_too_long_err
 	popa
@@ -550,8 +600,8 @@ commands_err:
 .invalid_uint_err:
 	mov bx, commands_data.invalid_uint_err_str
 .end: 
-	clc
 	call print_err_ln 
+	stc
 	popa 
 	ret
 
