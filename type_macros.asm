@@ -17,7 +17,7 @@
 	%define BUFFER_BEGIN_ADDR (KERNEL_FINAL_ADDR + 1000)
 	%define BUFFER_BEGIN_SEG (BUFFER_BEGIN_ADDR >> 4)
 	%define BUFFER_COUNT 3 ; {1B}
-	%define BUFFER_SEG_PER_ROW 2 ; width in segment unit, segment per row
+	%define BUFFER_SEG_PER_ROW 3 ; width in segment unit, segment per row
 	%define BUFFER_SECT_PER_COL 5 ; height in (disk) sector unit, sector per column 
 	%define BUFFER_WIDTH (BUFFER_SEG_PER_ROW << 4)
 	%define BUFFER_HEIGHT (BUFFER_SECT_PER_COL * 512)
