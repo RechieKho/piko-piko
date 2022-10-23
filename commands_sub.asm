@@ -81,9 +81,9 @@ commands_data:
 .shutdown_str:
 	db "Shutting down...", 0
 .variables:
-	resb (VARIABLE_SIZE * VARIABLE_COUNT)
+	times (VARIABLE_SIZE * VARIABLE_COUNT) db 0
 .stack:
-	resb (STACK_MAX_VAR * VARIABLE_SIZE)
+	times (STACK_MAX_VAR * VARIABLE_SIZE) db 0
 .stack_pointer:
 	dw .stack
 .active_buffer:

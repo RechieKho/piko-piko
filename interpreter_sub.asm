@@ -20,8 +20,8 @@
 interpreter_data:
 .marks:
 	;    a ls32. each slot stores address to the begining of sub-string and the length
-	resw 1
-	resd LS32_MAX
+	times 1 dw 0
+	times LS32_MAX dd 0
 	.splitting_chars: ; characters that splits string into sub-strings (separator)
 	db   " ", 0
 	.standalone_chars: ; character that is always alone

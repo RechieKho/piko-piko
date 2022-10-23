@@ -45,12 +45,12 @@ kernel_data:
 	dw 0
 
 .input_buffer:
-	resw 1; ls16 header (max and length)
-	resw BUFFER_WIDTH; ls16 content
+	times 1 dw 0; ls16 header (max and length)
+	times BUFFER_WIDTH dw 0; ls16 content
 
 .raw_buffer:
-	resw 1; ls8 header (max and length)
-	resb BUFFER_WIDTH; ls16 content
+	times 1 dw 0; ls8 header (max and length)
+	times BUFFER_WIDTH db 0; ls8 content
 
 	; --- subroutines ---
 ; a function that do nothing
