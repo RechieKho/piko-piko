@@ -163,8 +163,7 @@ interpreter_execute_mark:
 .invalid_command_err:
 	;    print error
 	mov  bx, interpreter_data.invalid_command_err_str
-	call print_err
-	PRINT_NL
+	jmp commands_err.print ; jmping to label from other files :0
 
 .end:
 	popa

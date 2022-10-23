@@ -78,6 +78,8 @@ commands_data:
 	db "Invalid number of arguments.", 0
 .invalid_uint_err_str:
 	db "Invalid number.", 0
+.debug_show_row_str:
+	db "[line ", 0
 .shutdown_str:
 	db "Shutting down...", 0
 .variables:
@@ -90,6 +92,8 @@ commands_data:
 	dw BUFFER_BEGIN_SEG
 .is_running_buffer:
 	db 0 ; 0 = false ; else = true
+.current_running_row:
+	dw 0 
 .buffer_row:
 	times BUFFER_WIDTH db 0
 
@@ -104,10 +108,12 @@ run_buffer_command:
 	mov es, ax
 	mov ax, BUFFER_BEGIN_SEG ; running first buffer 
 	mov dx, BUFFER_HEIGHT
+	xor bx, bx ; current running line
 	mov byte [commands_data.is_running_buffer], 1
 .loop: 
 	cmp dx, 0 
 	je .loop_end 
+	mov word [commands_data.current_running_row], bx
 	; copy line from buffer to commands_data.buffer_row
 	push ds
 	xor si, si
@@ -123,6 +129,7 @@ run_buffer_command:
 	clc
 	call interpreter_execute_strn
 	jc .loop_end
+	inc bx
 	add ax, BUFFER_SEG_PER_ROW
 	dec dx 
 	jmp .loop
@@ -580,29 +587,44 @@ commands_consume_mark_as_uint:
 commands_err:
 .value_too_long_err:
 	mov bx, commands_data.value_too_long_err_str
-	jmp .end
+	jmp .print
 .invalid_arg_num_err:
 	mov bx, commands_data.invalid_arg_num_err_str
-	jmp .end
+	jmp .print
 .stack_full_err:
 	mov bx, commands_data.stack_full_err_str
-	jmp .end
+	jmp .print
 .stack_empty_err:
 	mov bx, commands_data.stack_empty_err_str 
-	jmp .end
+	jmp .print
 .invalid_variable_err: 
 	mov bx, commands_data.invalid_variable_err_str
-	jmp .end
+	jmp .print
 .invalid_buffer_err:
 	mov bx, commands_data.invalid_buffer_err_str
-	jmp .end
+	jmp .print
 .invalid_buffer_row_err:
 	mov bx, commands_data.invalid_buffer_row_err_str
-	jmp .end
+	jmp .print
 .invalid_uint_err:
 	mov bx, commands_data.invalid_uint_err_str
-.end: 
+.print: 
+	mov byte al, [commands_data.is_running_buffer]
+	cmp al, 0
+	je .not_running_buffer
+	call print_err
+	PRINT_CHAR ' '
+	mov bx, commands_data.debug_show_row_str
+	call print_str
+	mov ah, MAGENTA
+	mov dx, [commands_data.current_running_row]
+	call console_print_uint
+	PRINT_CHAR ']'
+	PRINT_NL
+	jmp .end
+.not_running_buffer:
 	call print_err_ln 
+.end:
 	stc
 	popa 
 	ret
