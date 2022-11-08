@@ -41,5 +41,8 @@ dev: piko-piko.bin
 		-m ${QEMU_RAM_SIZE} \
 		-drive file=piko-piko.bin,format=raw
 
+fmt:
+	python fmt.py $(wildcard *.asm)
+
 clean:
 	rm -rf boot.bin kernel.bin piko-piko.bin
