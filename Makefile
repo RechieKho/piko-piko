@@ -1,48 +1,45 @@
-KERNEL_CODE_SECTOR_COUNT=40
+BIN_NAME:=piko-piko.bin
+BOOT_NAME:=boot.bin
+KERNEL_NAME:=kernel.bin
 
-QEMU_RAM_SIZE=256M
+QEMU?=qemu-system-x86_64
+QEMU_RAM_SIZE:=256M
+QEMU_FLAGS:= -m $(QEMU_RAM_SIZE) -drive file=$(BIN_NAME),format=raw
 
-piko-piko.bin: kernel.bin boot.bin
-	dd if=/dev/zero of=$@ bs=512 count=$$(( ${KERNEL_CODE_SECTOR_COUNT} + 3 ))
-	dd if=boot.bin of=$@ bs=512 conv=notrunc
-	dd if=kernel.bin of=$@ bs=512 seek=1 conv=notrunc
+RM?=rm
+DD?=dd
+NASM?=nasm
+FORMATTER:=python fmt.py
 
-kernel.bin: kernel.asm \
-		disk_sub.asm \
-		console_sub.asm \
-		print_sub.asm \
-		ls8_sub.asm \
-		ls16_sub.asm \
-		ls32_sub.asm \
-		str_sub.asm \
-		interpreter_sub.asm \
-		commands_sub.asm \
-		mem_sub.asm \
-		type_macros.asm
-	nasm -dKERNEL_CODE_SECTOR_COUNT=${KERNEL_CODE_SECTOR_COUNT} -fbin $< -o $@
+default: dev
 
-boot.bin: boot.asm \
-		disk_sub.asm \
-		console_sub.asm \
-		print_sub.asm \
-		ls8_sub.asm \
-		ls16_sub.asm \
-		type_macros.asm
-	nasm -dKERNEL_CODE_SECTOR_COUNT=${KERNEL_CODE_SECTOR_COUNT} -fbin $< -o $@
+.PHONY: \
+	default \
+	dev-graphics \
+	dev \
+	fmt \
+	clean
 
-dev-graphics: piko-piko.bin
-	qemu-system-x86_64 \
-		-m ${QEMU_RAM_SIZE} \
-		-drive file=piko-piko.bin,format=raw
+dev: QEMU_FLAGS+= -display curses
+dev: $(BIN_NAME)
+	$(QEMU) $(QEMU_FLAGS)
 
-dev: piko-piko.bin
-	qemu-system-x86_64 \
-		-display curses \
-		-m ${QEMU_RAM_SIZE} \
-		-drive file=piko-piko.bin,format=raw
+dev-graphics: $(BIN_NAME)
+	$(QEMU) $(QEMU_FLAGS)
 
 fmt:
-	python fmt.py $(wildcard *.asm)
+	$(FORMATTER) $(wildcard *.asm)
 
 clean:
-	rm -rf boot.bin kernel.bin piko-piko.bin
+	$(RM) -rf $(BOOT_NAME) $(KERNEL_NAME) $(BIN_NAME)
+
+$(BIN_NAME): $(KERNEL_NAME) $(BOOT_NAME)
+	$(DD) if=/dev/zero of=$@ bs=512 count=$$(( $(KERNEL_CODE_SECTOR_COUNT) + 3 ))
+	$(DD) if=boot.bin of=$@ bs=512 conv=notrunc
+	$(DD) if=kernel.bin of=$@ bs=512 seek=1 conv=notrunc
+
+$(KERNEL_NAME): kernel.asm $(wildcard *_sub.asm) $(wildcard *_macro.asm)
+	$(NASM) -fbin $< -o $@
+
+$(BOOT_NAME): boot.asm disk_sub.asm print_sub.asm type_macros.asm
+	$(NASM) -fbin $< -o $@
