@@ -55,27 +55,27 @@
 ; --- data ---
 commands_data :
 .stack_empty_err_str :
-	db "Stack is empty." , 0
+	db "Stack is empty.", 0
 .stack_full_err_str :
-	db "Stack is full." , 0
+	db "Stack is full.", 0
 .value_too_long_err_str :
-	db "Value too long." , 0
+	db "Value too long.", 0
 .invalid_variable_err_str :
-	db "Invalid variable." , 0
+	db "Invalid variable.", 0
 .invalid_buffer_err_str :
-	db "Invalid buffer." , 0
+	db "Invalid buffer.", 0
 .invalid_buffer_row_err_str :
-	db "Invalid buffer row." , 0
+	db "Invalid buffer row.", 0
 .invalid_arg_num_err_str :
-	db "Invalid number of arguments." , 0
+	db "Invalid number of arguments.", 0
 .not_running_buffer_err_str :
-	db "Not running in the buffer." , 0
+	db "Not running in the buffer.", 0
 .invalid_uint_err_str :
-	db "Invalid number." , 0
+	db "Invalid number.", 0
 .debug_show_row_str :
-	db "[line " , 0
+	db "[line ", 0
 .shutdown_str :
-	db "Shutting down..." , 0
+	db "Shutting down...", 0
 .variables :
 	times (VARIABLE_SIZE * VARIABLE_COUNT) db 0
 .stack :
@@ -94,7 +94,7 @@ commands_data :
 	times BUFFER_WIDTH db 0
 ; --- commands ---
 jump_command_name :
-	db "jump" , 0 
+	db "jump", 0
 ; 1 <- nth row to be jump to
 jump_command :
 	pusha
@@ -112,9 +112,8 @@ jump_command :
 	mov word [commands_data.current_running_seg], ax
 	popa
 	ret
-
 run_buffer_command_name :
-	db "run" , 0 
+	db "run", 0
 run_buffer_command :
 	pusha
 	push es
@@ -170,7 +169,7 @@ run_buffer_command :
 	popa
 	ret
 clear_buffer_command_name :
-	db "clb" , 0 
+	db "clb", 0
 clear_buffer_command :
 	pusha
 	push es
@@ -192,7 +191,7 @@ clear_buffer_command :
 	popa
 	ret
 set_active_buffer_command_name :
-	db "stb" , 0 
+	db "stb", 0
 ; 1 <- buffer to be set
 set_active_buffer_command :
 	pusha
@@ -212,7 +211,7 @@ set_active_buffer_command :
 	popa
 	ret
 set_row_command_name :
-	db "=" , 0 
+	db "=", 0
 ; 1 <- row to be set
 ; n <- new row
 set_row_command :
@@ -220,7 +219,6 @@ set_row_command :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 1 ; no args
 	je commands_err.invalid_arg_num_err
-
 	mov ax, cx ; ax = args count (temp)
 	add si, 6
 	clc
@@ -240,7 +238,7 @@ set_row_command :
 	push cx
 	mov cx, BUFFER_WIDTH
 	xor bx, bx
-	mov al, ' '  
+	mov al, ' '
 	call byteset
 	pop cx
 	xor di, di
@@ -271,7 +269,7 @@ set_row_command :
 	popa
 	ret
 list_buffer_command_name :
-	db "lsb" , 0
+	db "lsb", 0
 ; 1? <- starting row
 ; 2? <- count
 list_buffer_command :
@@ -338,7 +336,6 @@ list_buffer_command :
 	add di, 2
 	dec cx
 	jnz .mov_loop
-
 	pop ds
 	pop es
 	popa
@@ -351,13 +348,13 @@ list_buffer_command :
 	popa
 	ret
 reset_stack_command_name :
-	db "rst" , 0
+	db "rst", 0
 ; n <- ignored
 reset_stack_command :
 	mov word [commands_data.stack_pointer], commands_data.stack
 	ret
 pop_stack_command_name :
-	db "pop" , 0 
+	db "pop", 0
 ; n <- variables to be popped
 pop_stack_command :
 	pusha
@@ -397,7 +394,7 @@ pop_stack_command :
 	popa
 	ret
 push_stack_command_name :
-	db "push" , 0 
+	db "push", 0
 ; n <- variables to be pushed
 push_stack_command :
 	pusha
@@ -435,7 +432,7 @@ push_stack_command :
 	popa
 	ret
 dump_command_name :
-	db "dump" , 0 
+	db "dump", 0
 ; 1 <- nth variable
 dump_command :
 	pusha
@@ -461,7 +458,7 @@ dump_command :
 	popa
 	ret
 set_command_name :
-	db "set" , 0 
+	db "set", 0
 ; 1 <- nth variable
 ; 2 <- value
 set_command :
@@ -490,7 +487,7 @@ set_command :
 	popa
 	ret
 shutdown_command_name :
-	db "bye" , 0 
+	db "bye", 0
 shutdown_command :
 	mov bx, commands_data.shutdown_str
 	call print_str
@@ -504,7 +501,7 @@ shutdown_command :
 	jmp .halt
 	ret
 say_command_name :
-	db "say" , 0
+	db "say", 0
 say_command :
 	pusha
 	LS32_GET_COUNT
@@ -552,7 +549,6 @@ commands_consume_mark_as_uint :
 	pop bx
 	pop cx
 	ret
-
 ; There is so many repeating lines of code for handling err so I just put it all in one place.
 commands_err :
 .value_too_long_err :

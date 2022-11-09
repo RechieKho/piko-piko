@@ -3,7 +3,7 @@
 ; --- data ---
 str_sub_data :
 .err :
-	db "ERROR: " , 0
+	db "ERROR: ", 0
 ; --- macros ---
 ; print a character and advance the cursor
 ; %1 <- character to be printed {1B, !al}

@@ -3,8 +3,8 @@
 [bits 16]
 ; --- data ---
 disk_sub_data :
-	.read_disk_err : db "Fail to read disk, error code: " , 0
-	.write_disk_err : db "Fail to write disk, error cord: " , 0
+	.read_disk_err : db "Fail to read disk, error code: ", 0
+	.write_disk_err : db "Fail to write disk, error cord: ", 0
 ; --- macros ---
 ; --- subroutines ---
 %include "print_sub.asm"

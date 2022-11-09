@@ -19,9 +19,9 @@ interpreter_data :
 	times 1 dw 0
 	times LS32_MAX dd 0
 	.splitting_chars : ; characters that splits string into sub-strings (separator)
-	db " " , 0
+	db " ", 0
 	.standalone_chars : ; character that is always alone
-	db "=" , 0
+	db "=", 0
 	.str_chars : ; character that initiate or terminate strings
 	db 0x22, 0x27, 0x60, 0
 .commands_table :
@@ -41,7 +41,7 @@ interpreter_data :
 	dw shutdown_command_name, shutdown_command
 	dw 0
 .invalid_command_err_str :
-	db "Invalid command." , 0
+	db "Invalid command.", 0
 ; --- subroutines ---
 ; print marks
 interpreter_print_marks :
@@ -317,7 +317,6 @@ interpreter_paint :
 .switch_end :
 	clc
 	pop di ; >> END SWITCH <<
-
 .continue :
 	add di, 2
 	dec cx

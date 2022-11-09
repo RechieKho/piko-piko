@@ -10,8 +10,7 @@ def tokenize(p_line):
         c = p_line[i]
         if len(litc): # During reading literal.
             if litc == c:
-                tokens.append(p_line[token_begin_idx:i+1])
-                token_begin_idx = i + 1
+                litc = ''
             continue
         else:
             if c in '\'\"': # Start reading literal.
@@ -61,7 +60,12 @@ def format(p_code):
         ):
             new_line = '\t' + new_line
         return new_line
-    return '\n'.join([format_line(line) for line in lines if len(line)])
+    new_lines = []
+    for line in lines:
+        new_line = format_line(line)
+        if len(new_line):
+            new_lines.append(new_line)
+    return '\n'.join(new_lines)
 
 def main():
     FILEPATHS = sys.argv[1:]
