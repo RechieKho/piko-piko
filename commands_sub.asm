@@ -213,28 +213,28 @@ set_active_buffer_command :
 set_row_command_name :
 	db "=", 0
 ; 1 <- row to be set
-; n <- new row
+; 2 <- new row
 set_row_command :
 	pusha
 	LS32_GET_COUNT ; cx = args count
-	cmp cx, 1 ; no args
-	je commands_err.invalid_arg_num_err
-	mov ax, cx ; ax = args count (temp)
+	cmp cx, 3 ; no args
+	jne commands_err.invalid_arg_num_err
 	add si, 6
 	clc
-	call commands_consume_mark_as_uint ; dx = uint
+	call commands_consume_mark_as_uint ; dx = row
 	jc commands_err.invalid_uint_err
 	cmp dx, BUFFER_HEIGHT
 	jae commands_err.invalid_buffer_row_err
-	mov cx, ax ; cx = args count
+	call commands_consume_mark
+	mov si, bx ; si = new row content
+	cmp cx, BUFFER_WIDTH
+	jae commands_err.value_too_long_err ; cx = content length
 	mov ax, dx
 	mov dx, BUFFER_SEG_PER_ROW
 	mul dx
-	add ax, [commands_data.active_buffer] ; ax = buffer seg
-	xor di, di
-	push es
-	mov es, ax
+	add ax, [commands_data.active_buffer] ; ax = buffer row seg
 ; clear the row
+	mov es, ax
 	push cx
 	mov cx, BUFFER_WIDTH
 	xor bx, bx
@@ -242,30 +242,8 @@ set_row_command :
 	call byteset
 	pop cx
 	xor di, di
-	sub cx, 2
-.set_loop :
-	cmp cx, 0
-	je .set_loop_end
-	push cx
-	call commands_consume_mark
-.write_loop :
-	cmp di, BUFFER_WIDTH
-	jae .write_loop_end ; the row is fully filled
-	cmp cx, 0
-	je .write_loop_end
-	mov byte al, [bx]
-	mov byte [es : di], al
-	inc bx
-	inc di
-	dec cx
-	jmp .write_loop
-.write_loop_end :
-	pop cx
-	inc di
-	dec cx
-	jmp .set_loop
-.set_loop_end :
-	pop es
+	cld
+	rep movsb
 	popa
 	ret
 list_buffer_command_name :
