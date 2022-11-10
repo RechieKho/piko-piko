@@ -84,13 +84,13 @@ commands_data :
 	dw .stack
 .active_buffer :
 	dw BUFFER_BEGIN_SEG
-.is_running_buffer :
-	db 0 ; 0 = false ; else = true
-.current_running_row :
+.is_buffer_executing :
+	db 0 ; 0 = false, else = true
+.executing_row : ; Current executing row in buffer.
 	dw 0
-.current_running_seg : ; basically current_running_row but in segment unit
+.executing_seg : ; basically executing_row but in segment unit
 	dw 0
-.buffer_row :
+.execution_buffer : ; Buffer for saving row to be executed.
 	times BUFFER_WIDTH db 0
 ; --- commands ---
 jump_command_name :
@@ -98,18 +98,18 @@ jump_command_name :
 ; 1 <- nth row to be jump to
 jump_command :
 	pusha
-	mov byte al, [commands_data.is_running_buffer]
+	mov byte al, [commands_data.is_buffer_executing]
 	cmp al, 0
 	je commands_err.not_running_buffer_err ; command can only run in buffer
 	add si, 6
 	call commands_consume_mark_as_uint ; dx = nth row to be jump to
 	cmp dx, BUFFER_HEIGHT
 	jae commands_err.invalid_buffer_row_err
-	mov word [commands_data.current_running_row], dx
+	mov word [commands_data.executing_row], dx
 	mov ax, BUFFER_SEG_PER_ROW
 	mul dx
 	add ax, BUFFER_BEGIN_SEG
-	mov word [commands_data.current_running_seg], ax
+	mov word [commands_data.executing_seg], ax
 	popa
 	ret
 run_buffer_command_name :
@@ -121,50 +121,50 @@ run_buffer_command :
 	mov es, ax
 	mov ax, BUFFER_BEGIN_SEG ; running first buffer
 	xor bx, bx ; current running line
-	mov byte [commands_data.is_running_buffer], 1
+	mov byte [commands_data.is_buffer_executing], 1
 .loop :
 	cmp ax, (BUFFER_BEGIN_SEG + BUFFER_SEG_COUNT)
 	jae .loop_end
 	cmp ax, BUFFER_BEGIN_SEG
 	jb .loop_end
-	mov word [commands_data.current_running_row], bx
-	mov word [commands_data.current_running_seg], ax
-; copy line from buffer to commands_data.buffer_row
+	mov word [commands_data.executing_row], bx
+	mov word [commands_data.executing_seg], ax
+; copy line from buffer to commands_data.execution_buffer
 	push ds
 	xor si, si
-	mov di, commands_data.buffer_row
+	mov di, commands_data.execution_buffer
 	mov cx, BUFFER_WIDTH
 	mov ds, ax
 	cld
 	rep movsb
 	pop ds
 ; execute it
-	mov si, commands_data.buffer_row
+	mov si, commands_data.execution_buffer
 	mov cx, BUFFER_WIDTH
 	clc
 	call interpreter_execute_strn
 	jc .loop_end
 ; update current running row
-	mov dx, [commands_data.current_running_row]
+	mov dx, [commands_data.executing_row]
 	cmp dx, bx
-	jne .current_running_row_changed
+	jne .executing_row_changed
 	inc bx
-	jmp .current_running_row_changed_end
-.current_running_row_changed :
+	jmp .executing_row_changed_end
+.executing_row_changed :
 	mov bx, dx
-.current_running_row_changed_end :
+.executing_row_changed_end :
 ; update current running seg
-	mov dx, [commands_data.current_running_seg]
+	mov dx, [commands_data.executing_seg]
 	cmp dx, ax
-	jne .current_running_seg_changed
+	jne .executing_seg_changed
 	add ax, BUFFER_SEG_PER_ROW
-	jmp .current_running_seg_changed_end
-.current_running_seg_changed :
+	jmp .executing_seg_changed_end
+.executing_seg_changed :
 	mov ax, dx
-.current_running_seg_changed_end :
+.executing_seg_changed_end :
 	jmp .loop
 .loop_end :
-	mov byte [commands_data.is_running_buffer], 0
+	mov byte [commands_data.is_buffer_executing], 0
 	pop es
 	popa
 	ret
@@ -556,7 +556,7 @@ commands_err :
 .invalid_uint_err :
 	mov bx, commands_data.invalid_uint_err_str
 .print :
-	mov byte al, [commands_data.is_running_buffer]
+	mov byte al, [commands_data.is_buffer_executing]
 	cmp al, 0
 	je .not_running_buffer
 	call print_err
@@ -564,7 +564,7 @@ commands_err :
 	mov bx, commands_data.debug_show_row_str
 	call print_str
 	mov ah, MAGENTA
-	mov dx, [commands_data.current_running_row]
+	mov dx, [commands_data.executing_row]
 	call console_print_uint
 	PRINT_CHAR ']'
 	PRINT_NL
