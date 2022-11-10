@@ -101,6 +101,9 @@ jump_command :
 	mov byte al, [commands_data.is_buffer_executing]
 	cmp al, 0
 	je commands_err.not_running_buffer_err ; command can only run in buffer
+	LS32_GET_COUNT
+	cmp cx, 2
+	jne commands_err.invalid_arg_num_err
 	add si, 6
 	call commands_consume_mark_as_uint ; dx = nth row to be jump to
 	cmp dx, BUFFER_HEIGHT
@@ -114,6 +117,7 @@ jump_command :
 	ret
 run_buffer_command_name :
 	db "run", 0
+; n <- ignored
 run_buffer_command :
 	pusha
 	push es
@@ -466,6 +470,7 @@ set_command :
 	ret
 shutdown_command_name :
 	db "bye", 0
+; n <- ignored
 shutdown_command :
 	mov bx, commands_data.shutdown_str
 	call print_str
@@ -480,6 +485,7 @@ shutdown_command :
 	ret
 say_command_name :
 	db "say", 0
+; n <- string to be printed
 say_command :
 	pusha
 	LS32_GET_COUNT
