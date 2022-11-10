@@ -45,9 +45,10 @@ def format(p_code):
     def format_line(p_line):
         """Format a line of nasm code."""
         def is_line_label(p_tokens):
-            last_token_idx = -1
+            last_token_idx = 0
             try: last_token_idx = p_tokens.index(';')
             except ValueError: pass
+            last_token_idx -= 1
             return p_tokens[last_token_idx] == ':'
         tokens = tokenize(p_line)
         if not len(tokens): return ""

@@ -88,7 +88,7 @@ commands_data :
 	db 0 ; 0 = false ; else = true
 .current_running_row :
 	dw 0
-	.current_running_seg : ; basically current_running_row but in segment unit
+.current_running_seg : ; basically current_running_row but in segment unit
 	dw 0
 .buffer_row :
 	times BUFFER_WIDTH db 0

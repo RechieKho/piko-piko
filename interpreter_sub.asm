@@ -18,11 +18,11 @@ interpreter_data :
 ; a ls32. each slot stores address to the begining of sub-string and the length
 	times 1 dw 0
 	times LS32_MAX dd 0
-	.splitting_chars : ; characters that splits string into sub-strings (separator)
+.splitting_chars : ; characters that splits string into sub-strings (separator)
 	db " ", 0
-	.standalone_chars : ; character that is always alone
+.standalone_chars : ; character that is always alone
 	db "=", 0
-	.str_chars : ; character that initiate or terminate strings
+.str_chars : ; character that initiate or terminate strings
 	db 0x22, 0x27, 0x60, 0
 .commands_table :
 ; address to the command name and its corresponding function
