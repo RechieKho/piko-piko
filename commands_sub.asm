@@ -12,7 +12,7 @@
 %include "console_sub.asm"
 %include "interpreter_sub.asm"
 ; --- macros ---
-%define VARIABLE_SIZE 0x40 ; MUST within a byte
+%define VARIABLE_SIZE 0x20 ; MUST within a byte
 %define VARIABLE_COUNT 0x1a ; MUST within a byte
 %define STACK_MAX_VAR (VARIABLE_COUNT * 5) ; number of variable able to store on stack
 %macro COMMANDS_INIT 0
@@ -25,7 +25,7 @@
 	mov di, commands_data.variables
 	mov cx, VARIABLE_COUNT
 %%loop :
-	LS8_INIT (VARIABLE_SIZE - 1)
+	LS8_INIT (VARIABLE_SIZE - 2)
 	add di, VARIABLE_SIZE
 	dec cx
 	jnz %%loop
