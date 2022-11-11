@@ -60,6 +60,8 @@ commands_data :
 	db "Stack is full.", 0
 .value_too_long_err_str :
 	db "Value too long.", 0
+.invalid_value_err_str :
+	db "Invalid value.", 0
 .invalid_variable_err_str :
 	db "Invalid variable.", 0
 .invalid_buffer_err_str :
@@ -95,24 +97,46 @@ commands_data :
 ; --- commands ---
 jump_command_name :
 	db "jump", 0
-; 1 <- nth row to be jump to
+; -1 <- nth row to be jump to
+; 1? <- + if downward, - if upward (relative to the jump instruction)
 jump_command :
 	pusha
 	mov byte al, [commands_data.is_buffer_executing]
 	cmp al, 0
 	je commands_err.not_running_buffer_err ; command can only run in buffer
 	LS32_GET_COUNT
-	cmp cx, 2
-	jne commands_err.invalid_arg_num_err
 	add si, 6
+	cmp cx, 2
+	je .absolute
+	cmp cx, 3
+	je .relative
+	jmp commands_err.invalid_arg_num_err
+.relative :
+	call commands_consume_mark
+	cmp cx, 1
+	jne commands_err.invalid_value_err
+	call commands_consume_mark_as_uint ; dx = displacement
+	mov cx, [commands_data.executing_row] ; cx = current executing row
+	mov byte al, [bx]
+	cmp al, '+'
+	je .downward
+	cmp al, '-'
+	je .upward
+	jmp commands_err.invalid_value_err
+.downward :
+	add cx, dx
+	mov dx, cx
+	jmp .set_seg
+.upward :
+	sub cx, dx
+	mov dx, cx
+	jmp .set_seg
+.absolute :
 	call commands_consume_mark_as_uint ; dx = nth row to be jump to
+.set_seg :
 	cmp dx, BUFFER_HEIGHT
 	jae commands_err.invalid_buffer_row_err
-	mov word [commands_data.executing_row], dx
-	mov ax, BUFFER_SEG_PER_ROW
-	mul dx
-	add ax, BUFFER_BEGIN_SEG
-	mov word [commands_data.executing_seg], ax
+	call commands_set_executing_seg
 	popa
 	ret
 run_buffer_command_name :
@@ -506,6 +530,19 @@ say_command :
 	popa
 	ret
 ; --- subroutine ---
+; Set executing row together with its corresponding executing segment.
+; dx <- executing row
+commands_set_executing_seg :
+	push ax
+	push dx
+	mov word [commands_data.executing_row], dx
+	mov ax, BUFFER_SEG_PER_ROW
+	mul dx
+	add ax, BUFFER_BEGIN_SEG
+	mov word [commands_data.executing_seg], ax
+	pop dx
+	pop ax
+	ret
 ; si <- current mark
 ; bx -> address of argument
 ; cx -> length of argument
@@ -546,6 +583,9 @@ commands_err :
 	jmp .print
 .stack_empty_err :
 	mov bx, commands_data.stack_empty_err_str
+	jmp .print
+.invalid_value_err :
+	mov bx, commands_data.invalid_value_err_str
 	jmp .print
 .invalid_variable_err :
 	mov bx, commands_data.invalid_variable_err_str
