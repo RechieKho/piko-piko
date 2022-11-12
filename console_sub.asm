@@ -483,6 +483,7 @@ console_print_strn :
 	call console_make_space ; dx = new starting index
 	mov bx, dx
 	call console_write_strn_idx
+	add bx, cx
 	CONSOLE_IDX2RC bx
 	SET_CURSOR
 	popa
