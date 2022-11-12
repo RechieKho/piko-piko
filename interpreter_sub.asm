@@ -253,8 +253,11 @@ interpreter_mark_strn :
 	inc si
 	jmp .loop
 .loop_end :
+	cmp ah, 0
+	jne .uncleaned_buffer
 	cmp dx, 0
 	je .cleaned_buffer
+.uncleaned_buffer :
 	mov si, interpreter_data.marks
 	mov ax, bx
 	LS32_APPEND dx, bx
