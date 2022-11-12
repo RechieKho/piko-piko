@@ -510,24 +510,71 @@ shutdown_command :
 	ret
 say_command_name :
 	db "say", 0
-; n <- string to be printed
+; -1 <- string to be printed
+; 1? <- options
 say_command :
 	pusha
 	LS32_GET_COUNT
-	dec cx ; cx = number of arguments excluding itself
-	add si, 6 ; si = arguments after its name
-.loop :
-	cmp cx, 0
-	je .end
-	push cx
+	mov ah, GREY ; ah = text color
+	xor al, al ; al = number of new lines after print.
+	add si, 6
+	cmp cx, 2
+	je .default
+	cmp cx, 3
+	je .set_option
+	jmp commands_err.invalid_arg_num_err
+.set_option :
 	call commands_consume_mark
-	call print_n_str
-	pop cx
-	PRINT_CHAR ' '
+.option_detection_loop :
+	cmp cx, 0
+	je .default
+	mov byte dl, [bx]
+	cmp dl, 'n'
+	jne .not_newline_option
+	inc al
+	jmp .continue_option_detection_loop
+.not_newline_option :
+; %1 <- character
+; %2 <- color
+%macro COLOR_OPTION 2
+	cmp dl, %1
+	jne %%end
+	mov ah, %2
+	jmp .continue_option_detection_loop
+%%end :
+%endmacro
+	COLOR_OPTION 'd', BLACK
+	COLOR_OPTION 'b', BLUE
+	COLOR_OPTION 'v', GREEN
+	COLOR_OPTION 'c', CYAN
+	COLOR_OPTION 'r', RED
+	COLOR_OPTION 'm', MAGENTA
+	COLOR_OPTION 'y', YELLOW
+	COLOR_OPTION 'g', GREY
+	COLOR_OPTION 'B', (BRIGHT + BLUE)
+	COLOR_OPTION 'V', (BRIGHT + GREEN)
+	COLOR_OPTION 'C', (BRIGHT + CYAN)
+	COLOR_OPTION 'R', (BRIGHT + RED)
+	COLOR_OPTION 'M', (BRIGHT + MAGENTA)
+	COLOR_OPTION 'Y', (BRIGHT + YELLOW)
+	COLOR_OPTION 'G', BRIGHT
+	COLOR_OPTION 'w', WHITE
+%unmacro COLOR_OPTION 2
+.continue_option_detection_loop :
+	inc bx
 	dec cx
-	jmp .loop
-.end :
+	jmp .option_detection_loop
+.default :
+	call commands_consume_mark
+	mov si, bx
+	call console_print_strn
+.newline_loop :
+	cmp al, 0
+	je .end
 	PRINT_NL
+	dec al
+	jmp .newline_loop
+.end :
 	popa
 	ret
 ; --- subroutine ---
