@@ -438,32 +438,6 @@ push_stack_command :
 .end :
 	popa
 	ret
-dump_command_name :
-	db "dump", 0
-; 1 <- nth variable
-dump_command :
-	pusha
-	LS32_GET_COUNT ; cx = args count
-	cmp cx, 2
-	jne commands_err.invalid_arg_num_err
-	add si, 6
-	clc
-	call commands_consume_mark_as_uint ; dx = variable
-	jc commands_err.invalid_uint_err
-	cmp dx, VARIABLE_COUNT
-	jae commands_err.invalid_variable_err
-	mov al, VARIABLE_SIZE
-	mul dl
-	mov si, commands_data.variables
-	add si, ax ; si = variable address
-	LS8_GET_COUNT ; cx = variable length
-	mov bx, si
-	add bx, 2
-	call print_n_str
-	PRINT_NL
-.end :
-	popa
-	ret
 set_command_name :
 	db "set", 0
 ; 1 <- nth variable
@@ -566,7 +540,36 @@ say_command :
 	jmp .option_detection_loop
 .default :
 	call commands_consume_mark
+	cmp cx, 0
+	je .newline_loop
 	mov si, bx
+	mov byte dl, [si]
+	cmp dl, '$'
+	jne .not_var
+; Reading variable to be output
+	inc si
+	dec cx
+	clc
+	call strn_to_uint
+	jc commands_err.invalid_uint_err
+	cmp dx, VARIABLE_COUNT
+	jae commands_err.invalid_variable_err
+	push ax
+	mov al, VARIABLE_SIZE
+	mul dl
+	mov si, commands_data.variables
+	add si, ax
+	pop ax
+	LS8_GET_COUNT
+	add si, 2
+	jmp .print_strn
+.not_var :
+	cmp dl, '\'
+	jne .print_strn
+; Skip first character if it is '\'
+	inc si
+	dec cx
+.print_strn :
 	call console_print_strn
 .newline_loop :
 	cmp al, 0
