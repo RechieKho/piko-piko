@@ -478,13 +478,9 @@ set_command :
 	mov di, commands_data.variables
 	add di, ax ; di = variable address
 	call commands_consume_mark
-	mov si, bx
-	cmp ch, 0
-	jne commands_err.value_too_long_err
-	xchg si, di
 	clc
-	call ls8_set
-	jc commands_err.value_too_long_err
+	call commands_ls8_set
+	jc commands_err.invalid_value_err
 	popa
 	ret
 shutdown_command_name :
