@@ -4,7 +4,7 @@
 ; --- data ---
 disk_sub_data :
 	.read_disk_err : db "Fail to read disk, error code: ", 0
-	.write_disk_err : db "Fail to write disk, error cord: ", 0
+	.write_disk_err : db "Fail to write disk, error code: ", 0
 ; --- macros ---
 ; --- subroutines ---
 %include "print_sub.asm"
@@ -18,6 +18,7 @@ disk_sub_data :
 read_disk :
 	pusha
 	mov ah, 0x02
+	clc
 	int 0x13
 	jc .err
 	popa
@@ -39,6 +40,7 @@ read_disk :
 write_disk :
 	pusha
 	mov ah, 0x03
+	clc
 	int 0x13
 	jc .err
 	popa
