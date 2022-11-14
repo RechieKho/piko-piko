@@ -17,20 +17,7 @@
 %define VARIABLE_COUNT 0x1a ; MUST within a byte
 %define STACK_MAX_VAR (VARIABLE_COUNT * 5) ; number of variable able to store on stack
 %macro COMMANDS_INIT 0
-	VAR_INIT
 	BUFFER_INIT
-%endmacro
-; initiate variables
-%macro VAR_INIT 0
-	pusha
-	mov di, commands_data.variables
-	mov cx, VARIABLE_COUNT
-%%loop :
-	LS8_INIT VARIABLE_CAPACITY
-	add di, VARIABLE_SIZE
-	dec cx
-	jnz %%loop
-	popa
 %endmacro
 ; initiate buffer
 %macro BUFFER_INIT 0
@@ -80,7 +67,10 @@ commands_data :
 .shutdown_str :
 	db "Shutting down...", 0
 .variables :
-	times (VARIABLE_SIZE * VARIABLE_COUNT) db 0
+%rep VARIABLE_COUNT
+	db VARIABLE_CAPACITY, 0
+	times (VARIABLE_CAPACITY) db 0
+%endrep
 .stack :
 	times (STACK_MAX_VAR * VARIABLE_SIZE) db 0
 .stack_pointer :
