@@ -606,6 +606,8 @@ say_command :
 ; cf -> set if fail
 commands_ls8_set :
 	pusha
+	cmp cx, 0
+	je .success
 	mov byte al, [bx]
 	cmp al, '$'
 	jne .not_var
@@ -631,7 +633,7 @@ commands_ls8_set :
 	mov di, bx
 	cmp al, '\'
 	jne .set
-	inc bx
+	inc di
 	dec cx
 .set :
 	clc
