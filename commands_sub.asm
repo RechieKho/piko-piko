@@ -44,8 +44,6 @@
 %endmacro
 ; --- data ---
 commands_data :
-.fail_to_store_value :
-	db "Fail to store value.", 0
 .stack_empty_err_str :
 	db "Stack is empty.", 0
 .stack_full_err_str :
@@ -110,12 +108,12 @@ compare_command :
 	mov di, commands_data.compare_buffer_a
 	clc
 	call commands_ls8_set
-	jc commands_err.fail_to_store_value_err
+	jc commands_err.invalid_value_err
 	call commands_consume_mark
 	mov di, commands_data.compare_buffer_b
 	clc
 	call commands_ls8_set
-	jc commands_err.fail_to_store_value_err
+	jc commands_err.invalid_value_err
 	popa
 	ret
 jump_command_name :
@@ -482,7 +480,7 @@ set_command :
 	call commands_consume_mark
 	clc
 	call commands_ls8_set
-	jc commands_err.fail_to_store_value_err
+	jc commands_err.invalid_value_err
 	popa
 	ret
 shutdown_command_name :
@@ -687,9 +685,6 @@ commands_consume_mark_as_uint :
 	ret
 ; There is so many repeating lines of code for handling err so I just put it all in one place.
 commands_err :
-.fail_to_store_value_err :
-	mov bx, commands_data.fail_to_store_value
-	jmp .print
 .value_too_long_err :
 	mov bx, commands_data.value_too_long_err_str
 	jmp .print
