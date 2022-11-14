@@ -16,6 +16,8 @@
 %define VARIABLE_SIZE (VARIABLE_CAPACITY + 2) ; MUST within a byte
 %define VARIABLE_COUNT 0x1a ; MUST within a byte
 %define STACK_MAX_VAR (VARIABLE_COUNT * 5) ; number of variable able to store on stack
+%define COMPARE_BUFFER_CAPACITY 0x20
+%define COMPARE_BUFFER_SIZE (COMPARE_BUFFER_SIZE + 2)
 %macro COMMANDS_INIT 0
 	BUFFER_INIT
 %endmacro
@@ -85,7 +87,35 @@ commands_data :
 	dw 0
 .execution_buffer : ; Buffer for saving row to be executed.
 	times BUFFER_WIDTH db 0
+.compare_buffer_a : ; A ls8 buffer for value to be compared (to compare_buffer_b).
+	db COMPARE_BUFFER_CAPACITY, 0
+	times (COMPARE_BUFFER_CAPACITY) db 0
+.compare_buffer_b : ; A ls8 buffer for value to be compared (to compare_buffer_a).
+	db COMPARE_BUFFER_CAPACITY, 0
+	times (COMPARE_BUFFER_CAPACITY) db 0
 ; --- commands ---
+compare_command_name :
+	db "cmp", 0
+; 1 <- value a
+; 2 <- value b
+compare_command :
+	pusha
+	LS32_GET_COUNT ; cx = args count
+	cmp cx, 3
+	jne commands_err.invalid_arg_num_err
+	add si, 6
+	call commands_consume_mark
+	mov di, commands_data.compare_buffer_a
+	clc
+	call commands_ls8_set
+	jc commands_err.invalid_value_err
+	call commands_consume_mark
+	mov di, commands_data.compare_buffer_b
+	clc
+	call commands_ls8_set
+	jc commands_err.invalid_value_err
+	popa
+	ret
 jump_command_name :
 	db "jump", 0
 ; -1 <- nth row to be jump to
@@ -571,6 +601,50 @@ say_command :
 	popa
 	ret
 ; --- subroutine ---
+; Set ls8 (accept variable referencing).
+; bx <- string
+; cx <- string length
+; di <- ls8 to be output to
+; cf -> set if fail
+commands_ls8_set :
+	pusha
+	mov byte al, [bx]
+	cmp al, '$'
+	jne .not_var
+; variable referencing
+	mov si, bx
+	inc si
+	dec cx
+	clc
+	call strn_to_uint
+	jc .fail
+	cmp dx, VARIABLE_COUNT
+	jae .fail
+	mov al, VARIABLE_SIZE
+	mul dl
+	mov si, commands_data.variables
+	add si, ax
+	LS8_GET_COUNT
+	xchg si, di ; di = variable ; si = ls8 output
+	add di, 2
+	jmp .set
+.not_var :
+	mov si, di
+	mov di, bx
+	cmp al, '\'
+	jne .set
+	inc bx
+	dec cx
+.set :
+	clc
+	call ls8_set
+	jc .fail
+	jmp .success
+.fail :
+	stc
+.success :
+	popa
+	ret
 ; Set executing row together with its corresponding executing segment.
 ; dx <- executing row
 commands_set_executing_seg :
