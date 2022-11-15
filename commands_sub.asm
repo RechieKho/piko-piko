@@ -145,7 +145,7 @@ jump_str_n_eq_command :
 	call ls8_equal
 	pop di
 	pop si
-	jnc jump_command
+	jc jump_command
 	ret
 jump_str_eq_command_name :
 	db "jse", 0
@@ -158,7 +158,7 @@ jump_str_eq_command :
 	call ls8_equal
 	pop di
 	pop si
-	jc jump_command
+	jnc jump_command
 	ret
 compare_command_name :
 	db "cmp", 0
