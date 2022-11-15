@@ -56,6 +56,18 @@
 	pop si
 	jc commands_err.invalid_uint_err
 %endmacro
+; Read compare buffer as uint. MUST ONLY BE CALLED IN COMMANDS AND SHOULDN 'T BE 
+; IN BETWEEN PUSH AND POP.
+; ax -> uint of compare_buffer_a
+; dx -> uint of compare_buffer_b
+; ~si
+%macro COMMANDS_COMBUF2UINT 0
+	mov si, commands_data.compare_buffer_a
+	COMMANDS_LS82UINT
+	mov ax, dx ; ax = uint of first compare buffer
+	mov si, commands_data.compare_buffer_b
+	COMMANDS_LS82UINT
+%endmacro
 ; --- data ---
 commands_data :
 .stack_empty_err_str :
@@ -108,16 +120,54 @@ commands_data :
 	db COMPARE_BUFFER_CAPACITY, 0
 	times (COMPARE_BUFFER_CAPACITY) db 0
 ; --- commands ---
+jump_uint_le_command_name :
+	db "jule", 0
+jump_uint_le_command :
+	mov bx, si
+	COMMANDS_COMBUF2UINT
+	mov si, bx
+	cmp ax, dx
+	jbe jump_command
+	clc
+	ret
+jump_uint_l_command_name :
+	db "jul", 0
+jump_uint_l_command :
+	mov bx, si
+	COMMANDS_COMBUF2UINT
+	mov si, bx
+	cmp ax, dx
+	jb jump_command
+	clc
+	ret
+jump_uint_ge_command_name :
+	db "juge", 0
+jump_uint_ge_command :
+	mov bx, si
+	COMMANDS_COMBUF2UINT
+	mov si, bx
+	cmp ax, dx
+	jae jump_command
+	clc
+	ret
+jump_uint_g_command_name :
+	db "jug", 0
+jump_uint_g_command :
+	mov bx, si
+	COMMANDS_COMBUF2UINT
+	mov si, bx
+	cmp ax, dx
+	ja jump_command
+	clc
+	ret
 jump_uint_n_eq_command_name :
 	db "june", 0
-; If uints in compare buffer are equal, jump command is executed.
+; If uints in compare buffer are not equal, jump command is executed.
 jump_uint_n_eq_command :
-	mov si, commands_data.compare_buffer_a
-	COMMANDS_LS82UINT
-	mov ax, dx ; ax = uint of first compare buffer
-	mov si, commands_data.compare_buffer_b
-	COMMANDS_LS82UINT
-	cmp ax, dx
+	mov bx, si
+	COMMANDS_COMBUF2UINT
+	mov si, bx
+	pop si
 	jne jump_command
 	clc
 	ret
@@ -125,11 +175,9 @@ jump_uint_eq_command_name :
 	db "jue", 0
 ; If uints in compare buffer are equal, jump command is executed.
 jump_uint_eq_command :
-	mov si, commands_data.compare_buffer_a
-	COMMANDS_LS82UINT
-	mov ax, dx ; ax = uint of first compare buffer
-	mov si, commands_data.compare_buffer_b
-	COMMANDS_LS82UINT
+	mov bx, si
+	COMMANDS_COMBUF2UINT
+	mov si, bx
 	cmp ax, dx
 	je jump_command
 	clc

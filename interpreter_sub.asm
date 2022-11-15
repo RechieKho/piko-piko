@@ -36,6 +36,10 @@ interpreter_data :
 	dw jump_str_n_eq_command_name, jump_str_n_eq_command
 	dw jump_uint_eq_command_name, jump_uint_eq_command
 	dw jump_uint_n_eq_command_name, jump_uint_n_eq_command
+	dw jump_uint_l_command_name, jump_uint_l_command
+	dw jump_uint_le_command_name, jump_uint_le_command
+	dw jump_uint_g_command_name, jump_uint_g_command
+	dw jump_uint_ge_command_name, jump_uint_ge_command
 	dw jump_command_name, jump_command
 	dw list_buffer_command_name, list_buffer_command
 	dw set_row_command_name, set_row_command
