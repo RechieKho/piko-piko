@@ -3,6 +3,7 @@
 ; NOTE : YOU MUST COMMANDS_INIT BEFORE USING ANYTHING IN THIS MODULE
 ; each commands expecting :
 ; si <- ls32 of marks point to the arguments
+; COMMANDS RETURN WITH CARRY FLAG SET WILL CANCEL RUNNING BUFFER.
 ; --- modules ---
 %include "print_sub.asm"
 %include "ls32_sub.asm"
@@ -119,6 +120,7 @@ jump_uint_n_eq_command :
 	cmp ax, dx
 	popa
 	jne jump_command
+	clc
 	ret
 jump_uint_eq_command_name :
 	db "jue", 0
@@ -133,6 +135,7 @@ jump_uint_eq_command :
 	cmp ax, dx
 	popa
 	je jump_command
+	clc
 	ret
 jump_str_n_eq_command_name :
 	db "jsne", 0
@@ -146,6 +149,7 @@ jump_str_n_eq_command :
 	pop di
 	pop si
 	jc jump_command
+	clc
 	ret
 jump_str_eq_command_name :
 	db "jse", 0
@@ -159,6 +163,7 @@ jump_str_eq_command :
 	pop di
 	pop si
 	jnc jump_command
+	clc
 	ret
 compare_command_name :
 	db "cmp", 0
@@ -181,6 +186,7 @@ compare_command :
 	call commands_ls8_set
 	jc commands_err.invalid_value_err
 	popa
+	clc
 	ret
 jump_command_name :
 	db "jump", 0
@@ -225,6 +231,7 @@ jump_command :
 	jae commands_err.invalid_buffer_row_err
 	call commands_set_executing_seg
 	popa
+	clc
 	ret
 run_buffer_command_name :
 	db "run", 0
@@ -282,6 +289,7 @@ run_buffer_command :
 	mov byte [commands_data.is_buffer_executing], 0
 	pop es
 	popa
+	clc
 	ret
 clear_buffer_command_name :
 	db "clb", 0
@@ -304,6 +312,7 @@ clear_buffer_command :
 .clear_loop_end :
 	pop es
 	popa
+	clc
 	ret
 set_active_buffer_command_name :
 	db "stb", 0
@@ -324,6 +333,7 @@ set_active_buffer_command :
 	add ax, BUFFER_BEGIN_SEG
 	mov word [commands_data.active_buffer], ax
 	popa
+	clc
 	ret
 set_row_command_name :
 	db "=", 0
@@ -360,6 +370,7 @@ set_row_command :
 	cld
 	rep movsb
 	popa
+	clc
 	ret
 list_buffer_command_name :
 	db "lsb", 0
@@ -439,6 +450,7 @@ list_buffer_command :
 .list_loop_end :
 .end :
 	popa
+	clc
 	ret
 reset_stack_command_name :
 	db "rst", 0
@@ -485,6 +497,7 @@ pop_stack_command :
 	jmp .pop_loop
 .end :
 	popa
+	clc
 	ret
 push_stack_command_name :
 	db "push", 0
@@ -523,6 +536,7 @@ push_stack_command :
 	jmp .push_loop
 .end :
 	popa
+	clc
 	ret
 set_command_name :
 	db "set", 0
@@ -548,6 +562,7 @@ set_command :
 	call commands_ls8_set
 	jc commands_err.invalid_value_err
 	popa
+	clc
 	ret
 shutdown_command_name :
 	db "bye", 0
@@ -563,6 +578,7 @@ shutdown_command :
 	cli
 	hlt
 	jmp .halt
+	clc
 	ret
 say_command_name :
 	db "say", 0
@@ -661,6 +677,7 @@ say_command :
 	jmp .newline_loop
 .end :
 	popa
+	clc
 	ret
 ; --- subroutine ---
 ; Set ls8 (accept variable referencing).
