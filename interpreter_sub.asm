@@ -34,6 +34,8 @@ interpreter_data :
 	dw compare_command_name, compare_command
 	dw jump_str_eq_command_name, jump_str_eq_command
 	dw jump_str_n_eq_command_name, jump_str_n_eq_command
+	dw jump_uint_eq_command_name, jump_uint_eq_command
+	dw jump_uint_n_eq_command_name, jump_uint_n_eq_command
 	dw jump_command_name, jump_command
 	dw list_buffer_command_name, list_buffer_command
 	dw set_row_command_name, set_row_command

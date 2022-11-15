@@ -42,6 +42,18 @@
 	pop es
 	popa
 %endmacro
+; Read ls8 as uint. MUST ONLY BE CALLED IN COMMANDS.
+; si <- ls8
+; dx -> uint
+%macro COMMANDS_LS82UINT 0
+	push si
+	LS8_GET_COUNT
+	add si, 2
+	clc
+	call strn_to_uint
+	pop si
+	jc commands_err.invalid_uint_err
+%endmacro
 ; --- data ---
 commands_data :
 .stack_empty_err_str :
@@ -94,6 +106,34 @@ commands_data :
 	db COMPARE_BUFFER_CAPACITY, 0
 	times (COMPARE_BUFFER_CAPACITY) db 0
 ; --- commands ---
+jump_uint_n_eq_command_name :
+	db "june", 0
+; If uints in compare buffer are equal, jump command is executed.
+jump_uint_n_eq_command :
+	pusha
+	mov si, commands_data.compare_buffer_a
+	COMMANDS_LS82UINT
+	mov ax, dx ; ax = uint of first compare buffer
+	mov si, commands_data.compare_buffer_b
+	COMMANDS_LS82UINT
+	cmp ax, dx
+	popa
+	jne jump_command
+	ret
+jump_uint_eq_command_name :
+	db "jue", 0
+; If uints in compare buffer are equal, jump command is executed.
+jump_uint_eq_command :
+	pusha
+	mov si, commands_data.compare_buffer_a
+	COMMANDS_LS82UINT
+	mov ax, dx ; ax = uint of first compare buffer
+	mov si, commands_data.compare_buffer_b
+	COMMANDS_LS82UINT
+	cmp ax, dx
+	popa
+	je jump_command
+	ret
 jump_str_n_eq_command_name :
 	db "jsne", 0
 ; If strings in compare buffer are not equal, jump command is executed.
