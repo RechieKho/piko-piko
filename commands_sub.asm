@@ -94,6 +94,32 @@ commands_data :
 	db COMPARE_BUFFER_CAPACITY, 0
 	times (COMPARE_BUFFER_CAPACITY) db 0
 ; --- commands ---
+jump_str_n_eq_command_name :
+	db "jsne", 0
+; If strings in compare buffer are not equal, jump command is executed.
+jump_str_n_eq_command :
+	push si
+	push di
+	mov si, commands_data.compare_buffer_a
+	mov di, commands_data.compare_buffer_b
+	call ls8_equal
+	pop di
+	pop si
+	jnc jump_command
+	ret
+jump_str_eq_command_name :
+	db "jse", 0
+; If strings in compare buffer are equal, jump command is executed.
+jump_str_eq_command :
+	push si
+	push di
+	mov si, commands_data.compare_buffer_a
+	mov di, commands_data.compare_buffer_b
+	call ls8_equal
+	pop di
+	pop si
+	jc jump_command
+	ret
 compare_command_name :
 	db "cmp", 0
 ; 1 <- value a

@@ -32,6 +32,8 @@ interpreter_data :
 	dw pop_stack_command_name, pop_stack_command
 	dw reset_stack_command_name, reset_stack_command
 	dw compare_command_name, compare_command
+	dw jump_str_eq_command_name, jump_str_eq_command
+	dw jump_str_n_eq_command_name, jump_str_n_eq_command
 	dw jump_command_name, jump_command
 	dw list_buffer_command_name, list_buffer_command
 	dw set_row_command_name, set_row_command
