@@ -131,10 +131,7 @@ interpreter_execute_mark :
 	mov si, interpreter_data.marks
 	mov di, [bx]
 	pusha
-; PRINT_WORD di
-; PRINT_CHAR ' '
-; PRINT_WORD say_command
-	call di ; call function
+	call di ; call command
 	popa
 	jmp .end
 .loop_end :
@@ -145,7 +142,7 @@ interpreter_execute_mark :
 .invalid_command_err :
 ; print error
 	mov bx, interpreter_data.invalid_command_err_str
-	jmp commands_err.print ; jmping to label from other files : 0
+	call commands_err.print ; jmping to label from other files : 0
 .end :
 	popa
 	ret

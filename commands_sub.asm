@@ -4,6 +4,7 @@
 ; each commands expecting :
 ; si <- ls32 of marks point to the arguments
 ; COMMANDS RETURN WITH CARRY FLAG SET WILL CANCEL RUNNING BUFFER.
+; COMMANDS SHOULD NOT PUSHA/POPA AT THE BEGINING AND ENDING OF COMMANDS.
 ; --- modules ---
 %include "print_sub.asm"
 %include "ls32_sub.asm"
@@ -111,14 +112,12 @@ jump_uint_n_eq_command_name :
 	db "june", 0
 ; If uints in compare buffer are equal, jump command is executed.
 jump_uint_n_eq_command :
-	pusha
 	mov si, commands_data.compare_buffer_a
 	COMMANDS_LS82UINT
 	mov ax, dx ; ax = uint of first compare buffer
 	mov si, commands_data.compare_buffer_b
 	COMMANDS_LS82UINT
 	cmp ax, dx
-	popa
 	jne jump_command
 	clc
 	ret
@@ -126,14 +125,12 @@ jump_uint_eq_command_name :
 	db "jue", 0
 ; If uints in compare buffer are equal, jump command is executed.
 jump_uint_eq_command :
-	pusha
 	mov si, commands_data.compare_buffer_a
 	COMMANDS_LS82UINT
 	mov ax, dx ; ax = uint of first compare buffer
 	mov si, commands_data.compare_buffer_b
 	COMMANDS_LS82UINT
 	cmp ax, dx
-	popa
 	je jump_command
 	clc
 	ret
@@ -170,7 +167,6 @@ compare_command_name :
 ; 1 <- value a
 ; 2 <- value b
 compare_command :
-	pusha
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 3
 	jne commands_err.invalid_arg_num_err
@@ -185,7 +181,6 @@ compare_command :
 	clc
 	call commands_ls8_set
 	jc commands_err.invalid_value_err
-	popa
 	clc
 	ret
 jump_command_name :
@@ -193,7 +188,6 @@ jump_command_name :
 ; -1 <- nth row to be jump to
 ; 1? <- + if downward, - if upward (relative to the jump instruction)
 jump_command :
-	pusha
 	mov byte al, [commands_data.is_buffer_executing]
 	cmp al, 0
 	je commands_err.not_running_buffer_err ; command can only run in buffer
@@ -230,14 +224,12 @@ jump_command :
 	cmp dx, BUFFER_HEIGHT
 	jae commands_err.invalid_buffer_row_err
 	call commands_set_executing_seg
-	popa
 	clc
 	ret
 run_buffer_command_name :
 	db "run", 0
 ; n <- ignored
 run_buffer_command :
-	pusha
 	push es
 	mov ax, ds
 	mov es, ax
@@ -288,13 +280,11 @@ run_buffer_command :
 .loop_end :
 	mov byte [commands_data.is_buffer_executing], 0
 	pop es
-	popa
 	clc
 	ret
 clear_buffer_command_name :
 	db "clb", 0
 clear_buffer_command :
-	pusha
 	push es
 	mov al, ' '
 	xor bx, bx
@@ -311,14 +301,12 @@ clear_buffer_command :
 	jmp .clear_loop
 .clear_loop_end :
 	pop es
-	popa
 	clc
 	ret
 set_active_buffer_command_name :
 	db "stb", 0
 ; 1 <- buffer to be set
 set_active_buffer_command :
-	pusha
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 2
 	jne commands_err.invalid_arg_num_err
@@ -332,7 +320,6 @@ set_active_buffer_command :
 	mul dx
 	add ax, BUFFER_BEGIN_SEG
 	mov word [commands_data.active_buffer], ax
-	popa
 	clc
 	ret
 set_row_command_name :
@@ -340,7 +327,6 @@ set_row_command_name :
 ; 1 <- row to be set
 ; 2 <- new row
 set_row_command :
-	pusha
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 3 ; no args
 	jne commands_err.invalid_arg_num_err
@@ -369,7 +355,6 @@ set_row_command :
 	xor di, di
 	cld
 	rep movsb
-	popa
 	clc
 	ret
 list_buffer_command_name :
@@ -377,7 +362,6 @@ list_buffer_command_name :
 ; 1? <- starting row
 ; 2? <- count
 list_buffer_command :
-	pusha
 	LS32_GET_COUNT ; cx = args count
 	xor dx, dx ; default 1st arg
 	mov ax, 5 ; default 2nd arg
@@ -449,7 +433,6 @@ list_buffer_command :
 	jmp .list_loop
 .list_loop_end :
 .end :
-	popa
 	clc
 	ret
 reset_stack_command_name :
@@ -462,7 +445,6 @@ pop_stack_command_name :
 	db "pop", 0
 ; n <- variables to be popped
 pop_stack_command :
-	pusha
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 1
 	jbe .end
@@ -496,14 +478,12 @@ pop_stack_command :
 	dec cx
 	jmp .pop_loop
 .end :
-	popa
 	clc
 	ret
 push_stack_command_name :
 	db "push", 0
 ; n <- variables to be pushed
 push_stack_command :
-	pusha
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 1
 	jbe .end
@@ -535,7 +515,6 @@ push_stack_command :
 	dec cx
 	jmp .push_loop
 .end :
-	popa
 	clc
 	ret
 set_command_name :
@@ -543,7 +522,6 @@ set_command_name :
 ; 1 <- nth variable
 ; 2 <- value
 set_command :
-	pusha
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 3
 	jne commands_err.invalid_arg_num_err
@@ -561,7 +539,6 @@ set_command :
 	clc
 	call commands_ls8_set
 	jc commands_err.invalid_value_err
-	popa
 	clc
 	ret
 shutdown_command_name :
@@ -585,7 +562,6 @@ say_command_name :
 ; -1 <- string to be printed
 ; 1? <- options
 say_command :
-	pusha
 	LS32_GET_COUNT
 	mov ah, GREY ; ah = text color
 	xor al, al ; al = number of new lines after print.
@@ -676,7 +652,6 @@ say_command :
 	dec al
 	jmp .newline_loop
 .end :
-	popa
 	clc
 	ret
 ; --- subroutine ---
@@ -815,7 +790,6 @@ commands_err :
 	call print_err_ln
 .end :
 	stc
-	popa
 	ret
 ; --- checks ---
 %if (VARIABLE_SIZE > 0xff) || (VARIABLE_COUNT > 0xff)
