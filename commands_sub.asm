@@ -155,6 +155,7 @@ add_command :
 	mov byte [di], 5
 	inc di
 	call uint_to_strn
+	clc
 	ret
 jump_uint_le_command_name :
 	db "jule", 0
@@ -286,7 +287,7 @@ jump_command :
 	call commands_consume_mark
 	cmp cx, 1
 	jne commands_err.invalid_value_err
-	call commands_consume_mark_as_uint ; dx = displacement
+	COMMANDS_CONSUME_MARK_READ_UINT ; dx = displacement
 	mov cx, [commands_data.executing_row] ; cx = current executing row
 	mov byte al, [bx]
 	cmp al, '+'
@@ -303,7 +304,7 @@ jump_command :
 	mov dx, cx
 	jmp .set_seg
 .absolute :
-	call commands_consume_mark_as_uint ; dx = nth row to be jump to
+	COMMANDS_CONSUME_MARK_READ_UINT ; dx = nth row to be jump to
 .set_seg :
 	cmp dx, BUFFER_HEIGHT
 	jae commands_err.invalid_buffer_row_err
@@ -395,9 +396,7 @@ set_active_buffer_command :
 	cmp cx, 2
 	jne commands_err.invalid_arg_num_err
 	add si, 6
-	clc
-	call commands_consume_mark_as_uint ; dx = buffer index
-	jc commands_err.invalid_uint_err
+	COMMANDS_CONSUME_MARK_READ_UINT ; dx = buffer index
 	cmp dx, BUFFER_COUNT
 	jae commands_err.invalid_buffer_err
 	mov ax, BUFFER_SEG_COUNT
@@ -415,9 +414,7 @@ set_row_command :
 	cmp cx, 3 ; no args
 	jne commands_err.invalid_arg_num_err
 	add si, 6
-	clc
-	call commands_consume_mark_as_uint ; dx = row
-	jc commands_err.invalid_uint_err
+	COMMANDS_CONSUME_MARK_READ_UINT ; dx = row
 	cmp dx, BUFFER_HEIGHT
 	jae commands_err.invalid_buffer_row_err
 	call commands_consume_mark
@@ -461,16 +458,15 @@ list_buffer_command :
 .list_with_count :
 	push si
 	add si, 10 ; the third arg
+	call commands_consume_mark
 	clc
-	call commands_consume_mark_as_uint
+	call commands_read_uint
 	pop si
 	jc commands_err.invalid_uint_err
 	mov ax, dx ; ax = count
 .list_with_start :
 	add si, 6 ; the second arg
-	clc
-	call commands_consume_mark_as_uint ; dx = starting row
-	jc commands_err.invalid_uint_err
+	COMMANDS_CONSUME_MARK_READ_UINT ; dx = starting row
 .list :
 	mov cx, ax ; cx = counter
 	mov bx, dx ; bx = starting row ; dx = current line
@@ -542,9 +538,7 @@ pop_stack_command :
 	mov word di, [commands_data.stack_pointer]
 	cmp di, commands_data.stack
 	jbe commands_err.stack_empty_err
-	clc
-	call commands_consume_mark_as_uint ; dx = variable
-	jc commands_err.invalid_uint_err
+	COMMANDS_CONSUME_MARK_READ_UINT ; dx = variable
 	cmp dx, VARIABLE_COUNT
 	jae commands_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
@@ -581,9 +575,7 @@ push_stack_command :
 	mov word di, [commands_data.stack_pointer] ; di = pointer to top of the stack
 	cmp di, commands_data.stack_pointer
 	jae commands_err.stack_full_err
-	clc
-	call commands_consume_mark_as_uint ; dx = variable
-	jc commands_err.invalid_uint_err
+	COMMANDS_CONSUME_MARK_READ_UINT ; dx = variable
 	cmp dx, VARIABLE_COUNT
 	jae commands_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
@@ -612,9 +604,7 @@ set_command :
 	cmp cx, 3
 	jne commands_err.invalid_arg_num_err
 	add si, 6
-	clc
-	call commands_consume_mark_as_uint ; dx = variable
-	jc commands_err.invalid_uint_err
+	COMMANDS_CONSUME_MARK_READ_UINT ; dx = variable
 	cmp dx, VARIABLE_COUNT
 	jae commands_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
@@ -854,23 +844,6 @@ commands_consume_mark :
 	add si, 2
 	mov word bx, [si]
 	add si, 2
-	ret
-; si <- current mark
-; dx -> uint
-; si -> next mark
-; cf -> set if fail to convert to uint
-commands_consume_mark_as_uint :
-	push cx
-	push bx
-	mov word cx, [si]
-	add si, 2
-	mov word bx, [si]
-	add si, 2
-	xchg bx, si
-	call strn_to_uint
-	xchg bx, si
-	pop bx
-	pop cx
 	ret
 ; There is so many repeating lines of code for handling err so I just put it all in one place.
 commands_err :
