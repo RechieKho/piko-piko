@@ -994,4 +994,7 @@ commands_err :
 %if (VARIABLE_SIZE > 0xff) || (VARIABLE_COUNT > 0xff)
 %error "Variable size and count must be a byte."
 %endif
+%if (VARIABLE_CAPACITY < 5)
+%error "Variable too small."
+%endif
 %endif ; _COMMANDS_SUB_ASM_
