@@ -222,12 +222,12 @@ compare_command :
 	call commands_consume_mark
 	mov di, commands_data.compare_buffer_a
 	clc
-	call commands_ls8_set
+	call commands_read_strn
 	jc commands_err.invalid_value_err
 	call commands_consume_mark
 	mov di, commands_data.compare_buffer_b
 	clc
-	call commands_ls8_set
+	call commands_read_strn
 	jc commands_err.invalid_value_err
 	clc
 	ret
@@ -587,7 +587,7 @@ set_command :
 	add di, ax ; di = variable address
 	call commands_consume_mark
 	clc
-	call commands_ls8_set
+	call commands_read_strn
 	jc commands_err.invalid_value_err
 	clc
 	ret
@@ -705,12 +705,12 @@ say_command :
 	clc
 	ret
 ; --- subroutine ---
-; Set ls8 (accept variable referencing).
+; Read strn to ls8 (accept variable referencing).
 ; bx <- string
 ; cx <- string length
 ; di <- ls8 to be output to
 ; cf -> set if fail
-commands_ls8_set :
+commands_read_strn :
 	pusha
 	cmp cx, 0
 	je .success
