@@ -68,6 +68,19 @@
 	mov si, commands_data.compare_buffer_b
 	COMMANDS_LS82UINT
 %endmacro
+; Consume mark and read as uint (accept variable referencing).
+; MUST ONLY BE CALLED IN COMMANDS.
+; si <- current mark
+; bx -> address of argument
+; cx -> length of argument
+; dx -> uint
+; si -> next mark
+%macro COMMANDS_CONSUME_MARK_READ_UINT 0
+	call commands_consume_mark
+	clc
+	call commands_read_uint
+	jc commands_err.invalid_uint_err
+%endmacro
 ; --- data ---
 commands_data :
 .stack_empty_err_str :
@@ -120,6 +133,29 @@ commands_data :
 	db COMPARE_BUFFER_CAPACITY, 0
 	times (COMPARE_BUFFER_CAPACITY) db 0
 ; --- commands ---
+add_command_name :
+	db "add", 0
+add_command :
+	LS32_GET_COUNT
+	cmp cx, 4
+	jne commands_err.invalid_arg_num_err
+	add si, 6
+	COMMANDS_CONSUME_MARK_READ_UINT
+	cmp dx, VARIABLE_COUNT
+	jae commands_err.invalid_variable_err
+	mov al, VARIABLE_SIZE
+	mul dl
+	mov di, commands_data.variables
+	add di, ax ; di = variable address
+	COMMANDS_CONSUME_MARK_READ_UINT
+	mov ax, dx ; ax = first value
+	COMMANDS_CONSUME_MARK_READ_UINT
+	add ax, dx
+	inc di
+	mov byte [di], 5
+	inc di
+	call uint_to_strn
+	ret
 jump_uint_le_command_name :
 	db "jule", 0
 jump_uint_le_command :
@@ -705,6 +741,51 @@ say_command :
 	clc
 	ret
 ; --- subroutine ---
+; Read strn as uint to ls8 (accept variable referencing).
+; bx <- string
+; cx <- string length
+; dx -> uint read
+; cf -> set if fail
+commands_read_uint :
+	cmp cx, 0
+	je .fail
+	push ax
+	mov byte al, [bx]
+	cmp al, '$'
+	pop ax
+	jne .literal_uint
+	push si
+	mov si, bx
+	inc si
+	dec cx
+	clc
+	call strn_to_uint
+	pop si
+	jc .fail
+	cmp dx, VARIABLE_COUNT
+	jae .fail
+	push ax
+	mov al, VARIABLE_SIZE
+	mul dl
+	push si
+	mov si, commands_data.variables
+	add si, ax
+	LS8_GET_COUNT
+	mov bx, si
+	pop si
+	pop ax
+	add bx, 2
+.literal_uint :
+	push si
+	mov si, bx
+	clc
+	call strn_to_uint
+	pop si
+	jnc .success
+.fail :
+	stc
+.success :
+	ret
 ; Read strn to ls8 (accept variable referencing).
 ; bx <- string
 ; cx <- string length

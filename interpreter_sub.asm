@@ -28,6 +28,7 @@ interpreter_data :
 ; address to the command name and its corresponding function
 	dw say_command_name, say_command
 	dw set_command_name, set_command
+	dw add_command_name, add_command
 	dw push_stack_command_name, push_stack_command
 	dw pop_stack_command_name, pop_stack_command
 	dw reset_stack_command_name, reset_stack_command

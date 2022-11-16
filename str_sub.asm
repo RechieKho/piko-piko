@@ -101,4 +101,22 @@ strn_to_uint :
 	pop bx
 	pop ax
 	ret
+; Turn uint to strn (always 5 digits)
+; ax <- number
+; di <- location to be written to
+uint_to_strn :
+	pusha
+	mov cx, 5
+	mov bx, 10
+	add di, 4
+.loop :
+	xor dx, dx
+	div bx
+	add dl, '0'
+	mov byte [di], dl
+	dec di
+	dec cx
+	jnz .loop
+	popa
+	ret
 %endif ; _STR_SUB_ASM_
