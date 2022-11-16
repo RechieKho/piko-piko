@@ -393,6 +393,7 @@ set_row_command :
 	mul dx
 	add ax, [commands_data.active_buffer] ; ax = buffer row seg
 ; clear the row
+	push es
 	mov es, ax
 	push cx
 	mov cx, BUFFER_WIDTH
@@ -403,6 +404,7 @@ set_row_command :
 	xor di, di
 	cld
 	rep movsb
+	pop es
 	clc
 	ret
 list_buffer_command_name :
