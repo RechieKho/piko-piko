@@ -71,14 +71,16 @@
 ; Consume mark and read as uint (accept variable referencing).
 ; MUST ONLY BE CALLED IN COMMANDS.
 ; si <- current mark
-; bx -> address of argument
-; cx -> length of argument
 ; dx -> uint
 ; si -> next mark
 %macro COMMANDS_CONSUME_MARK_READ_UINT 0
+	push bx
+	push cx
 	call commands_consume_mark
 	clc
 	call commands_read_uint
+	pop cx
+	pop bx
 	jc commands_err.invalid_uint_err
 %endmacro
 ; --- data ---
@@ -87,8 +89,8 @@ commands_data :
 	db "Stack is empty.", 0
 .stack_full_err_str :
 	db "Stack is full.", 0
-.value_too_long_err_str :
-	db "Value too long.", 0
+.value_too_big_err_str :
+	db "Value too big.", 0
 .invalid_value_err_str :
 	db "Invalid value.", 0
 .invalid_variable_err_str :
@@ -133,6 +135,99 @@ commands_data :
 	db COMPARE_BUFFER_CAPACITY, 0
 	times (COMPARE_BUFFER_CAPACITY) db 0
 ; --- commands ---
+div_command_name :
+	db "div", 0
+div_command :
+	LS32_GET_COUNT
+	cmp cx, 5
+	jne commands_err.invalid_arg_num_err
+	add si, 6
+	COMMANDS_CONSUME_MARK_READ_UINT
+	cmp dx, VARIABLE_COUNT
+	jae commands_err.invalid_variable_err
+	mov al, VARIABLE_SIZE
+	mul dl
+	mov di, commands_data.variables
+	add di, ax ; di = variable address for quotient
+	COMMANDS_CONSUME_MARK_READ_UINT
+	cmp dx, VARIABLE_COUNT
+	jae commands_err.invalid_variable_err
+	mov al, VARIABLE_SIZE
+	mul dl
+	mov bx, commands_data.variables
+	add bx, ax ; bx = variable address for remainder
+	COMMANDS_CONSUME_MARK_READ_UINT
+	mov ax, dx ; ax = first value
+	COMMANDS_CONSUME_MARK_READ_UINT
+	cmp dh, 0
+	jne commands_err.value_too_big_err
+	div dl
+	mov dx, ax
+	xor ax, ax
+	mov al, dl
+	inc di
+	mov byte [di], 5
+	inc di
+	call uint_to_strn
+	mov di, bx
+	xor ax, ax
+	mov al, dh
+	inc di
+	mov byte [di], 5
+	inc di
+	call uint_to_strn
+	clc
+	ret
+mul_command_name :
+	db "mul", 0
+mul_command :
+	LS32_GET_COUNT
+	cmp cx, 4
+	jne commands_err.invalid_arg_num_err
+	add si, 6
+	COMMANDS_CONSUME_MARK_READ_UINT
+	cmp dx, VARIABLE_COUNT
+	jae commands_err.invalid_variable_err
+	mov al, VARIABLE_SIZE
+	mul dl
+	mov di, commands_data.variables
+	add di, ax ; di = variable address
+	COMMANDS_CONSUME_MARK_READ_UINT
+	mov ax, dx ; ax = first value
+	COMMANDS_CONSUME_MARK_READ_UINT
+	mul dx
+	cmp dx, 0
+	jne commands_err.value_too_big_err
+	inc di
+	mov byte [di], 5
+	inc di
+	call uint_to_strn
+	clc
+	ret
+sub_command_name :
+	db "sub", 0
+sub_command :
+	LS32_GET_COUNT
+	cmp cx, 4
+	jne commands_err.invalid_arg_num_err
+	add si, 6
+	COMMANDS_CONSUME_MARK_READ_UINT
+	cmp dx, VARIABLE_COUNT
+	jae commands_err.invalid_variable_err
+	mov al, VARIABLE_SIZE
+	mul dl
+	mov di, commands_data.variables
+	add di, ax ; di = variable address
+	COMMANDS_CONSUME_MARK_READ_UINT
+	mov ax, dx ; ax = first value
+	COMMANDS_CONSUME_MARK_READ_UINT
+	sub ax, dx
+	inc di
+	mov byte [di], 5
+	inc di
+	call uint_to_strn
+	clc
+	ret
 add_command_name :
 	db "add", 0
 add_command :
@@ -420,7 +515,7 @@ set_row_command :
 	call commands_consume_mark
 	mov si, bx ; si = new row content
 	cmp cx, BUFFER_WIDTH
-	jae commands_err.value_too_long_err ; cx = content length
+	jae commands_err.value_too_big_err ; cx = content length
 	mov ax, dx
 	mov dx, BUFFER_SEG_PER_ROW
 	mul dx
@@ -847,8 +942,8 @@ commands_consume_mark :
 	ret
 ; There is so many repeating lines of code for handling err so I just put it all in one place.
 commands_err :
-.value_too_long_err :
-	mov bx, commands_data.value_too_long_err_str
+.value_too_big_err :
+	mov bx, commands_data.value_too_big_err_str
 	jmp .print
 .invalid_arg_num_err :
 	mov bx, commands_data.invalid_arg_num_err_str
