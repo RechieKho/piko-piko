@@ -102,8 +102,9 @@ interpreter_execute_mark :
 	add si, 2
 	mov word cx, [si] ; cx = length of first argument
 	add si, 2
-	mov word dx, [si]
-	mov si, dx ; si = address of first argument
+	mov word bx, [si]
+	call commands_read_strn ; accept variable referencing
+	mov si, bx ; si = address of first argument
 	mov bx, interpreter_data.commands_table
 .loop_commands_table :
 	mov word di, [bx] ; di = command name from commands table
