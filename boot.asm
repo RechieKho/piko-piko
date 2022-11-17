@@ -9,6 +9,9 @@
 	mov bp, FREE_BEGIN + 1024
 	mov sp, bp
 	jmp main
+; --- data ---
+boot_data :
+	.disk_read_err_str : db "Fail to read disk, error code: ", 0
 ; --- subroutine ---
 %include "disk_sub.asm"
 main :
@@ -28,7 +31,7 @@ main :
 	dw 0xaa55 ; sig of bootloader, end of bootloader
 boot_err :
 .read_disk_err :
-	mov bx, disk_data.disk_read_err_str
+	mov bx, boot_data.disk_read_err_str
 	call print_err
 	PRINT_BYTE ah
 	PRINT_CHAR '.'

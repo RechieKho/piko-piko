@@ -30,8 +30,4 @@
 	mov ah, 0x03
 	int 0x13
 %endmacro
-; --- data ---
-disk_data :
-	.disk_read_err_str : db "Fail to read disk, error code: ", 0
-	.disk_write_err_str : db "Fail to write disk, error code: ", 0
 %endif ; _DISK_SUB_ASM_
