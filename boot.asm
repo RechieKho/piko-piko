@@ -20,8 +20,17 @@ main :
 	mov cl, 0x02 ; right after boot sector
 	mov dh, 0
 	mov bx, 0
-	call read_disk
+	DISK_READ
+	jc boot_err.read_disk_err
 ; jmp into kernel
 	jmp KERNEL_CODE_BEGIN_SEG : 0
 	times 510-($-$$) db 0
 	dw 0xaa55 ; sig of bootloader, end of bootloader
+boot_err :
+.read_disk_err :
+	mov bx, disk_data.disk_read_err_str
+	call print_err
+	PRINT_BYTE ah
+	PRINT_CHAR '.'
+.jam :
+	jmp $

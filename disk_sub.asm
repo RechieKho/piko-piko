@@ -1,13 +1,9 @@
 %ifndef _DISK_SUB_ASM_
 %define _DISK_SUB_ASM_
 [bits 16]
-; --- data ---
-disk_sub_data :
-	.read_disk_err : db "Fail to read disk, error code: ", 0
-	.write_disk_err : db "Fail to write disk, error code: ", 0
-; --- macros ---
-; --- subroutines ---
+; --- modules ---
 %include "print_sub.asm"
+; --- macros ---
 ; read sectors into memory
 ; al <- number of sectors to read (nonzero)
 ; ch <- low eight bits of cylinder number
@@ -15,21 +11,12 @@ disk_sub_data :
 ; dh <- head number
 ; dl <- drive number
 ; es : bx <- data buffer for loaded data
-read_disk :
-	pusha
+; ah -> error code
+; cf -> set on fail
+%macro DISK_READ 0
 	mov ah, 0x02
-	clc
 	int 0x13
-	jc .err
-	popa
-	ret
-.err :
-	mov bx, disk_sub_data.read_disk_err
-	call print_err
-	PRINT_BYTE ah
-	PRINT_CHAR '.'
-	PRINT_NL
-	jmp $
+%endmacro
 ; write sectors into disk
 ; al <- number of sectors to write (nonzero)
 ; ch <- low eight bits of cylinder number
@@ -37,20 +24,14 @@ read_disk :
 ; dh <- head number
 ; dl <- drive number
 ; es : bx <- data to be written on disk
-write_disk :
-	pusha
+; ah -> error code
+; cf -> set on fail
+%macro DISK_WRITE 0
 	mov ah, 0x03
-	clc
 	int 0x13
-	jc .err
-	popa
-	ret
-.err :
-	mov bx, disk_sub_data.write_disk_err
-	call print_err
-	mov bl, ah
-	PRINT_BYTE ah
-	PRINT_CHAR '.'
-	PRINT_NL
-	jmp $
+%endmacro
+; --- data ---
+disk_data :
+	.disk_read_err_str : db "Fail to read disk, error code: ", 0
+	.disk_write_err_str : db "Fail to write disk, error code: ", 0
 %endif ; _DISK_SUB_ASM_
