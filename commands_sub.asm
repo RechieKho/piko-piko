@@ -180,6 +180,10 @@ commands_data :
 ; --- commands ---
 div_command_name :
 	db "div", 0
+; 1 <- variable for storing quotient
+; 2 <- variable for stonig remainder
+; 3 <- dividend
+; 4 <- divisor
 div_command :
 	LS32_GET_COUNT
 	cmp cx, 5
@@ -223,6 +227,9 @@ div_command :
 	ret
 mul_command_name :
 	db "mul", 0
+; 1 <- value for storing the product
+; 2 <- first value
+; 3 <- second value
 mul_command :
 	LS32_GET_COUNT
 	cmp cx, 4
@@ -249,6 +256,9 @@ mul_command :
 	ret
 sub_command_name :
 	db "sub", 0
+; 1 <- variable for storing the result
+; 2 <- value to be subtracted
+; 3 <- subtracted value
 sub_command :
 	LS32_GET_COUNT
 	cmp cx, 4
@@ -273,6 +283,9 @@ sub_command :
 	ret
 add_command_name :
 	db "add", 0
+; 1 <- value for storing the sum
+; 2 <- first value
+; 3 <- second value
 add_command :
 	LS32_GET_COUNT
 	cmp cx, 4
@@ -297,6 +310,7 @@ add_command :
 	ret
 jump_uint_le_command_name :
 	db "jule", 0
+; jump if less equal
 jump_uint_le_command :
 	mov bx, si
 	COMMANDS_COMBUF2UINT
@@ -307,6 +321,7 @@ jump_uint_le_command :
 	ret
 jump_uint_l_command_name :
 	db "jul", 0
+; jump if less
 jump_uint_l_command :
 	mov bx, si
 	COMMANDS_COMBUF2UINT
@@ -317,6 +332,7 @@ jump_uint_l_command :
 	ret
 jump_uint_ge_command_name :
 	db "juge", 0
+; jump if greater equal
 jump_uint_ge_command :
 	mov bx, si
 	COMMANDS_COMBUF2UINT
@@ -327,6 +343,7 @@ jump_uint_ge_command :
 	ret
 jump_uint_g_command_name :
 	db "jug", 0
+; jump if greater
 jump_uint_g_command :
 	mov bx, si
 	COMMANDS_COMBUF2UINT

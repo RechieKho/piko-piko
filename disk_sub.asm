@@ -5,7 +5,7 @@
 %include "print_sub.asm"
 ; --- macros ---
 ; read sectors into memory
-; al <- number of sectors to read (nonzero)
+; al <- number of sectors to read (nonzero, max 128)
 ; ch <- low eight bits of cylinder number
 ; cl <- sector number (1-63 bits 0-5)
 ; dh <- head number
@@ -18,7 +18,7 @@
 	int 0x13
 %endmacro
 ; write sectors into disk
-; al <- number of sectors to write (nonzero)
+; al <- number of sectors to write (nonzero, max 128)
 ; ch <- low eight bits of cylinder number
 ; cl <- sector number (1-63 bits 0-5)
 ; dh <- head number
