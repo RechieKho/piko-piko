@@ -3,7 +3,7 @@
 	mov bx, KERNEL_CODE_BEGIN_SEG
 	mov ds, bx
 ; setup stack
-	mov ss, bx ; bx is dx
+	mov ss, bx ; bx is ds
 	mov bp, KERNEL_CODE_SIZE + KERNEL_STACK_SIZE
 	mov sp, bp
 	jmp main
