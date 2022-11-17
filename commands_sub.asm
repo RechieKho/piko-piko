@@ -68,6 +68,49 @@
 	mov si, commands_data.compare_buffer_b
 	COMMANDS_LS82UINT
 %endmacro
+; Consume mark and read as strn (accept variable referencing).
+; MUST ONLY BE CALLED IN COMMANDS.
+; si <- current mark
+; bx -> string
+; cx -> string length
+; si -> next mark
+%macro COMMANDS_CONSUME_MARK_READ_STRN 0
+	call commands_consume_mark
+	clc
+	call commands_read_strn
+	jc commands_err.invalid_variable_err
+%endmacro
+; Consume mark and read as strn save it to ls8 (accept variable referencing).
+; MUST ONLY BE CALLED IN COMMANDS.
+; si <- current_mark
+; di <- ls8 to output to
+; si -> next mark
+%macro COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8 0
+	push bx
+	push cx
+	call commands_consume_mark
+	clc
+	call commands_read_strn
+	jc %%fail
+	cmp ch , 0
+	jne %%fail
+	push si
+	mov si, di
+	mov di, bx
+	clc
+	call ls8_set
+	pop si
+	jc %%fail
+%%success :
+	clc
+	jmp %%end
+%%fail :
+	stc
+%%end :
+	pop cx
+	pop bx
+	jc commands_err.invalid_value_err
+%endmacro
 ; Consume mark and read as uint (accept variable referencing).
 ; MUST ONLY BE CALLED IN COMMANDS.
 ; si <- current mark
@@ -351,16 +394,10 @@ compare_command :
 	cmp cx, 3
 	jne commands_err.invalid_arg_num_err
 	add si, 6
-	call commands_consume_mark
 	mov di, commands_data.compare_buffer_a
-	clc
-	call commands_read_strn
-	jc commands_err.invalid_value_err
-	call commands_consume_mark
+	COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8
 	mov di, commands_data.compare_buffer_b
-	clc
-	call commands_read_strn
-	jc commands_err.invalid_value_err
+	COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8
 	clc
 	ret
 jump_command_name :
@@ -379,7 +416,7 @@ jump_command :
 	je .relative
 	jmp commands_err.invalid_arg_num_err
 .relative :
-	call commands_consume_mark
+	COMMANDS_CONSUME_MARK_READ_STRN
 	cmp cx, 1
 	jne commands_err.invalid_value_err
 	COMMANDS_CONSUME_MARK_READ_UINT ; dx = displacement
@@ -512,7 +549,7 @@ set_row_command :
 	COMMANDS_CONSUME_MARK_READ_UINT ; dx = row
 	cmp dx, BUFFER_HEIGHT
 	jae commands_err.invalid_buffer_row_err
-	call commands_consume_mark
+	COMMANDS_CONSUME_MARK_READ_STRN
 	mov si, bx ; si = new row content
 	cmp cx, BUFFER_WIDTH
 	jae commands_err.value_too_big_err ; cx = content length
@@ -706,10 +743,7 @@ set_command :
 	mul dl
 	mov di, commands_data.variables
 	add di, ax ; di = variable address
-	call commands_consume_mark
-	clc
-	call commands_read_strn
-	jc commands_err.invalid_value_err
+	COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8
 	clc
 	ret
 shutdown_command_name :
@@ -743,7 +777,7 @@ say_command :
 	je .set_option
 	jmp commands_err.invalid_arg_num_err
 .set_option :
-	call commands_consume_mark
+	COMMANDS_CONSUME_MARK_READ_STRN
 .option_detection_loop :
 	cmp cx, 0
 	je .default
@@ -784,36 +818,10 @@ say_command :
 	dec cx
 	jmp .option_detection_loop
 .default :
-	call commands_consume_mark
+	COMMANDS_CONSUME_MARK_READ_STRN
 	cmp cx, 0
 	je .newline_loop
 	mov si, bx
-	mov byte dl, [si]
-	cmp dl, '$'
-	jne .not_var
-; Reading variable to be output
-	inc si
-	dec cx
-	clc
-	call strn_to_uint
-	jc commands_err.invalid_uint_err
-	cmp dx, VARIABLE_COUNT
-	jae commands_err.invalid_variable_err
-	push ax
-	mov al, VARIABLE_SIZE
-	mul dl
-	mov si, commands_data.variables
-	add si, ax
-	pop ax
-	LS8_GET_COUNT
-	add si, 2
-	jmp .print_strn
-.not_var :
-	cmp dl, '\'
-	jne .print_strn
-; Skip first character if it is '\'
-	inc si
-	dec cx
 .print_strn :
 	call console_print_strn
 .newline_loop :
@@ -871,18 +879,21 @@ commands_read_uint :
 	stc
 .success :
 	ret
-; Read strn to ls8 (accept variable referencing).
+; Read strn (accept variable referencing).
 ; bx <- string
 ; cx <- string length
-; di <- ls8 to be output to
+; bx -> string
+; cx -> string length
 ; cf -> set if fail
 commands_read_strn :
-	pusha
+	push ax
+	push dx
+	push si
 	cmp cx, 0
 	je .success
 	mov byte al, [bx]
 	cmp al, '$'
-	jne .not_var
+	jne .literal_strn
 ; variable referencing
 	mov si, bx
 	inc si
@@ -897,25 +908,24 @@ commands_read_strn :
 	mov si, commands_data.variables
 	add si, ax
 	LS8_GET_COUNT
-	xchg si, di ; di = variable ; si = ls8 output
-	add di, 2
-	jmp .set
-.not_var :
-	mov si, di
-	mov di, bx
-	cmp al, '\'
-	jne .set
-	inc di
-	dec cx
-.set :
-	clc
-	call ls8_set
-	jc .fail
+	mov bx, si
+	add bx, 2
 	jmp .success
+.literal_strn :
+	cmp al, '\'
+	jne .success
+	inc bx
+	dec cx
+	jmp .success
+.success :
+	clc
+	jmp .end
 .fail :
 	stc
-.success :
-	popa
+.end :
+	pop si
+	pop dx
+	pop ax
 	ret
 ; Set executing row together with its corresponding executing segment.
 ; dx <- executing row
