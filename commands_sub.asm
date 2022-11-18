@@ -13,6 +13,7 @@
 %include "type_macros.asm"
 %include "console_sub.asm"
 %include "interpreter_sub.asm"
+%include "storage_sub.asm"
 ; --- macros ---
 %define VARIABLE_CAPACITY 0x20
 %define VARIABLE_SIZE (VARIABLE_CAPACITY + 2) ; MUST within a byte
@@ -128,6 +129,10 @@
 %endmacro
 ; --- data ---
 commands_data :
+.disk_read_err_str :
+	db "Fail to read disk.", 0
+.invalid_file_err_str :
+	db "Invalid file.", 0
 .stack_empty_err_str :
 	db "Stack is empty.", 0
 .stack_full_err_str :
@@ -178,6 +183,32 @@ commands_data :
 	db COMPARE_BUFFER_CAPACITY, 0
 	times (COMPARE_BUFFER_CAPACITY) db 0
 ; --- commands ---
+load_command_name :
+	db "load", 0
+; 1 <- file index
+load_command :
+	LS32_GET_COUNT
+	cmp cx, 2
+	jne commands_err.invalid_arg_num_err
+	add si, 6
+	COMMANDS_CONSUME_MARK_READ_UINT
+	cmp dx, FILE_COUNT
+	jae commands_err.invalid_file_err
+	mov ax, BUFFER_SEC_COUNT
+	mul dx
+	ror ax, 5
+	add ax, STORAGE_BEGIN_SEC
+	rol ax, 5
+	mov cx, ax ; cx = sector & cylinder
+	xchg dl, dh ; dh = starting head
+	mov ax, BUFFER_SEC_COUNT ; ax = number of sectors
+	push es
+	mov word bx, [commands_data.active_buffer]
+	mov es, bx
+	call storage_read
+	pop es
+	jc commands_err.disk_read_err
+	ret
 div_command_name :
 	db "div", 0
 ; 1 <- variable for storing quotient
@@ -969,6 +1000,12 @@ commands_consume_mark :
 	ret
 ; There is so many repeating lines of code for handling err so I just put it all in one place.
 commands_err :
+.disk_read_err :
+	mov bx, commands_data.disk_read_err_str
+	jmp .print
+.invalid_file_err :
+	mov bx, commands_data.invalid_file_err_str
+	jmp .print
 .value_too_big_err :
 	mov bx, commands_data.value_too_big_err_str
 	jmp .print

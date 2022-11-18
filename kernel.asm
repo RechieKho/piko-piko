@@ -12,6 +12,7 @@
 %include "ls16_sub.asm"
 %include "ls8_sub.asm"
 %include "interpreter_sub.asm"
+%include "storage_sub.asm"
 ; --- data ---
 kernel_data :
 .greeting :
@@ -49,6 +50,7 @@ pass :
 	ret
 main :
 ; initialization
+	STORAGE_SET_DRIVE dl
 	CONSOLE_INIT
 	COMMANDS_INIT
 	mov di, kernel_data.input_buffer
