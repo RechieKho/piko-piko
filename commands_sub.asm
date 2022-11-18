@@ -158,7 +158,7 @@ commands_data :
 .debug_show_row_str :
 	db "[line ", 0
 .shutdown_str :
-	db "Shutting down...", 0
+	db "Shutting down... Wait, I am still alive? Maybe holding down the power button will completely kill me.", 0
 .variables :
 %rep VARIABLE_COUNT
 	db VARIABLE_CAPACITY, 0
@@ -828,14 +828,11 @@ shutdown_command_name :
 shutdown_command :
 	mov bx, commands_data.shutdown_str
 	call print_str
+	PRINT_NL
 	mov ax, 0x5307
-	mov cx, 3
-	mov bx, 1
+	mov cx, 0x03
+	mov bx, 0x01
 	int 0x15
-.halt :
-	cli
-	hlt
-	jmp .halt
 	clc
 	ret
 say_command_name :
