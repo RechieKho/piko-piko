@@ -20,6 +20,12 @@
 %define BUFFER_SIZE (BUFFER_WIDTH * BUFFER_HEIGHT)
 %define BUFFER_SEG_COUNT (BUFFER_SIZE >> 4)
 %define BUFFER_SEC_COUNT (BUFFER_SIZE / 512)
+%ifndef STORAGE_SECTOR_COUNT
+%define STORAGE_SECTOR_COUNT 20
+%endif
+%define STORAGE_BEGIN_SEC (KERNEL_CODE_SECTOR_COUNT + 1)
+%define STORAGE_SIZE (STORAGE_SECTOR_COUNT * 512)
+%define FILE_COUNT (STORAGE_SIZE / BUFFER_SIZE)
 ; Memory mapping :
 ; high
 ; ...
@@ -41,5 +47,8 @@
 %endif
 %if (BUFFER_BEGIN_ADDR + BUFFER_SIZE * BUFFER_COUNT) >= FREE_END
 %error "Buffer exceed the end of free memory."
+%endif
+%if (FILE_COUNT > 0xff)
+%error "File count must be a byte."
 %endif
 %endif ; _TYPEDEF_MACROS_ASM_
