@@ -15,10 +15,10 @@
 %include "interpreter_sub.asm"
 %include "storage_sub.asm"
 ; --- macros ---
-%define VARIABLE_CAPACITY 0x20
+%define VARIABLE_CAPACITY BUFFER_WIDTH
 %define VARIABLE_SIZE (VARIABLE_CAPACITY + 2) ; MUST within a byte
 %define VARIABLE_COUNT 0x1a ; MUST within a byte
-%define STACK_MAX_VAR (VARIABLE_COUNT * 5) ; number of variable able to store on stack
+%define STACK_MAX_VAR 25 ; number of variable able to store on stack
 %define COMPARE_BUFFER_CAPACITY 0x20
 %define COMPARE_BUFFER_SIZE (COMPARE_BUFFER_SIZE + 2)
 %macro COMMANDS_INIT 0
@@ -32,13 +32,13 @@
 	xor bx, bx
 	mov dx, (BUFFER_SEC_COUNT * BUFFER_COUNT)
 	mov si, BUFFER_BEGIN_SEG
-	mov cx, 512
+	mov cx, SECTOR_SIZE
 %%set_loop :
 	cmp dx, 0
 	je %%set_loop_end
 	mov es, si
 	call byteset
-	add si, (512 >> 4)
+	add si, (SECTOR_SIZE >> 4)
 	dec dx
 	jmp %%set_loop
 %%set_loop_end :
@@ -583,13 +583,13 @@ clear_buffer_command :
 	xor bx, bx
 	mov dx, BUFFER_SEC_COUNT
 	mov si, [commands_data.active_buffer]
-	mov cx, 512
+	mov cx, SECTOR_SIZE
 .clear_loop :
 	cmp dx, 0
 	je .clear_loop_end
 	mov es, si
 	call byteset
-	add si, (512 >> 4)
+	add si, (SECTOR_SIZE >> 4)
 	dec dx
 	jmp .clear_loop
 .clear_loop_end :

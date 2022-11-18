@@ -47,7 +47,7 @@
 	jnc %%success
 	xor ah, ah ; ax/al = number of sectors read
 	pusha
-	mov dl, 20 ; 512 >> 4
+	mov dl, 20 ; SECTOR_SIZE >> 4
 	mul dl
 	mov bx, es
 	add bx, ax
@@ -90,7 +90,7 @@
 	jnc %%success
 	xor ah, ah ; ax/al = number of sectors written
 	pusha
-	mov dl, 20 ; 512 >> 4
+	mov dl, 20 ; SECTOR_SIZE >> 4
 	mul dl
 	mov bx, es
 	add bx, ax
@@ -156,9 +156,9 @@ storage_read :
 	pop ax
 	jc .fail
 	mov bx, es
-	add bx, ((MAX_SEC_PER_OP * 512) >> 4)
+	add bx, ((MAX_SEC_PER_OP * SECTOR_SIZE) >> 4)
 	mov es, bx
-	mov bx, ((MAX_SEC_PER_OP * 512) & 0x0f) ; digits that are shifted out
+	mov bx, ((MAX_SEC_PER_OP * SECTOR_SIZE) & 0x0f) ; digits that are shifted out
 	jmp .loop
 .loop_end :
 	clc
@@ -209,9 +209,9 @@ storage_write :
 	pop ax
 	jc .fail
 	mov bx, es
-	add bx, ((MAX_SEC_PER_OP * 512) >> 4)
+	add bx, ((MAX_SEC_PER_OP * SECTOR_SIZE) >> 4)
 	mov es, bx
-	mov bx, ((MAX_SEC_PER_OP * 512) & 0x0f) ; digits that are shifted out
+	mov bx, ((MAX_SEC_PER_OP * SECTOR_SIZE) & 0x0f) ; digits that are shifted out
 	jmp .loop
 .loop_end :
 	clc
