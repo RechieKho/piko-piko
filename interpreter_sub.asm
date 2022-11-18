@@ -50,6 +50,7 @@ interpreter_data :
 	dw clear_buffer_command_name, clear_buffer_command
 	dw set_active_buffer_command_name, set_active_buffer_command
 	dw run_buffer_command_name, run_buffer_command
+	dw save_command_name, save_command
 	dw load_command_name, load_command
 	dw shutdown_command_name, shutdown_command
 	dw 0

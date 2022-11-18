@@ -50,7 +50,7 @@ pass :
 	ret
 main :
 ; initialization
-	STORAGE_SET_DRIVE dl
+	STORAGE_SET_DRIVE
 	CONSOLE_INIT
 	COMMANDS_INIT
 	mov di, kernel_data.input_buffer
