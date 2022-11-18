@@ -27,8 +27,6 @@ main :
 	jc boot_err.read_disk_err
 ; jmp into kernel
 	jmp KERNEL_CODE_BEGIN_SEG : 0
-	times 510-($-$$) db 0
-	dw 0xaa55 ; sig of bootloader, end of bootloader
 boot_err :
 .read_disk_err :
 	mov bx, boot_data.disk_read_err_str
@@ -37,3 +35,5 @@ boot_err :
 	PRINT_CHAR '.'
 .jam :
 	jmp $
+	times 510-($-$$) db 0
+	dw 0xaa55 ; sig of bootloader, end of bootloader
