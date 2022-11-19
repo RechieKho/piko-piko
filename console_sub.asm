@@ -579,12 +579,12 @@ console_read_line :
 	sub cx, dx
 	dec cx ; cx = index of character to be erased, right before cursor
 	mov dh, cl
+	clc
 	call ls16_erase
 	popa
 	jc .reject_handle
 	call bx
 	call _update_input_line
-	jc .reject_handle
 	CURSOR_BACKWARD
 	jmp .loop
 ; ax <- scancode
@@ -597,16 +597,15 @@ console_read_line :
 	sub cx, dx ; cx = index of character to be inserted
 	mov dh, cl
 	mov ah, CONSOLE_READ_LINE_DEFAULT_COLOR
+	clc
 	call ls16_insert
 	popa
 	jc .reject_handle
 	call bx
 	call _update_input_line
-	jc .reject_handle
 	CURSOR_FORWARD
 	jmp .loop
 .reject_handle :
-	clc
 	PRINT_CHAR 0x07 ; ring a bell
 	jmp .loop
 .loop_end :
