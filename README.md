@@ -1,10 +1,13 @@
-# Piko-piko OS - A simplistic, minimalistic, 16-bit toy OS
+# Piko-piko OS
 
-> A small OS for entertainment & education. 0 practicality, 100% messing around.
-> - From the author, *Rechie Kho*
+> A simplistic, minimalistic, 16-bit toy OS.
+> Perfect for entertainment & education. 
+> 0 practicality, 100% messing around.
+>
+> *From the author, Rechie Kho*
 
 Packed with a bootloader and an interpreter, it is able to run the commands like how
-BASIC works in the 80s. It is much user-unfriendly as the language is closer to
+BASIC does in the 80s. It is much user-unfriendly as the language is closer to
 assembly. It can: 
 
 - Do basic arithmetics (`add`, `sub`, `mul` & `div`)
@@ -18,28 +21,28 @@ It is written in *pure* nasm assembly, so brace yourself.
 
 ## Hello world in Piko-piko
 
-First, clone the project if you haven't do it [as stated in 'Build the source' section](## Build the source).
+First, clone the project if you haven't do it [as stated in 'Build the source' section](#build-from-source).
 
 Then, enter the world of Piko-piko.
 ```sh 
 $ make
 ```
 
-At this point, you'll see 'Welcome to piko-piko!' printed on the screen proceeds with `>`. Welcome to Piko-piko!
+At this point, you'll see "Welcome to piko-piko!" printed on the screen proceeds with `>`. Welcome to Piko-piko!
 
-Then, type this command to print 'Hello world!'.
+Then, type this command to print "Hello world!".
 ```sh
 > say n 'Hello world!'
 ```
 
-Yay, your first 'Hello world!' in Piko-piko!
+Yay, your first "Hello world!" in Piko-piko!
 
-Let's spice things up by making our 'Hello world!' colorful (in cyan)!
+Let's spice things up by making our "Hello world!" colorful!
 ```sh 
 > say Cn 'Hello world!'
 ```
 
-It is time to take a rest and say goodbye to Piko-piko since we have printed 'Hello world!'.
+It is time to take a rest and say goodbye to Piko-piko since we have printed "Hello world!".
 ```sh
 > bye
 ```
@@ -75,20 +78,22 @@ To clean (remove) the generated files.
 $ make clean
 ```
 
-After doing some serious assembly programming, you can format the code before commiting. Note that this needs python.
+After doing some serious assembly programming, you can format the code before commiting.
 ```sh
 $ make fmt
 ```
+**NOTE:** This needs `python`
 
 ## Make a bootable Piko-piko USB.
 
 **NOTE:** For Windows and Mac OS, it is not tested and unsupported.(?)
+
 **WARNING:** Once you made the bootable USB, the old data in the USB will not be able to recovered. Please consider backing up the data of USB before doing such dangerous act.
 
 Piko-piko OS is an 16-bit x86 OS so it is able to boot on computer with intel-based CPU.
 
 To make a bootable Piko-piko USB, you'll need to have:
-- `piko-piko.bin` file from [building the source](## Build from source),
+- `piko-piko.bin` file from [building the source](#build-from-source),
 - A USB that can store the size of `piko-piko.bin`.
 
 Then, directly copy it onto your USB.
