@@ -1,6 +1,7 @@
 %ifndef _STORAGE_SUB_ASM_
 %define _STORAGE_SUB_ASM_
 ; --- modules ---
+%include "type_macros.asm"
 %include "disk_sub.asm"
 ; --- macros ---
 %define MAX_SEC_PER_OP 128 ; max sector per operation
@@ -18,8 +19,16 @@
 	pop es
 	jc %%fail
 	mov byte [storage_data.initialized], 1
-	mov byte [storage_data.head_last_idx], dh
-	mov word [storage_data.cylinder_sector_last_idx], cx
+	inc dh
+	mov byte [storage_data.head_count], dh
+	mov bx, cx
+	and bl, 0x3f
+	mov byte [storage_data.sector_count], bl
+	mov bx, cx
+	and bx, 0xffc0
+	ror bx, 8
+	inc bx
+	mov word [storage_data.cylinder_count], bx
 	jmp %%end
 %%fail :
 	mov byte [storage_data.initialized], 0
@@ -118,10 +127,12 @@ storage_data :
 	db 0 ; 0 if false, else true
 .drive_number :
 	db 0
-.head_last_idx :
+.head_count :
 	db 0
-.cylinder_sector_last_idx :
+.cylinder_count :
 	dw 0
+.sector_count :
+	db 0
 ; --- subroutine ---
 ; Read sectors into memory
 ; ax <- number of sectors
@@ -241,23 +252,19 @@ storage_add_chs :
 	mov byte bl, [storage_data.initialized]
 	cmp bl, 0
 	je .fail
-	mov word bx, [storage_data.cylinder_sector_last_idx]
-	and bx, 111111b
-	inc bx ; bx/bl = sector per track
+	xor bx, bx
+	mov byte bl, [storage_data.sector_count] ; bx/bl = sector per track
 	push dx
 	mov dx, cx
-	and dx, 111111b ; dx/dl = currect sector
+	and dx, 0x3f ; dx/dl = currect sector
 	add dx, ax
 	mov ax, dx
 	pop dx
 	div bl ; ah = new sector ; al = cylinder to be added
-	mov word bx, [storage_data.cylinder_sector_last_idx]
-	and bx, 1111111111000000b
-	ror bx, 8
-	inc bx ; bx = cylinder count
+	mov word bx, [storage_data.cylinder_count] ; bx = cylinder count
 	push dx
 	mov dx, cx
-	and dx, 1111111111000000b
+	and dx, 0xffc0
 	ror dx, 8
 	movzx cx, ah ; cx = new sector
 	xor ah, ah
@@ -270,7 +277,7 @@ storage_add_chs :
 	inc dh
 	jmp .subtract_loop
 .subtract_loop_end :
-	mov bh, [storage_data.head_last_idx]
+	mov bh, [storage_data.head_count]
 	cmp dh, bh
 	ja .fail
 .success :

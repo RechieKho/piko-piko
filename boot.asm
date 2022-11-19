@@ -20,7 +20,7 @@ main :
 	mov es, bx
 	mov al, KERNEL_CODE_SECTOR_COUNT
 	mov ch, 0
-	mov cl, 0x02 ; right after boot sector
+	mov cl, KERNEL_CODE_BEGIN_SEC
 	mov dh, 0
 	mov bx, 0
 	DISK_READ
