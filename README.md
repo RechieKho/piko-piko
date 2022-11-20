@@ -49,7 +49,7 @@ It is time to take a rest and say goodbye to Piko-piko since we have printed "He
 
 We will discuss more commands in the future.
 
-## Build the source
+## Build from source
 
 **NOTE:** For Windows and Mac OS, it is not tested and unsupported.(?)
 
