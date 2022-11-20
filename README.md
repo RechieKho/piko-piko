@@ -47,7 +47,7 @@ It is time to take a rest and say goodbye to Piko-piko since we have printed "He
 > bye
 ```
 
-We will discuss more commands in the future.
+We will discuss more commands in the [wiki](https://github.com/RechieKho/piko-piko/wiki).
 
 ## Build from source
 
