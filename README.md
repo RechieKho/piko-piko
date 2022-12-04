@@ -15,6 +15,8 @@ assembly. It can:
 - Save and load (`save` & `load`)
 - And most importantly, print colorful text (`say`)
 
+All the commands are in [the commands reference](https://github.com/RechieKho/piko-piko/wiki/commands-reference).
+
 You are very welcome to fork this project and add your own commands.
 
 It is written in *pure* nasm assembly, so brace yourself.
