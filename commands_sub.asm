@@ -1055,6 +1055,9 @@ commands_err :
 %error "Variable size and count must be a byte."
 %endif
 %if (VARIABLE_CAPACITY < 5)
-%error "Variable too small."
+%error "Variable too small for uint."
+%endif
+%if (VARIABLE_CAPACITY < BUFFER_WIDTH)
+%error "Variable too small for buffer row."
 %endif
 %endif ; _COMMANDS_SUB_ASM_
