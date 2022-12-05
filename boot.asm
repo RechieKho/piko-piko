@@ -9,11 +9,13 @@
 	mov bp, FREE_BEGIN + 1024
 	mov sp, bp
 	jmp main
+; --- modules ---
+%include "disk_sub.asm"
+%include "print_sub.asm"
 ; --- data ---
 boot_data :
 	.disk_read_err_str : db "Fail to read disk, error code: ", 0
 ; --- subroutine ---
-%include "disk_sub.asm"
 main :
 ; load kernel
 	mov bx, KERNEL_CODE_BEGIN_SEG

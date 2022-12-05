@@ -1,8 +1,6 @@
 %ifndef _DISK_SUB_ASM_
 %define _DISK_SUB_ASM_
 [bits 16]
-; --- modules ---
-%include "print_sub.asm"
 ; --- macros ---
 ; read sectors into memory
 ; al <- number of sectors to read (nonzero, max 128)
