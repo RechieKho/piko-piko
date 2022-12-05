@@ -45,7 +45,8 @@
 	pop es
 	popa
 %endmacro
-; Read ls8 as uint. MUST ONLY BE CALLED IN COMMANDS.
+; Read ls8 as uint. MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN
+; PUSH AND POP.
 ; si <- ls8
 ; dx -> uint
 %macro COMMANDS_LS82UINT 0
@@ -57,7 +58,7 @@
 	pop si
 	jc commands_err.invalid_uint_err
 %endmacro
-; Read compare buffer as uint. MUST ONLY BE CALLED IN COMMANDS AND SHOULDN 'T BE 
+; Read compare buffer as uint. MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE
 ; IN BETWEEN PUSH AND POP.
 ; ax -> uint of compare_buffer_a
 ; dx -> uint of compare_buffer_b
@@ -70,7 +71,7 @@
 	COMMANDS_LS82UINT
 %endmacro
 ; Consume mark and read as strn (accept variable referencing).
-; MUST ONLY BE CALLED IN COMMANDS.
+; MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN PUSH AND POP.
 ; si <- current mark
 ; bx -> string
 ; cx -> string length
@@ -82,7 +83,7 @@
 	jc commands_err.invalid_variable_err
 %endmacro
 ; Consume mark and read as strn save it to ls8 (accept variable referencing).
-; MUST ONLY BE CALLED IN COMMANDS.
+; MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN PUSH AND POP.
 ; si <- current_mark
 ; di <- ls8 to output to
 ; si -> next mark
@@ -121,8 +122,15 @@
 	push bx
 	push cx
 	call commands_consume_mark
+	push si
 	clc
-	call commands_read_uint
+	call commands_read_strn
+	jc %%end
+	mov si, bx
+	clc
+	call strn_to_uint
+%%end :
+	pop si
 	pop cx
 	pop bx
 	jc commands_err.invalid_uint_err
@@ -668,7 +676,12 @@ list_buffer_command :
 	add si, 10 ; the third arg
 	call commands_consume_mark
 	clc
-	call commands_read_uint
+	call commands_read_strn
+	jc .list_count_read_strn_fail_err
+	mov si, bx
+	clc
+	call strn_to_uint
+.list_count_read_strn_fail_err :
 	pop si
 	jc commands_err.invalid_uint_err
 	mov ax, dx ; ax = count
@@ -907,51 +920,6 @@ say_command :
 	clc
 	ret
 ; --- subroutine ---
-; Read strn as uint to ls8 (accept variable referencing).
-; bx <- string
-; cx <- string length
-; dx -> uint read
-; cf -> set if fail
-commands_read_uint :
-	cmp cx, 0
-	je .fail
-	push ax
-	mov byte al, [bx]
-	cmp al, '$'
-	pop ax
-	jne .literal_uint
-	push si
-	mov si, bx
-	inc si
-	dec cx
-	clc
-	call strn_to_uint
-	pop si
-	jc .fail
-	cmp dx, VARIABLE_COUNT
-	jae .fail
-	push ax
-	mov al, VARIABLE_SIZE
-	mul dl
-	push si
-	mov si, commands_data.variables
-	add si, ax
-	LS8_GET_COUNT
-	mov bx, si
-	pop si
-	pop ax
-	add bx, 2
-.literal_uint :
-	push si
-	mov si, bx
-	clc
-	call strn_to_uint
-	pop si
-	jnc .success
-.fail :
-	stc
-.success :
-	ret
 ; Read strn (accept variable referencing).
 ; bx <- string
 ; cx <- string length
