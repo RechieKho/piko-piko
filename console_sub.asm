@@ -511,9 +511,7 @@ console_make_space :
 	ret
 ; read line from console
 ; si <- ls16 for storing output
-; bx <- painter function that colorize the the input
-; arguments :
-; si <- ls16 buffer
+; bx <- painter function that colorize the the input. It won 't be called if it is 0.
 console_read_line :
 	pusha
 	LS16_CLEAR
@@ -583,7 +581,10 @@ console_read_line :
 	call ls16_erase
 	popa
 	jc .reject_handle
+	cmp bx, 0
+	je .no_painter_handle_bs
 	call bx
+.no_painter_handle_bs :
 	call _update_input_line
 	CURSOR_BACKWARD
 	jmp .loop
@@ -601,7 +602,10 @@ console_read_line :
 	call ls16_insert
 	popa
 	jc .reject_handle
+	cmp bx, 0
+	je .no_painter_handle_normal
 	call bx
+.no_painter_handle_normal :
 	call _update_input_line
 	CURSOR_FORWARD
 	jmp .loop
