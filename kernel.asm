@@ -45,9 +45,6 @@ kernel_data :
 	times 1 dw 0 ; ls8 header (max and length)
 	times BUFFER_WIDTH db 0 ; ls8 content
 ; --- subroutines ---
-; a function that do nothing
-pass :
-	ret
 main :
 ; initialization
 	STORAGE_SET_DRIVE
