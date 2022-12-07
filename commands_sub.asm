@@ -192,7 +192,32 @@ commands_data :
 .compare_buffer_b : ; A ls8 buffer for value to be compared (to compare_buffer_a).
 	db COMPARE_BUFFER_CAPACITY, 0
 	times (COMPARE_BUFFER_CAPACITY) db 0
+.read_buffer : ; A ls16 buffer for read command.
+	db VARIABLE_SIZE, 0
+	times (VARIABLE_SIZE) dw 0
 ; --- commands ---
+read_command_name :
+	db "read", 0
+; 1 <- nth variable
+read_command :
+	LS32_GET_COUNT ; cx = args count
+	cmp cx, 2
+	jne commands_err.invalid_arg_num_err
+	add si, 6
+	COMMANDS_CONSUME_MARK_READ_UINT ; dx = variable
+	cmp dx, VARIABLE_COUNT
+	jae commands_err.invalid_variable_err
+	mov al, VARIABLE_SIZE
+	mul dl
+	mov di, commands_data.variables
+	add di, ax ; di = variable address
+	mov si, commands_data.read_buffer
+	xor bx, bx
+	call console_read_line
+	call ls16_take_lower
+	PRINT_NL
+	clc
+	ret
 save_command_name :
 	db "save", 0
 ; 1 <- file index

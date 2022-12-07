@@ -27,6 +27,7 @@ interpreter_data :
 .commands_table :
 ; address to the command name and its corresponding function
 	dw say_command_name, say_command
+	dw read_command_name, read_command
 	dw set_command_name, set_command
 	dw add_command_name, add_command
 	dw sub_command_name, sub_command
