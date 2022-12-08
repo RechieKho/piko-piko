@@ -33,6 +33,7 @@ interpreter_data :
 	dw sub_command_name, sub_command
 	dw mul_command_name, mul_command
 	dw div_command_name, div_command
+	dw clear_console_command_name, clear_console_command
 	dw push_stack_command_name, push_stack_command
 	dw pop_stack_command_name, pop_stack_command
 	dw reset_stack_command_name, reset_stack_command

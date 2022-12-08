@@ -196,6 +196,22 @@ commands_data :
 	db VARIABLE_SIZE, 0
 	times (VARIABLE_SIZE) dw 0
 ; --- commands ---
+clear_console_command_name :
+	db "cls", 0
+; n <- ignored
+clear_console_command :
+	push es
+	mov bx, CONSOLE_DUMP_SEG
+	mov es, bx
+	mov cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
+	xor bx, bx
+	xor ax, ax
+	call wordset
+	pop es
+	xor dx, dx
+	SET_CURSOR
+	clc
+	ret
 read_command_name :
 	db "read", 0
 ; 1 <- nth variable
