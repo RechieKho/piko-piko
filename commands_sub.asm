@@ -100,7 +100,7 @@
 	mov si, di
 	mov di, bx
 	clc
-	call ls8_set
+	call list8Set
 	pop si
 	jc %%fail
 %%success :
@@ -230,7 +230,7 @@ commands_data :
 	mov si, commands_data.read_buffer
 	xor bx, bx
 	call consoleReadLine
-	call ls16_take_lower
+	call list16TakeLower
 	PRINT_NL
 	clc
 	ret
@@ -490,7 +490,7 @@ commands_data :
 	push di
 	mov si, commands_data.compare_buffer_a
 	mov di, commands_data.compare_buffer_b
-	call ls8_equal
+	call list8Equal
 	pop di
 	pop si
 	jc @jumpCommand
@@ -504,7 +504,7 @@ commands_data :
 	push di
 	mov si, commands_data.compare_buffer_a
 	mov di, commands_data.compare_buffer_b
-	call ls8_equal
+	call list8Equal
 	pop di
 	pop si
 	jnc @jumpCommand

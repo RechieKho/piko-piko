@@ -50,7 +50,7 @@
 	mov byte dh, [si]
 	dec si
 	mov al, %1
-	call ls8_insert
+	call list8Insert
 	popa
 %endmacro
 ; prepend to ls8
@@ -60,7 +60,7 @@
 	pusha
 	mov al, %1
 	mov dh, 0
-	call ls8_insert
+	call list8Insert
 	popa
 %endmacro
 ; pop last element of ls8
@@ -71,7 +71,7 @@
 	mov byte dh, [si]
 	dec dh
 	dec si
-	call ls8_erase
+	call list8Erase
 	popa
 %endmacro
 ; pop first element of ls8
@@ -79,13 +79,13 @@
 %macro LS8_POP_FIRST 0
 	pusha
 	mov dh, 0
-	call ls8_erase
+	call list8Erase
 	popa
 %endmacro
 ; --- subroutine ---
 ; print ls8 as ascii to console
 ; si <- address of ls8
-ls8_print_ascii :
+list8PrintAscii :
 	pusha
 	LS8_GET_COUNT ; cx = count
 	add si, 2 ; si = begining of element
@@ -103,7 +103,7 @@ ls8_print_ascii :
 ; si <- address of first ls8
 ; di <- address of second ls8
 ; cf -> set if ls8s are not equal
-ls8_equal :
+list8Equal :
 	pusha
 	mov word cx, [si] ; cl = max ; ch = count
 	mov word dx, [di] ; dl = max ; dh = count
@@ -135,7 +135,7 @@ ls8_equal :
 ; dh <- index of the element to be erased
 ; si <- address of ls8
 ; cf -> set if element fail to be inserted (either ls8 is empty or ah (index) is invalid)
-ls8_erase :
+list8Erase :
 	pusha
 	LS8_GET_INFO ; cl = max ; ch = count
 ; check validity
@@ -176,7 +176,7 @@ ls8_erase :
 ; di <- address of data
 ; cl <- count
 ; cf -> set if fail to be set (count exceed max)
-ls8_set :
+list8Set :
 	pusha
 	mov dl, cl ; dl = count
 	LS8_GET_INFO ; cl = max
@@ -203,7 +203,7 @@ ls8_set :
 ; si <- address of ls8
 ; dh <- index of the element to be inserted
 ; cf -> set if element fail to be inserted (either ls8 is full or ah (index) is invalid)
-ls8_insert :
+list8Insert :
 	pusha
 	LS8_GET_INFO ; cl = max ; ch = count
 	cmp ch, cl

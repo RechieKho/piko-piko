@@ -51,7 +51,7 @@
 	mov byte dh, [si]
 	dec si
 	mov ax, %1
-	call ls16_insert
+	call list16Insert
 	popa
 %endmacro
 ; prepend to ls16
@@ -61,7 +61,7 @@
 	pusha
 	mov ax, %1
 	mov dh, 0
-	call ls16_insert
+	call list16Insert
 	popa
 %endmacro
 ; pop last element of ls16
@@ -72,7 +72,7 @@
 	mov byte dh, [si]
 	dec dh
 	dec si
-	call ls16_erase
+	call list16Erase
 	popa
 %endmacro
 ; pop first element of ls16
@@ -80,7 +80,7 @@
 %macro LS16_POP_FIRST 0
 	pusha
 	mov dh, 0
-	call ls16_erase
+	call list16Erase
 	popa
 %endmacro
 ; --- subroutine ---
@@ -88,7 +88,7 @@
 ; si <- address of first ls16
 ; di <- address of second ls16
 ; cf -> set if ls16s are not equal
-ls16_equal :
+list16Equal :
 	pusha
 	mov word cx, [si] ; cl = max ; ch = count
 	mov word dx, [di] ; dl = max ; dh = count
@@ -120,7 +120,7 @@ ls16_equal :
 ; dh <- index of the element to be erased
 ; si <- address of ls16 header
 ; cf -> set if element fail to be inserted (either ls16 is empty or ah (index) is invalid)
-ls16_erase :
+list16Erase :
 	pusha
 	LS16_GET_INFO ; cl = max ; ch = count
 ; check validity
@@ -162,7 +162,7 @@ ls16_erase :
 ; dh <- index of the element to be inserted
 ; si <- address of ls16 header
 ; cf -> set if element fail to be inserted (either ls16 is full or ah (index) is invalid)
-ls16_insert :
+list16Insert :
 	pusha
 	LS16_GET_INFO ; cl = max ; ch = count
 	cmp ch, cl
@@ -208,7 +208,7 @@ ls16_insert :
 ; take lower byte and turn it into a ls8
 ; si <- address of ls16
 ; di <- address of ls8
-ls16_take_lower :
+list16TakeLower :
 	pusha
 	LS16_GET_COUNT ; cx = count
 	xchg si, di ; di = ls16 ; si = ls8

@@ -50,7 +50,7 @@
 	inc si
 	mov byte dh, [si]
 	dec si
-	call ls32_insert
+	call list32Insert
 	popa
 %endmacro
 ; prepend to ls32
@@ -62,7 +62,7 @@
 	mov bx, %2
 	mov ax, %1
 	mov dh, 0
-	call ls32_insert
+	call list32Insert
 	popa
 %endmacro
 ; pop last element of ls32
@@ -73,7 +73,7 @@
 	mov byte dh, [si]
 	dec dh
 	dec si
-	call ls32_erase
+	call list32Erase
 	popa
 %endmacro
 ; pop first element of ls32
@@ -81,7 +81,7 @@
 %macro LS32_POP_FIRST 0
 	pusha
 	mov dh, 0
-	call ls32_erase
+	call list32Erase
 	popa
 %endmacro
 ; --- subroutine ---
@@ -89,7 +89,7 @@
 ; si <- address of first ls32
 ; di <- address of second ls32
 ; cf -> set if ls32s are not equal
-ls32_equal :
+list32Equal :
 	pusha
 	mov word cx, [si] ; cl = max ; ch = count
 	mov word dx, [di] ; dl = max ; dh = count
@@ -122,7 +122,7 @@ ls32_equal :
 ; dh <- index of the element to be erased
 ; si <- address of ls32 header
 ; cf -> set if element fail to be inserted (either ls32 is empty or ah (index) is invalid)
-ls32_erase :
+list32Erase :
 	pusha
 	LS32_GET_INFO ; cl = max ; ch = count
 ; check validity
@@ -165,7 +165,7 @@ ls32_erase :
 ; dh <- index of the element to be inserted
 ; si <- address of ls32 header
 ; cf -> set if element fail to be inserted (either ls32 is full or ah (index) is invalid)
-ls32_insert :
+list32Insert :
 	pusha
 	LS32_GET_INFO ; cl = max ; ch = count
 	cmp ch, cl

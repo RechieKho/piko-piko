@@ -578,7 +578,7 @@ consoleReadLine :
 	dec cx ; cx = index of character to be erased, right before cursor
 	mov dh, cl
 	clc
-	call ls16_erase
+	call list16Erase
 	popa
 	jc .reject_handle
 	cmp bx, 0
@@ -599,7 +599,7 @@ consoleReadLine :
 	mov dh, cl
 	mov ah, CONSOLE_READ_LINE_DEFAULT_COLOR
 	clc
-	call ls16_insert
+	call list16Insert
 	popa
 	jc .reject_handle
 	cmp bx, 0

@@ -68,7 +68,7 @@ main :
 	call consoleReadLine
 	PRINT_NL
 	mov di, kernel_data.raw_buffer
-	call ls16_take_lower
+	call list16TakeLower
 	mov si, kernel_data.raw_buffer
 	clc
 	call interpreterExecute
