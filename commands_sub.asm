@@ -196,10 +196,10 @@ commands_data :
 	db VARIABLE_SIZE, 0
 	times (VARIABLE_SIZE) dw 0
 ; --- commands ---
-clear_console_command_name :
+@clearConsoleCommand_name :
 	db "cls", 0
 ; n <- ignored
-clear_console_command :
+@clearConsoleCommand :
 	push es
 	mov bx, CONSOLE_DUMP_SEG
 	mov es, bx
@@ -212,10 +212,10 @@ clear_console_command :
 	SET_CURSOR
 	clc
 	ret
-read_command_name :
+@readCommand_name :
 	db "read", 0
 ; 1 <- nth variable
-read_command :
+@readCommand :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 2
 	jne commands_err.invalid_arg_num_err
@@ -234,10 +234,10 @@ read_command :
 	PRINT_NL
 	clc
 	ret
-save_command_name :
+@saveCommand_name :
 	db "save", 0
 ; 1 <- file index
-save_command :
+@saveCommand :
 	LS32_GET_COUNT
 	cmp cx, 2
 	jne commands_err.invalid_arg_num_err
@@ -260,10 +260,10 @@ save_command :
 	pop es
 	jc commands_err.disk_write_err
 	ret
-load_command_name :
+@loadCommand_name :
 	db "load", 0
 ; 1 <- file index
-load_command :
+@loadCommand :
 	LS32_GET_COUNT
 	cmp cx, 2
 	jne commands_err.invalid_arg_num_err
@@ -286,13 +286,13 @@ load_command :
 	pop es
 	jc commands_err.disk_read_err
 	ret
-div_command_name :
+@divCommand_name :
 	db "div", 0
 ; 1 <- variable for storing quotient
 ; 2 <- variable for stonig remainder
 ; 3 <- dividend
 ; 4 <- divisor
-div_command :
+@divCommand :
 	LS32_GET_COUNT
 	cmp cx, 5
 	jne commands_err.invalid_arg_num_err
@@ -333,12 +333,12 @@ div_command :
 	call uint_to_strn
 	clc
 	ret
-mul_command_name :
+@mulCommand_name :
 	db "mul", 0
 ; 1 <- value for storing the product
 ; 2 <- first value
 ; 3 <- second value
-mul_command :
+@mulCommand :
 	LS32_GET_COUNT
 	cmp cx, 4
 	jne commands_err.invalid_arg_num_err
@@ -362,12 +362,12 @@ mul_command :
 	call uint_to_strn
 	clc
 	ret
-sub_command_name :
+@subCommand_name :
 	db "sub", 0
 ; 1 <- variable for storing the result
 ; 2 <- value to be subtracted
 ; 3 <- subtracted value
-sub_command :
+@subCommand :
 	LS32_GET_COUNT
 	cmp cx, 4
 	jne commands_err.invalid_arg_num_err
@@ -389,12 +389,12 @@ sub_command :
 	call uint_to_strn
 	clc
 	ret
-add_command_name :
+@addCommand_name :
 	db "add", 0
 ; 1 <- value for storing the sum
 ; 2 <- first value
 ; 3 <- second value
-add_command :
+@addCommand :
 	LS32_GET_COUNT
 	cmp cx, 4
 	jne commands_err.invalid_arg_num_err
@@ -416,76 +416,76 @@ add_command :
 	call uint_to_strn
 	clc
 	ret
-jump_uint_le_command_name :
+@jumpUintLessEqualCommand_name :
 	db "jule", 0
 ; jump if less equal
-jump_uint_le_command :
+@jumpUintLessEqualCommand :
 	mov bx, si
 	COMMANDS_COMBUF2UINT
 	mov si, bx
 	cmp ax, dx
-	jbe jump_command
+	jbe @jumpCommand
 	clc
 	ret
-jump_uint_l_command_name :
+@jumpUintLessCommand_name :
 	db "jul", 0
 ; jump if less
-jump_uint_l_command :
+@jumpUintLessCommand :
 	mov bx, si
 	COMMANDS_COMBUF2UINT
 	mov si, bx
 	cmp ax, dx
-	jb jump_command
+	jb @jumpCommand
 	clc
 	ret
-jump_uint_ge_command_name :
+@jumpUintGreaterEqualCommand_name :
 	db "juge", 0
 ; jump if greater equal
-jump_uint_ge_command :
+@jumpUintGreaterEqualCommand :
 	mov bx, si
 	COMMANDS_COMBUF2UINT
 	mov si, bx
 	cmp ax, dx
-	jae jump_command
+	jae @jumpCommand
 	clc
 	ret
-jump_uint_g_command_name :
+@jumpUintGreaterCommand_name :
 	db "jug", 0
 ; jump if greater
-jump_uint_g_command :
+@jumpUintGreaterCommand :
 	mov bx, si
 	COMMANDS_COMBUF2UINT
 	mov si, bx
 	cmp ax, dx
-	ja jump_command
+	ja @jumpCommand
 	clc
 	ret
-jump_uint_n_eq_command_name :
+@jumpUintNotEqualCommand_name :
 	db "june", 0
 ; If uints in compare buffer are not equal, jump command is executed.
-jump_uint_n_eq_command :
+@jumpUintNotEqualCommand :
 	mov bx, si
 	COMMANDS_COMBUF2UINT
 	mov si, bx
 	pop si
-	jne jump_command
+	jne @jumpCommand
 	clc
 	ret
-jump_uint_eq_command_name :
+@jumpUintEqualCommand_name :
 	db "jue", 0
 ; If uints in compare buffer are equal, jump command is executed.
-jump_uint_eq_command :
+@jumpUintEqualCommand :
 	mov bx, si
 	COMMANDS_COMBUF2UINT
 	mov si, bx
 	cmp ax, dx
-	je jump_command
+	je @jumpCommand
 	clc
 	ret
-jump_str_n_eq_command_name :
+@jumpStringNotEqualCommand_name :
 	db "jsne", 0
 ; If strings in compare buffer are not equal, jump command is executed.
-jump_str_n_eq_command :
+@jumpStringNotEqualCommand :
 	push si
 	push di
 	mov si, commands_data.compare_buffer_a
@@ -493,13 +493,13 @@ jump_str_n_eq_command :
 	call ls8_equal
 	pop di
 	pop si
-	jc jump_command
+	jc @jumpCommand
 	clc
 	ret
-jump_str_eq_command_name :
+@jumpStringEqualCommand_name :
 	db "jse", 0
 ; If strings in compare buffer are equal, jump command is executed.
-jump_str_eq_command :
+@jumpStringEqualCommand :
 	push si
 	push di
 	mov si, commands_data.compare_buffer_a
@@ -507,14 +507,14 @@ jump_str_eq_command :
 	call ls8_equal
 	pop di
 	pop si
-	jnc jump_command
+	jnc @jumpCommand
 	clc
 	ret
-compare_command_name :
+@compareCommand_name :
 	db "cmp", 0
 ; 1 <- value a
 ; 2 <- value b
-compare_command :
+@compareCommand :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 3
 	jne commands_err.invalid_arg_num_err
@@ -525,11 +525,11 @@ compare_command :
 	COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8
 	clc
 	ret
-jump_command_name :
+@jumpCommand_name :
 	db "jump", 0
 ; -1 <- nth row to be jump to
 ; 1? <- + if downward, - if upward (relative to the jump instruction)
-jump_command :
+@jumpCommand :
 	mov byte al, [commands_data.is_buffer_executing]
 	cmp al, 0
 	je commands_err.not_running_buffer_err ; command can only run in buffer
@@ -568,10 +568,10 @@ jump_command :
 	call commands_set_executing_seg
 	clc
 	ret
-run_buffer_command_name :
+@runBufferCommand_name :
 	db "run", 0
 ; n <- ignored
-run_buffer_command :
+@runBufferCommand :
 	push es
 	mov ax, ds
 	mov es, ax
@@ -624,9 +624,9 @@ run_buffer_command :
 	pop es
 	clc
 	ret
-clear_buffer_command_name :
+@clearBufferCommand_name :
 	db "clb", 0
-clear_buffer_command :
+@clearBufferCommand :
 	push es
 	mov al, ' '
 	xor bx, bx
@@ -645,10 +645,10 @@ clear_buffer_command :
 	pop es
 	clc
 	ret
-set_active_buffer_command_name :
+@setActiveBufferCommand_name :
 	db "stb", 0
 ; 1 <- buffer to be set
-set_active_buffer_command :
+@setActiveBufferCommand :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 2
 	jne commands_err.invalid_arg_num_err
@@ -662,11 +662,11 @@ set_active_buffer_command :
 	mov word [commands_data.active_buffer], ax
 	clc
 	ret
-set_row_command_name :
+@setRowCommand_name :
 	db "=", 0
 ; 1 <- row to be set
 ; 2 <- new row
-set_row_command :
+@setRowCommand :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 3 ; no args
 	jne commands_err.invalid_arg_num_err
@@ -697,11 +697,11 @@ set_row_command :
 	pop es
 	clc
 	ret
-list_buffer_command_name :
+@listBufferCommand_name :
 	db "lsb", 0
 ; 1? <- starting row
 ; 2? <- count
-list_buffer_command :
+@listBufferCommand :
 	LS32_GET_COUNT ; cx = args count
 	xor dx, dx ; default 1st arg
 	mov ax, 5 ; default 2nd arg
@@ -779,16 +779,16 @@ list_buffer_command :
 .end :
 	clc
 	ret
-reset_stack_command_name :
+@resetStackCommand_name :
 	db "rst", 0
 ; n <- ignored
-reset_stack_command :
+@resetStackCommand :
 	mov word [commands_data.stack_pointer], commands_data.stack
 	ret
-pop_stack_command_name :
+@popStackCommand_name :
 	db "pop", 0
 ; n <- variables to be popped
-pop_stack_command :
+@popStackCommand :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 1
 	jbe .end
@@ -822,10 +822,10 @@ pop_stack_command :
 .end :
 	clc
 	ret
-push_stack_command_name :
+@pushStackCommand_name :
 	db "push", 0
 ; n <- variables to be pushed
-push_stack_command :
+@pushStackCommand :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 1
 	jbe .end
@@ -857,11 +857,11 @@ push_stack_command :
 .end :
 	clc
 	ret
-set_command_name :
+@setCommand_name :
 	db "set", 0
 ; 1 <- nth variable
 ; 2 <- value
-set_command :
+@setCommand :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 3
 	jne commands_err.invalid_arg_num_err
@@ -876,10 +876,10 @@ set_command :
 	COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8
 	clc
 	ret
-shutdown_command_name :
+@byeCommand_name :
 	db "bye", 0
 ; n <- ignored
-shutdown_command :
+@byeCommand :
 	mov bx, commands_data.shutdown_str
 	call print_str
 	PRINT_NL
@@ -889,11 +889,11 @@ shutdown_command :
 	int 0x15
 	clc
 	ret
-say_command_name :
+@sayCommand_name :
 	db "say", 0
 ; -1 <- string to be printed
 ; 1? <- options
-say_command :
+@sayCommand :
 	LS32_GET_COUNT
 	mov ah, GREY ; ah = text color
 	xor al, al ; al = number of new lines after print.

@@ -26,35 +26,35 @@ interpreter_data :
 	db 0x22, 0x27, 0x60, 0
 .commands_table :
 ; address to the command name and its corresponding function
-	dw say_command_name, say_command
-	dw read_command_name, read_command
-	dw set_command_name, set_command
-	dw add_command_name, add_command
-	dw sub_command_name, sub_command
-	dw mul_command_name, mul_command
-	dw div_command_name, div_command
-	dw clear_console_command_name, clear_console_command
-	dw push_stack_command_name, push_stack_command
-	dw pop_stack_command_name, pop_stack_command
-	dw reset_stack_command_name, reset_stack_command
-	dw compare_command_name, compare_command
-	dw jump_str_eq_command_name, jump_str_eq_command
-	dw jump_str_n_eq_command_name, jump_str_n_eq_command
-	dw jump_uint_eq_command_name, jump_uint_eq_command
-	dw jump_uint_n_eq_command_name, jump_uint_n_eq_command
-	dw jump_uint_l_command_name, jump_uint_l_command
-	dw jump_uint_le_command_name, jump_uint_le_command
-	dw jump_uint_g_command_name, jump_uint_g_command
-	dw jump_uint_ge_command_name, jump_uint_ge_command
-	dw jump_command_name, jump_command
-	dw list_buffer_command_name, list_buffer_command
-	dw set_row_command_name, set_row_command
-	dw clear_buffer_command_name, clear_buffer_command
-	dw set_active_buffer_command_name, set_active_buffer_command
-	dw run_buffer_command_name, run_buffer_command
-	dw save_command_name, save_command
-	dw load_command_name, load_command
-	dw shutdown_command_name, shutdown_command
+	dw @sayCommand_name, @sayCommand
+	dw @readCommand_name, @readCommand
+	dw @setCommand_name, @setCommand
+	dw @addCommand_name, @addCommand
+	dw @subCommand_name, @subCommand
+	dw @mulCommand_name, @mulCommand
+	dw @divCommand_name, @divCommand
+	dw @clearConsoleCommand_name, @clearConsoleCommand
+	dw @pushStackCommand_name, @pushStackCommand
+	dw @popStackCommand_name, @popStackCommand
+	dw @resetStackCommand_name, @resetStackCommand
+	dw @compareCommand_name, @compareCommand
+	dw @jumpStringEqualCommand_name, @jumpStringEqualCommand
+	dw @jumpStringNotEqualCommand_name, @jumpStringNotEqualCommand
+	dw @jumpUintEqualCommand_name, @jumpUintEqualCommand
+	dw @jumpUintNotEqualCommand_name, @jumpUintNotEqualCommand
+	dw @jumpUintLessCommand_name, @jumpUintLessCommand
+	dw @jumpUintLessEqualCommand_name, @jumpUintLessEqualCommand
+	dw @jumpUintGreaterCommand_name, @jumpUintGreaterCommand
+	dw @jumpUintGreaterEqualCommand_name, @jumpUintGreaterEqualCommand
+	dw @jumpCommand_name, @jumpCommand
+	dw @listBufferCommand_name, @listBufferCommand
+	dw @setRowCommand_name, @setRowCommand
+	dw @clearBufferCommand_name, @clearBufferCommand
+	dw @setActiveBufferCommand_name, @setActiveBufferCommand
+	dw @runBufferCommand_name, @runBufferCommand
+	dw @saveCommand_name, @saveCommand
+	dw @loadCommand_name, @loadCommand
+	dw @byeCommand_name, @byeCommand
 	dw 0
 .invalid_command_err_str :
 	db "Invalid command.", 0
