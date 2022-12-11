@@ -74,7 +74,7 @@ interpreterPrintMarks :
 	add si, 2
 	mov word bx, [si] ; bx = string
 	add si, 2
-	call printStrn
+	call printCStringing
 	pop cx
 	PRINT_CHAR ','
 	dec cx
@@ -89,11 +89,11 @@ interpreterExecute :
 	call interpreterMark
 	call interpreterExecutreMark
 	ret
-; execute command strn
+; execute command string
 ; si <- address of string
 ; cx <- length of string
-interpreterExecuteStrn :
-	call interpreterMarkStrn
+interpreterExecuteString :
+	call interpreterMarkString
 	call interpreterExecutreMark
 	ret
 ; execute command from interpreter_data.marks
@@ -107,7 +107,7 @@ interpreterExecutreMark :
 	mov word cx, [si] ; cx = length of first argument
 	add si, 2
 	mov word bx, [si]
-	call commandsReadStrn ; accept variable referencing
+	call commandsReadString ; accept variable referencing
 	mov si, bx ; si = address of first argument
 	mov bx, interpreter_data.commands_table
 .loop_commands_table :
@@ -159,10 +159,10 @@ interpreterExecutreMark :
 .end :
 	popa
 	ret
-; mark the subs-strings in the strn given, output into interpreter_data.marks
+; mark the subs-strings in the string given, output into interpreter_data.marks
 ; si <- address of string
 ; cx <- length of string
-interpreterMarkStrn :
+interpreterMarkString :
 	pusha
 	mov di, interpreter_data.marks
 	LS32_INIT
@@ -193,13 +193,13 @@ interpreterMarkStrn :
 .not_processing_str :
 	push si ; >> BEGIN SWITCH <<
 	mov si, interpreter_data.splitting_chars
-	call strHasChar
+	call cStringHasChar
 	jc .is_splitting_char
 	mov si, interpreter_data.standalone_chars
-	call strHasChar
+	call cStringHasChar
 	jc .is_standalone_char
 	mov si, interpreter_data.str_chars
-	call strHasChar
+	call cStringHasChar
 	jc .is_str_char
 	inc dx
 	jmp .switch_end
@@ -260,7 +260,7 @@ interpreterMarkStrn :
 	xor dx, dx
 	jmp .switch_end
 .switch_end :
-	clc ; clear flag set by strHasChar
+	clc ; clear flag set by cStringHasChar
 	pop si ; >> END SWITCH <<
 .skip_switch :
 	dec cx
@@ -284,7 +284,7 @@ interpreterMark :
 	pusha
 	LS8_GET_COUNT ; cx = count of chars
 	add si, 2 ; si = begining of string
-	call interpreterMarkStrn
+	call interpreterMarkString
 	popa
 	ret
 ; paint the ls16 buffer
@@ -313,10 +313,10 @@ interpreterPaint :
 .not_processing_str :
 	push di ; >> BEGIN SWITCH <<
 	mov si, interpreter_data.standalone_chars
-	call strHasChar
+	call cStringHasChar
 	jc .is_standalone_char
 	mov si, interpreter_data.str_chars
-	call strHasChar
+	call cStringHasChar
 	jc .is_str_char
 	jmp .is_normal_char
 .is_standalone_char :

@@ -76,7 +76,7 @@ print_data :
 ; --- subroutines ---
 ; print string to console
 ; bx <- string
-printStr :
+printCString :
 	pusha
 .loop :
 	mov al, [bx]
@@ -92,7 +92,7 @@ printStr :
 ; print n characters from string to console
 ; bx <- string
 ; cx <- count
-printStrn :
+printCStringing :
 	pusha
 .loop :
 	cmp cx, 0
@@ -112,9 +112,9 @@ printError :
 	pusha
 	push bx
 	mov bx, print_data.error_prefix
-	call printStr
+	call printCString
 	pop bx
-	call printStr
+	call printCString
 	popa
 	ret
 ; print error in one line

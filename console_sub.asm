@@ -447,7 +447,7 @@ consolePrintUint :
 ; bx <- index
 ; cx <- length
 ; si <- string
-consoleWriteStrnIndex :
+consoleWriteStringIndex :
 	pusha
 	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
 	ja .end ; exceed video dump
@@ -473,7 +473,7 @@ consoleWriteStrnIndex :
 ; ah <- attribute
 ; cx <- length
 ; si <- string
-consolePrintStrn :
+consolePrintString :
 	pusha
 	push cx
 	GET_CURSOR
@@ -482,7 +482,7 @@ consolePrintStrn :
 	mov dx, bx
 	call consoleMakeSpace ; dx = new starting index
 	mov bx, dx
-	call consoleWriteStrnIndex
+	call consoleWriteStringIndex
 	add bx, cx
 	CONSOLE_IDX2RC bx
 	SET_CURSOR

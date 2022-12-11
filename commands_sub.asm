@@ -54,7 +54,7 @@
 	LS8_GET_COUNT
 	add si, 2
 	clc
-	call strnToUint
+	call stringToUint
 	pop si
 	jc commands_err.invalid_uint_err
 %endmacro
@@ -70,7 +70,7 @@
 	mov si, commands_data.compare_buffer_b
 	COMMANDS_LS82UINT
 %endmacro
-; Consume mark and read as strn (accept variable referencing).
+; Consume mark and read as string (accept variable referencing).
 ; MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN PUSH AND POP.
 ; si <- current mark
 ; bx -> string
@@ -79,10 +79,10 @@
 %macro COMMANDS_CONSUME_MARK_READ_STRN 0
 	call commandsConsumeMark
 	clc
-	call commandsReadStrn
+	call commandsReadString
 	jc commands_err.invalid_variable_err
 %endmacro
-; Consume mark and read as strn save it to ls8 (accept variable referencing).
+; Consume mark and read as string save it to ls8 (accept variable referencing).
 ; MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN PUSH AND POP.
 ; si <- current_mark
 ; di <- ls8 to output to
@@ -92,7 +92,7 @@
 	push cx
 	call commandsConsumeMark
 	clc
-	call commandsReadStrn
+	call commandsReadString
 	jc %%fail
 	cmp ch , 0
 	jne %%fail
@@ -124,11 +124,11 @@
 	call commandsConsumeMark
 	push si
 	clc
-	call commandsReadStrn
+	call commandsReadString
 	jc %%end
 	mov si, bx
 	clc
-	call strnToUint
+	call stringToUint
 %%end :
 	pop si
 	pop cx
@@ -323,14 +323,14 @@ commands_data :
 	inc di
 	mov byte [di], 5
 	inc di
-	call uintToStrn
+	call uintToString
 	mov di, bx
 	xor ax, ax
 	mov al, dh
 	inc di
 	mov byte [di], 5
 	inc di
-	call uintToStrn
+	call uintToString
 	clc
 	ret
 @mulCommand_name :
@@ -359,7 +359,7 @@ commands_data :
 	inc di
 	mov byte [di], 5
 	inc di
-	call uintToStrn
+	call uintToString
 	clc
 	ret
 @subCommand_name :
@@ -386,7 +386,7 @@ commands_data :
 	inc di
 	mov byte [di], 5
 	inc di
-	call uintToStrn
+	call uintToString
 	clc
 	ret
 @addCommand_name :
@@ -413,7 +413,7 @@ commands_data :
 	inc di
 	mov byte [di], 5
 	inc di
-	call uintToStrn
+	call uintToString
 	clc
 	ret
 @jumpUintLessEqualCommand_name :
@@ -598,7 +598,7 @@ commands_data :
 	mov si, commands_data.execution_buffer
 	mov cx, BUFFER_WIDTH
 	clc
-	call interpreterExecuteStrn
+	call interpreterExecuteString
 	jc .loop_end
 ; update current running row
 	mov dx, [commands_data.executing_row]
@@ -717,12 +717,12 @@ commands_data :
 	add si, 10 ; the third arg
 	call commandsConsumeMark
 	clc
-	call commandsReadStrn
-	jc .list_count_read_strn_fail_err
+	call commandsReadString
+	jc .list_count_read_string_fail_err
 	mov si, bx
 	clc
-	call strnToUint
-.list_count_read_strn_fail_err :
+	call stringToUint
+.list_count_read_string_fail_err :
 	pop si
 	jc commands_err.invalid_uint_err
 	mov ax, dx ; ax = count
@@ -881,7 +881,7 @@ commands_data :
 ; n <- ignored
 @byeCommand :
 	mov bx, commands_data.shutdown_str
-	call printStr
+	call printCString
 	PRINT_NL
 	mov ax, 0x5307
 	mov cx, 0x03
@@ -949,8 +949,8 @@ commands_data :
 	cmp cx, 0
 	je .newline_loop
 	mov si, bx
-.print_strn :
-	call consolePrintStrn
+.print_string :
+	call consolePrintString
 .newline_loop :
 	cmp al, 0
 	je .end
@@ -961,13 +961,13 @@ commands_data :
 	clc
 	ret
 ; --- subroutine ---
-; Read strn (accept variable referencing).
+; Read string (accept variable referencing).
 ; bx <- string
 ; cx <- string length
 ; bx -> string
 ; cx -> string length
 ; cf -> set if fail
-commandsReadStrn :
+commandsReadString :
 	push ax
 	push dx
 	push si
@@ -975,13 +975,13 @@ commandsReadStrn :
 	je .success
 	mov byte al, [bx]
 	cmp al, '$'
-	jne .literal_strn
+	jne .literal_string
 ; variable referencing
 	mov si, bx
 	inc si
 	dec cx
 	clc
-	call strnToUint
+	call stringToUint
 	jc .fail
 	cmp dx, VARIABLE_COUNT
 	jae .fail
@@ -993,7 +993,7 @@ commandsReadStrn :
 	mov bx, si
 	add bx, 2
 	jmp .success
-.literal_strn :
+.literal_string :
 	cmp al, '\'
 	jne .success
 	inc bx
@@ -1079,7 +1079,7 @@ commands_err :
 	call printError
 	PRINT_CHAR ' '
 	mov bx, commands_data.debug_show_row_str
-	call printStr
+	call printCString
 	mov ah, MAGENTA
 	mov dx, [commands_data.executing_row]
 	call consolePrintUint
