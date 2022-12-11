@@ -6,7 +6,7 @@
 %include "ls16_sub.asm"
 %include "str_sub.asm"
 %include "print_sub.asm"
-%include "commands_sub.asm"
+%include "command_sub.asm"
 %include "console_sub.asm"
 ; --- macros ---
 %define NORMAL_COLOR (YELLOW)
@@ -24,7 +24,7 @@ interpreter_data :
 	db "=", 0
 .str_chars : ; character that initiate or terminate strings
 	db 0x22, 0x27, 0x60, 0
-.commands_table :
+.command_table :
 ; address to the command name and its corresponding function
 	dw @sayCommand_name, @sayCommand
 	dw @readCommand_name, @readCommand
@@ -107,11 +107,11 @@ interpreterExecutreMark :
 	mov word cx, [si] ; cx = length of first argument
 	add si, 2
 	mov word bx, [si]
-	call commandsReadString ; accept variable referencing
+	call commandReadString ; accept variable referencing
 	mov si, bx ; si = address of first argument
-	mov bx, interpreter_data.commands_table
-.loop_commands_table :
-	mov word di, [bx] ; di = command name from commands table
+	mov bx, interpreter_data.command_table
+.loop_command_table :
+	mov word di, [bx] ; di = command name from command table
 	cmp di, 0
 	je .invalid_command_err
 ; compare first token with command name
@@ -151,11 +151,11 @@ interpreterExecutreMark :
 	pop cx
 	pop si
 	add bx, 4
-	jmp .loop_commands_table
+	jmp .loop_command_table
 .invalid_command_err :
 ; print error
 	mov bx, interpreter_data.invalid_command_err_str
-	call commands_err.print ; jmping to label from other files : 0
+	call command_err.print ; jmping to label from other files : 0
 .end :
 	popa
 	ret

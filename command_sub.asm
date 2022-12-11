@@ -1,7 +1,7 @@
 %ifndef _COMMANDS_SUB_ASM_
 %define _COMMANDS_SUB_ASM_
 ; NOTE : YOU MUST COMMANDS_INIT BEFORE USING ANYTHING IN THIS MODULE
-; each commands expecting :
+; each command expecting :
 ; si <- ls32 of marks point to the arguments
 ; COMMANDS RETURN WITH CARRY FLAG SET WILL CANCEL RUNNING BUFFER.
 ; COMMANDS SHOULD NOT PUSHA/POPA AT THE BEGINING AND ENDING OF COMMANDS.
@@ -56,7 +56,7 @@
 	clc
 	call stringToUint
 	pop si
-	jc commands_err.invalid_uint_err
+	jc command_err.invalid_uint_err
 %endmacro
 ; Read compare buffer as uint. MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE
 ; IN BETWEEN PUSH AND POP.
@@ -64,10 +64,10 @@
 ; dx -> uint of compare_buffer_b
 ; ~si
 %macro COMMANDS_COMBUF2UINT 0
-	mov si, commands_data.compare_buffer_a
+	mov si, command_data.compare_buffer_a
 	COMMANDS_LS82UINT
 	mov ax, dx ; ax = uint of first compare buffer
-	mov si, commands_data.compare_buffer_b
+	mov si, command_data.compare_buffer_b
 	COMMANDS_LS82UINT
 %endmacro
 ; Consume mark and read as string (accept variable referencing).
@@ -77,10 +77,10 @@
 ; cx -> string length
 ; si -> next mark
 %macro COMMANDS_CONSUME_MARK_READ_STRN 0
-	call commandsConsumeMark
+	call commandConsumeMark
 	clc
-	call commandsReadString
-	jc commands_err.invalid_variable_err
+	call commandReadString
+	jc command_err.invalid_variable_err
 %endmacro
 ; Consume mark and read as string save it to ls8 (accept variable referencing).
 ; MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN PUSH AND POP.
@@ -90,9 +90,9 @@
 %macro COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8 0
 	push bx
 	push cx
-	call commandsConsumeMark
+	call commandConsumeMark
 	clc
-	call commandsReadString
+	call commandReadString
 	jc %%fail
 	cmp ch , 0
 	jne %%fail
@@ -111,7 +111,7 @@
 %%end :
 	pop cx
 	pop bx
-	jc commands_err.invalid_value_err
+	jc command_err.invalid_value_err
 %endmacro
 ; Consume mark and read as uint (accept variable referencing).
 ; MUST ONLY BE CALLED IN COMMANDS.
@@ -121,10 +121,10 @@
 %macro COMMANDS_CONSUME_MARK_READ_UINT 0
 	push bx
 	push cx
-	call commandsConsumeMark
+	call commandConsumeMark
 	push si
 	clc
-	call commandsReadString
+	call commandReadString
 	jc %%end
 	mov si, bx
 	clc
@@ -133,10 +133,10 @@
 	pop si
 	pop cx
 	pop bx
-	jc commands_err.invalid_uint_err
+	jc command_err.invalid_uint_err
 %endmacro
 ; --- data ---
-commands_data :
+command_data :
 .disk_write_err_str :
 	db "Fail to write disk.", 0
 .disk_read_err_str :
@@ -195,7 +195,7 @@ commands_data :
 .read_buffer : ; A ls16 buffer for read command.
 	db VARIABLE_SIZE, 0
 	times (VARIABLE_SIZE) dw 0
-; --- commands ---
+; --- command ---
 @clearConsoleCommand_name :
 	db "cls", 0
 ; n <- ignored
@@ -218,16 +218,16 @@ commands_data :
 @readCommand :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 2
-	jne commands_err.invalid_arg_num_err
+	jne command_err.invalid_arg_num_err
 	add si, 6
 	COMMANDS_CONSUME_MARK_READ_UINT ; dx = variable
 	cmp dx, VARIABLE_COUNT
-	jae commands_err.invalid_variable_err
+	jae command_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
 	mul dl
-	mov di, commands_data.variables
+	mov di, command_data.variables
 	add di, ax ; di = variable address
-	mov si, commands_data.read_buffer
+	mov si, command_data.read_buffer
 	xor bx, bx
 	call consoleReadLine
 	call list16TakeLower
@@ -240,11 +240,11 @@ commands_data :
 @saveCommand :
 	LS32_GET_COUNT
 	cmp cx, 2
-	jne commands_err.invalid_arg_num_err
+	jne command_err.invalid_arg_num_err
 	add si, 6
 	COMMANDS_CONSUME_MARK_READ_UINT
 	cmp dx, FILE_COUNT
-	jae commands_err.invalid_file_err
+	jae command_err.invalid_file_err
 	mov ax, BUFFER_SEC_COUNT
 	mul dx
 	add ax, STORAGE_BEGIN_SEC
@@ -253,12 +253,12 @@ commands_data :
 	call storageAddCHS
 	mov ax, BUFFER_SEC_COUNT ; ax = number of sectors
 	push es
-	mov word bx, [commands_data.active_buffer]
+	mov word bx, [command_data.active_buffer]
 	mov es, bx
 	xor bx, bx
 	call storageWrite
 	pop es
-	jc commands_err.disk_write_err
+	jc command_err.disk_write_err
 	ret
 @loadCommand_name :
 	db "load", 0
@@ -266,11 +266,11 @@ commands_data :
 @loadCommand :
 	LS32_GET_COUNT
 	cmp cx, 2
-	jne commands_err.invalid_arg_num_err
+	jne command_err.invalid_arg_num_err
 	add si, 6
 	COMMANDS_CONSUME_MARK_READ_UINT
 	cmp dx, FILE_COUNT
-	jae commands_err.invalid_file_err
+	jae command_err.invalid_file_err
 	mov ax, BUFFER_SEC_COUNT
 	mul dx
 	add ax, STORAGE_BEGIN_SEC
@@ -279,12 +279,12 @@ commands_data :
 	call storageAddCHS
 	mov ax, BUFFER_SEC_COUNT ; ax = number of sectors
 	push es
-	mov word bx, [commands_data.active_buffer]
+	mov word bx, [command_data.active_buffer]
 	mov es, bx
 	xor bx, bx
 	call storageRead
 	pop es
-	jc commands_err.disk_read_err
+	jc command_err.disk_read_err
 	ret
 @divCommand_name :
 	db "div", 0
@@ -295,27 +295,27 @@ commands_data :
 @divCommand :
 	LS32_GET_COUNT
 	cmp cx, 5
-	jne commands_err.invalid_arg_num_err
+	jne command_err.invalid_arg_num_err
 	add si, 6
 	COMMANDS_CONSUME_MARK_READ_UINT
 	cmp dx, VARIABLE_COUNT
-	jae commands_err.invalid_variable_err
+	jae command_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
 	mul dl
-	mov di, commands_data.variables
+	mov di, command_data.variables
 	add di, ax ; di = variable address for quotient
 	COMMANDS_CONSUME_MARK_READ_UINT
 	cmp dx, VARIABLE_COUNT
-	jae commands_err.invalid_variable_err
+	jae command_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
 	mul dl
-	mov bx, commands_data.variables
+	mov bx, command_data.variables
 	add bx, ax ; bx = variable address for remainder
 	COMMANDS_CONSUME_MARK_READ_UINT
 	mov ax, dx ; ax = first value
 	COMMANDS_CONSUME_MARK_READ_UINT
 	cmp dh, 0
-	jne commands_err.value_too_big_err
+	jne command_err.value_too_big_err
 	div dl
 	mov dx, ax
 	xor ax, ax
@@ -341,21 +341,21 @@ commands_data :
 @mulCommand :
 	LS32_GET_COUNT
 	cmp cx, 4
-	jne commands_err.invalid_arg_num_err
+	jne command_err.invalid_arg_num_err
 	add si, 6
 	COMMANDS_CONSUME_MARK_READ_UINT
 	cmp dx, VARIABLE_COUNT
-	jae commands_err.invalid_variable_err
+	jae command_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
 	mul dl
-	mov di, commands_data.variables
+	mov di, command_data.variables
 	add di, ax ; di = variable address
 	COMMANDS_CONSUME_MARK_READ_UINT
 	mov ax, dx ; ax = first value
 	COMMANDS_CONSUME_MARK_READ_UINT
 	mul dx
 	cmp dx, 0
-	jne commands_err.value_too_big_err
+	jne command_err.value_too_big_err
 	inc di
 	mov byte [di], 5
 	inc di
@@ -370,14 +370,14 @@ commands_data :
 @subCommand :
 	LS32_GET_COUNT
 	cmp cx, 4
-	jne commands_err.invalid_arg_num_err
+	jne command_err.invalid_arg_num_err
 	add si, 6
 	COMMANDS_CONSUME_MARK_READ_UINT
 	cmp dx, VARIABLE_COUNT
-	jae commands_err.invalid_variable_err
+	jae command_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
 	mul dl
-	mov di, commands_data.variables
+	mov di, command_data.variables
 	add di, ax ; di = variable address
 	COMMANDS_CONSUME_MARK_READ_UINT
 	mov ax, dx ; ax = first value
@@ -397,14 +397,14 @@ commands_data :
 @addCommand :
 	LS32_GET_COUNT
 	cmp cx, 4
-	jne commands_err.invalid_arg_num_err
+	jne command_err.invalid_arg_num_err
 	add si, 6
 	COMMANDS_CONSUME_MARK_READ_UINT
 	cmp dx, VARIABLE_COUNT
-	jae commands_err.invalid_variable_err
+	jae command_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
 	mul dl
-	mov di, commands_data.variables
+	mov di, command_data.variables
 	add di, ax ; di = variable address
 	COMMANDS_CONSUME_MARK_READ_UINT
 	mov ax, dx ; ax = first value
@@ -488,8 +488,8 @@ commands_data :
 @jumpStringNotEqualCommand :
 	push si
 	push di
-	mov si, commands_data.compare_buffer_a
-	mov di, commands_data.compare_buffer_b
+	mov si, command_data.compare_buffer_a
+	mov di, command_data.compare_buffer_b
 	call list8Equal
 	pop di
 	pop si
@@ -502,8 +502,8 @@ commands_data :
 @jumpStringEqualCommand :
 	push si
 	push di
-	mov si, commands_data.compare_buffer_a
-	mov di, commands_data.compare_buffer_b
+	mov si, command_data.compare_buffer_a
+	mov di, command_data.compare_buffer_b
 	call list8Equal
 	pop di
 	pop si
@@ -517,11 +517,11 @@ commands_data :
 @compareCommand :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 3
-	jne commands_err.invalid_arg_num_err
+	jne command_err.invalid_arg_num_err
 	add si, 6
-	mov di, commands_data.compare_buffer_a
+	mov di, command_data.compare_buffer_a
 	COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8
-	mov di, commands_data.compare_buffer_b
+	mov di, command_data.compare_buffer_b
 	COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8
 	clc
 	ret
@@ -530,28 +530,28 @@ commands_data :
 ; -1 <- nth row to be jump to
 ; 1? <- + if downward, - if upward (relative to the jump instruction)
 @jumpCommand :
-	mov byte al, [commands_data.is_buffer_executing]
+	mov byte al, [command_data.is_buffer_executing]
 	cmp al, 0
-	je commands_err.not_running_buffer_err ; command can only run in buffer
+	je command_err.not_running_buffer_err ; command can only run in buffer
 	LS32_GET_COUNT
 	add si, 6
 	cmp cx, 2
 	je .absolute
 	cmp cx, 3
 	je .relative
-	jmp commands_err.invalid_arg_num_err
+	jmp command_err.invalid_arg_num_err
 .relative :
 	COMMANDS_CONSUME_MARK_READ_STRN
 	cmp cx, 1
-	jne commands_err.invalid_value_err
+	jne command_err.invalid_value_err
 	COMMANDS_CONSUME_MARK_READ_UINT ; dx = displacement
-	mov cx, [commands_data.executing_row] ; cx = current executing row
+	mov cx, [command_data.executing_row] ; cx = current executing row
 	mov byte al, [bx]
 	cmp al, '+'
 	je .downward
 	cmp al, '-'
 	je .upward
-	jmp commands_err.invalid_value_err
+	jmp command_err.invalid_value_err
 .downward :
 	add cx, dx
 	mov dx, cx
@@ -564,8 +564,8 @@ commands_data :
 	COMMANDS_CONSUME_MARK_READ_UINT ; dx = nth row to be jump to
 .set_seg :
 	cmp dx, BUFFER_HEIGHT
-	jae commands_err.invalid_buffer_row_err
-	call commandsSetExecutingSegment
+	jae command_err.invalid_buffer_row_err
+	call commandSetExecutingSegment
 	clc
 	ret
 @runBufferCommand_name :
@@ -577,31 +577,31 @@ commands_data :
 	mov es, ax
 	mov ax, BUFFER_BEGIN_SEG ; running first buffer
 	xor bx, bx ; current running line
-	mov byte [commands_data.is_buffer_executing], 1
+	mov byte [command_data.is_buffer_executing], 1
 .loop :
 	cmp ax, (BUFFER_BEGIN_SEG + BUFFER_SEG_COUNT)
 	jae .loop_end
 	cmp ax, BUFFER_BEGIN_SEG
 	jb .loop_end
-	mov word [commands_data.executing_row], bx
-	mov word [commands_data.executing_seg], ax
-; copy line from buffer to commands_data.execution_buffer
+	mov word [command_data.executing_row], bx
+	mov word [command_data.executing_seg], ax
+; copy line from buffer to command_data.execution_buffer
 	push ds
 	xor si, si
-	mov di, commands_data.execution_buffer
+	mov di, command_data.execution_buffer
 	mov cx, BUFFER_WIDTH
 	mov ds, ax
 	cld
 	rep movsb
 	pop ds
 ; execute it
-	mov si, commands_data.execution_buffer
+	mov si, command_data.execution_buffer
 	mov cx, BUFFER_WIDTH
 	clc
 	call interpreterExecuteString
 	jc .loop_end
 ; update current running row
-	mov dx, [commands_data.executing_row]
+	mov dx, [command_data.executing_row]
 	cmp dx, bx
 	jne .executing_row_changed
 	inc bx
@@ -610,7 +610,7 @@ commands_data :
 	mov bx, dx
 .executing_row_changed_end :
 ; update current running seg
-	mov dx, [commands_data.executing_seg]
+	mov dx, [command_data.executing_seg]
 	cmp dx, ax
 	jne .executing_seg_changed
 	add ax, BUFFER_SEG_PER_ROW
@@ -620,7 +620,7 @@ commands_data :
 .executing_seg_changed_end :
 	jmp .loop
 .loop_end :
-	mov byte [commands_data.is_buffer_executing], 0
+	mov byte [command_data.is_buffer_executing], 0
 	pop es
 	clc
 	ret
@@ -631,7 +631,7 @@ commands_data :
 	mov al, ' '
 	xor bx, bx
 	mov dx, BUFFER_SEC_COUNT
-	mov si, [commands_data.active_buffer]
+	mov si, [command_data.active_buffer]
 	mov cx, SECTOR_SIZE
 .clear_loop :
 	cmp dx, 0
@@ -651,15 +651,15 @@ commands_data :
 @setActiveBufferCommand :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 2
-	jne commands_err.invalid_arg_num_err
+	jne command_err.invalid_arg_num_err
 	add si, 6
 	COMMANDS_CONSUME_MARK_READ_UINT ; dx = buffer index
 	cmp dx, BUFFER_COUNT
-	jae commands_err.invalid_buffer_err
+	jae command_err.invalid_buffer_err
 	mov ax, BUFFER_SEG_COUNT
 	mul dx
 	add ax, BUFFER_BEGIN_SEG
-	mov word [commands_data.active_buffer], ax
+	mov word [command_data.active_buffer], ax
 	clc
 	ret
 @setRowCommand_name :
@@ -669,19 +669,19 @@ commands_data :
 @setRowCommand :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 3 ; no args
-	jne commands_err.invalid_arg_num_err
+	jne command_err.invalid_arg_num_err
 	add si, 6
 	COMMANDS_CONSUME_MARK_READ_UINT ; dx = row
 	cmp dx, BUFFER_HEIGHT
-	jae commands_err.invalid_buffer_row_err
+	jae command_err.invalid_buffer_row_err
 	COMMANDS_CONSUME_MARK_READ_STRN
 	mov si, bx ; si = new row content
 	cmp cx, BUFFER_WIDTH
-	jae commands_err.value_too_big_err ; cx = content length
+	jae command_err.value_too_big_err ; cx = content length
 	mov ax, dx
 	mov dx, BUFFER_SEG_PER_ROW
 	mul dx
-	add ax, [commands_data.active_buffer] ; ax = buffer row seg
+	add ax, [command_data.active_buffer] ; ax = buffer row seg
 ; clear the row
 	push es
 	mov es, ax
@@ -711,20 +711,20 @@ commands_data :
 	je .list_with_start
 	cmp cx, 3 ; have count
 	je .list_with_count
-	jmp commands_err.invalid_arg_num_err
+	jmp command_err.invalid_arg_num_err
 .list_with_count :
 	push si
 	add si, 10 ; the third arg
-	call commandsConsumeMark
+	call commandConsumeMark
 	clc
-	call commandsReadString
+	call commandReadString
 	jc .list_count_read_string_fail_err
 	mov si, bx
 	clc
 	call stringToUint
 .list_count_read_string_fail_err :
 	pop si
-	jc commands_err.invalid_uint_err
+	jc command_err.invalid_uint_err
 	mov ax, dx ; ax = count
 .list_with_start :
 	add si, 6 ; the second arg
@@ -748,7 +748,7 @@ commands_data :
 	mov ax, dx
 	mov dx, BUFFER_SEG_PER_ROW
 	mul dx
-	add ax, [commands_data.active_buffer]
+	add ax, [command_data.active_buffer]
 	mov es, ax
 	xor si, si
 ; setup destination
@@ -783,7 +783,7 @@ commands_data :
 	db "rst", 0
 ; n <- ignored
 @resetStackCommand :
-	mov word [commands_data.stack_pointer], commands_data.stack
+	mov word [command_data.stack_pointer], command_data.stack
 	ret
 @popStackCommand_name :
 	db "pop", 0
@@ -797,20 +797,20 @@ commands_data :
 .pop_loop :
 	cmp cx, 0
 	je .end
-	mov word di, [commands_data.stack_pointer]
-	cmp di, commands_data.stack
-	jbe commands_err.stack_empty_err
+	mov word di, [command_data.stack_pointer]
+	cmp di, command_data.stack
+	jbe command_err.stack_empty_err
 	COMMANDS_CONSUME_MARK_READ_UINT ; dx = variable
 	cmp dx, VARIABLE_COUNT
-	jae commands_err.invalid_variable_err
+	jae command_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
 	mul dl
 	push si
 	push cx
 	mov si, di
 	sub si, VARIABLE_SIZE ; si = stack pointer
-	mov word [commands_data.stack_pointer], si
-	mov di, commands_data.variables
+	mov word [command_data.stack_pointer], si
+	mov di, command_data.variables
 	add di, ax ; di = variable address
 	mov cx, VARIABLE_SIZE
 	cld
@@ -834,22 +834,22 @@ commands_data :
 .push_loop :
 	cmp cx, 0
 	je .end
-	mov word di, [commands_data.stack_pointer] ; di = pointer to top of the stack
-	cmp di, commands_data.stack_pointer
-	jae commands_err.stack_full_err
+	mov word di, [command_data.stack_pointer] ; di = pointer to top of the stack
+	cmp di, command_data.stack_pointer
+	jae command_err.stack_full_err
 	COMMANDS_CONSUME_MARK_READ_UINT ; dx = variable
 	cmp dx, VARIABLE_COUNT
-	jae commands_err.invalid_variable_err
+	jae command_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
 	mul dl
 	push si
 	push cx
-	mov si, commands_data.variables
+	mov si, command_data.variables
 	add si, ax ; si = variable address
 	mov cx, VARIABLE_SIZE
 	cld
 	rep movsb
-	mov word [commands_data.stack_pointer], di
+	mov word [command_data.stack_pointer], di
 	pop cx
 	pop si
 	dec cx
@@ -864,14 +864,14 @@ commands_data :
 @setCommand :
 	LS32_GET_COUNT ; cx = args count
 	cmp cx, 3
-	jne commands_err.invalid_arg_num_err
+	jne command_err.invalid_arg_num_err
 	add si, 6
 	COMMANDS_CONSUME_MARK_READ_UINT ; dx = variable
 	cmp dx, VARIABLE_COUNT
-	jae commands_err.invalid_variable_err
+	jae command_err.invalid_variable_err
 	mov al, VARIABLE_SIZE
 	mul dl
-	mov di, commands_data.variables
+	mov di, command_data.variables
 	add di, ax ; di = variable address
 	COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8
 	clc
@@ -880,7 +880,7 @@ commands_data :
 	db "bye", 0
 ; n <- ignored
 @byeCommand :
-	mov bx, commands_data.shutdown_str
+	mov bx, command_data.shutdown_str
 	call printCString
 	PRINT_NL
 	mov ax, 0x5307
@@ -902,7 +902,7 @@ commands_data :
 	je .default
 	cmp cx, 3
 	je .set_option
-	jmp commands_err.invalid_arg_num_err
+	jmp command_err.invalid_arg_num_err
 .set_option :
 	COMMANDS_CONSUME_MARK_READ_STRN
 .option_detection_loop :
@@ -967,7 +967,7 @@ commands_data :
 ; bx -> string
 ; cx -> string length
 ; cf -> set if fail
-commandsReadString :
+commandReadString :
 	push ax
 	push dx
 	push si
@@ -987,7 +987,7 @@ commandsReadString :
 	jae .fail
 	mov al, VARIABLE_SIZE
 	mul dl
-	mov si, commands_data.variables
+	mov si, command_data.variables
 	add si, ax
 	LS8_GET_COUNT
 	mov bx, si
@@ -1011,14 +1011,14 @@ commandsReadString :
 	ret
 ; Set executing row together with its corresponding executing segment.
 ; dx <- executing row
-commandsSetExecutingSegment :
+commandSetExecutingSegment :
 	push ax
 	push dx
-	mov word [commands_data.executing_row], dx
+	mov word [command_data.executing_row], dx
 	mov ax, BUFFER_SEG_PER_ROW
 	mul dx
 	add ax, BUFFER_BEGIN_SEG
-	mov word [commands_data.executing_seg], ax
+	mov word [command_data.executing_seg], ax
 	pop dx
 	pop ax
 	ret
@@ -1026,62 +1026,62 @@ commandsSetExecutingSegment :
 ; bx -> address of argument
 ; cx -> length of argument
 ; si -> next mark
-commandsConsumeMark :
+commandConsumeMark :
 	mov word cx, [si]
 	add si, 2
 	mov word bx, [si]
 	add si, 2
 	ret
 ; There is so many repeating lines of code for handling err so I just put it all in one place.
-commands_err :
+command_err :
 .disk_write_err :
-	mov bx, commands_data.disk_write_err_str
+	mov bx, command_data.disk_write_err_str
 	jmp .print
 .disk_read_err :
-	mov bx, commands_data.disk_read_err_str
+	mov bx, command_data.disk_read_err_str
 	jmp .print
 .invalid_file_err :
-	mov bx, commands_data.invalid_file_err_str
+	mov bx, command_data.invalid_file_err_str
 	jmp .print
 .value_too_big_err :
-	mov bx, commands_data.value_too_big_err_str
+	mov bx, command_data.value_too_big_err_str
 	jmp .print
 .invalid_arg_num_err :
-	mov bx, commands_data.invalid_arg_num_err_str
+	mov bx, command_data.invalid_arg_num_err_str
 	jmp .print
 .stack_full_err :
-	mov bx, commands_data.stack_full_err_str
+	mov bx, command_data.stack_full_err_str
 	jmp .print
 .stack_empty_err :
-	mov bx, commands_data.stack_empty_err_str
+	mov bx, command_data.stack_empty_err_str
 	jmp .print
 .invalid_value_err :
-	mov bx, commands_data.invalid_value_err_str
+	mov bx, command_data.invalid_value_err_str
 	jmp .print
 .invalid_variable_err :
-	mov bx, commands_data.invalid_variable_err_str
+	mov bx, command_data.invalid_variable_err_str
 	jmp .print
 .invalid_buffer_err :
-	mov bx, commands_data.invalid_buffer_err_str
+	mov bx, command_data.invalid_buffer_err_str
 	jmp .print
 .invalid_buffer_row_err :
-	mov bx, commands_data.invalid_buffer_row_err_str
+	mov bx, command_data.invalid_buffer_row_err_str
 	jmp .print
 .not_running_buffer_err :
-	mov bx, commands_data.not_running_buffer_err_str
+	mov bx, command_data.not_running_buffer_err_str
 	jmp .print
 .invalid_uint_err :
-	mov bx, commands_data.invalid_uint_err_str
+	mov bx, command_data.invalid_uint_err_str
 .print :
-	mov byte al, [commands_data.is_buffer_executing]
+	mov byte al, [command_data.is_buffer_executing]
 	cmp al, 0
 	je .not_running_buffer
 	call printError
 	PRINT_CHAR ' '
-	mov bx, commands_data.debug_show_row_str
+	mov bx, command_data.debug_show_row_str
 	call printCString
 	mov ah, MAGENTA
-	mov dx, [commands_data.executing_row]
+	mov dx, [command_data.executing_row]
 	call consolePrintUint
 	PRINT_CHAR ']'
 	PRINT_NL
