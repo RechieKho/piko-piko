@@ -250,13 +250,13 @@ commands_data :
 	add ax, STORAGE_BEGIN_SEC
 	xor cx, cx
 	xor dx, dx
-	call storage_add_chs
+	call storageAddCHS
 	mov ax, BUFFER_SEC_COUNT ; ax = number of sectors
 	push es
 	mov word bx, [commands_data.active_buffer]
 	mov es, bx
 	xor bx, bx
-	call storage_write
+	call storageWrite
 	pop es
 	jc commands_err.disk_write_err
 	ret
@@ -276,13 +276,13 @@ commands_data :
 	add ax, STORAGE_BEGIN_SEC
 	xor cx, cx
 	xor dx, dx
-	call storage_add_chs
+	call storageAddCHS
 	mov ax, BUFFER_SEC_COUNT ; ax = number of sectors
 	push es
 	mov word bx, [commands_data.active_buffer]
 	mov es, bx
 	xor bx, bx
-	call storage_read
+	call storageRead
 	pop es
 	jc commands_err.disk_read_err
 	ret

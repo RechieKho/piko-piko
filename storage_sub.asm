@@ -62,7 +62,7 @@
 	add bx, ax
 	mov es, bx
 	popa
-	call storage_add_chs
+	call storageAddCHS
 	sub si, ax
 	mov ax, si
 	dec di
@@ -105,7 +105,7 @@
 	add bx, ax
 	mov es, bx
 	popa
-	call storage_add_chs
+	call storageAddCHS
 	sub si, ax
 	mov ax, si
 	dec di
@@ -141,7 +141,7 @@ storage_data :
 ; dh <- starting head on disk
 ; es : bx <- data buffer for loaded data
 ; cf -> set on fail
-storage_read :
+storageRead :
 	pusha
 	push es
 	mov byte dl, [storage_data.initialized]
@@ -163,7 +163,7 @@ storage_read :
 	dec ah
 	push ax
 	mov ax, MAX_SEC_PER_OP
-	call storage_add_chs
+	call storageAddCHS
 	pop ax
 	jc .fail
 	mov bx, es
@@ -194,7 +194,7 @@ storage_read :
 ; dl <- drive number
 ; es : bx <- data to be written on disk
 ; cf -> set on fail
-storage_write :
+storageWrite :
 	pusha
 	push es
 	mov byte dl, [storage_data.initialized]
@@ -216,7 +216,7 @@ storage_write :
 	dec ah
 	push ax
 	mov ax, MAX_SEC_PER_OP
-	call storage_add_chs
+	call storageAddCHS
 	pop ax
 	jc .fail
 	mov bx, es
@@ -246,7 +246,7 @@ storage_write :
 ; cx -> new cylinder sector
 ; dh -> new head
 ; cf -> set if fail
-storage_add_chs :
+storageAddCHS :
 	push ax
 	push bx
 	mov byte bl, [storage_data.initialized]
