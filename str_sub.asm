@@ -1,6 +1,5 @@
 %ifndef _STR_SUB_ASM_
 %define _STR_SUB_ASM_
-; some helpful functions for (null-terminated) string operation
 ; check if string contains character
 ; si <- string
 ; al <- character
