@@ -949,7 +949,7 @@ commands_data :
 	cmp cx, 0
 	je .newline_loop
 	mov si, bx
-.printStrn :
+.print_strn :
 	call consolePrintStrn
 .newline_loop :
 	cmp al, 0
