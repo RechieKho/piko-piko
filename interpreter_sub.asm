@@ -60,7 +60,7 @@ interpreter_data :
 	db "Invalid command.", 0
 ; --- subroutines ---
 ; print marks
-interpreter_print_marks :
+interpreterPrintMarks :
 	pusha
 	mov si, interpreter_data.marks
 	LS32_GET_COUNT ; cx = count of marks
@@ -85,19 +85,19 @@ interpreter_print_marks :
 	ret
 ; execute command string
 ; si <- address of string (ls8)
-interpreter_execute :
-	call interpreter_mark
-	call interpreter_execute_mark
+interpreterExecute :
+	call interpreterMark
+	call interpreterExecutreMark
 	ret
 ; execute command strn
 ; si <- address of string
 ; cx <- length of string
-interpreter_execute_strn :
-	call interpreter_mark_strn
-	call interpreter_execute_mark
+interpreterExecuteStrn :
+	call interpreterMarkStrn
+	call interpreterExecutreMark
 	ret
 ; execute command from interpreter_data.marks
-interpreter_execute_mark :
+interpreterExecutreMark :
 	pusha
 	mov si, interpreter_data.marks
 	LS32_GET_COUNT
@@ -162,7 +162,7 @@ interpreter_execute_mark :
 ; mark the subs-strings in the strn given, output into interpreter_data.marks
 ; si <- address of string
 ; cx <- length of string
-interpreter_mark_strn :
+interpreterMarkStrn :
 	pusha
 	mov di, interpreter_data.marks
 	LS32_INIT
@@ -280,16 +280,16 @@ interpreter_mark_strn :
 	ret
 ; mark the sub-strings in the string (ls8) given, output into interpreter_data.marks
 ; si <- address of string (ls8)
-interpreter_mark :
+interpreterMark :
 	pusha
 	LS8_GET_COUNT ; cx = count of chars
 	add si, 2 ; si = begining of string
-	call interpreter_mark_strn
+	call interpreterMarkStrn
 	popa
 	ret
 ; paint the ls16 buffer
 ; si <- ls16 buffer
-interpreter_paint :
+interpreterPaint :
 	pusha
 	LS16_GET_COUNT ; cx = count
 	mov di, si

@@ -64,14 +64,14 @@ main :
 ; get user input
 	PRINT_CHAR '>'
 	PRINT_CHAR ' '
-	mov bx, interpreter_paint
+	mov bx, interpreterPaint
 	call consoleReadLine
 	PRINT_NL
 	mov di, kernel_data.raw_buffer
 	call ls16_take_lower
 	mov si, kernel_data.raw_buffer
 	clc
-	call interpreter_execute
+	call interpreterExecute
 	jmp .loop
 ; --- checks ---
 %if ($-$$) > KERNEL_CODE_SIZE

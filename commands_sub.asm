@@ -598,7 +598,7 @@ commands_data :
 	mov si, commands_data.execution_buffer
 	mov cx, BUFFER_WIDTH
 	clc
-	call interpreter_execute_strn
+	call interpreterExecuteStrn
 	jc .loop_end
 ; update current running row
 	mov dx, [commands_data.executing_row]
