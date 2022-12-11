@@ -79,7 +79,7 @@
 %macro COMMANDS_CONSUME_MARK_READ_STRN 0
 	call commands_consume_mark
 	clc
-	call commands_read_strn
+	call commandsReadStrn
 	jc commands_err.invalid_variable_err
 %endmacro
 ; Consume mark and read as strn save it to ls8 (accept variable referencing).
@@ -92,7 +92,7 @@
 	push cx
 	call commands_consume_mark
 	clc
-	call commands_read_strn
+	call commandsReadStrn
 	jc %%fail
 	cmp ch , 0
 	jne %%fail
@@ -124,7 +124,7 @@
 	call commands_consume_mark
 	push si
 	clc
-	call commands_read_strn
+	call commandsReadStrn
 	jc %%end
 	mov si, bx
 	clc
@@ -717,7 +717,7 @@ commands_data :
 	add si, 10 ; the third arg
 	call commands_consume_mark
 	clc
-	call commands_read_strn
+	call commandsReadStrn
 	jc .list_count_read_strn_fail_err
 	mov si, bx
 	clc
@@ -967,7 +967,7 @@ commands_data :
 ; bx -> string
 ; cx -> string length
 ; cf -> set if fail
-commands_read_strn :
+commandsReadStrn :
 	push ax
 	push dx
 	push si
