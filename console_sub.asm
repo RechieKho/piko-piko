@@ -162,7 +162,7 @@
 ; --- subroutine ---
 ; scroll console upward
 ; bl <- displacelment
-console_scroll_up :
+consoleScrollUp :
 	pusha
 	push ds
 	push es
@@ -197,7 +197,7 @@ console_scroll_up :
 ; al <- character
 ; ah <- attribute
 ; bx <- index
-console_write_idx :
+consoleWriteIndex :
 	pusha
 	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
 	ja .end ; exceed video dump
@@ -215,16 +215,16 @@ console_write_idx :
 ; ah <- attribute
 ; cl <- row
 ; ch <- column
-console_write :
+consoleWrite :
 	pusha
 	CONSOLE_RC2IDX cl, ch
-	call console_write_idx
+	call consoleWriteIndex
 	popa
 	ret
 ; write only character to location using index
 ; al <- character
 ; bx <- index
-console_write_char_idx :
+consoleWriteCharIndex :
 	pusha
 	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
 	ja .end ; exceed video dump
@@ -241,16 +241,16 @@ console_write_char_idx :
 ; al <- character
 ; cl <- row
 ; ch <- column
-console_write_char :
+consoleWriteChar :
 	pusha
 	CONSOLE_RC2IDX cl, ch
-	call console_write_char_idx
+	call consoleWriteCharIndex
 	popa
 	ret
 ; set the attribute of the character
 ; ah <- attribute
 ; bx <- index
-console_paint_idx :
+consolePaintIndex :
 	pusha
 	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
 	ja .end ; exceed video dump
@@ -268,16 +268,16 @@ console_paint_idx :
 ; ah <- attribute
 ; cl <- row
 ; ch <- column
-console_paint :
+consolePaint :
 	pusha
 	CONSOLE_RC2IDX cl, ch
-	call console_paint_idx
+	call consolePaintIndex
 	popa
 	ret
 ; write ls16 to location using index
 ; bx <- index
 ; si <- address of ls16
-console_write_ls16_idx :
+consoleWriteList16Index :
 	pusha
 	LS16_GET_COUNT ; cx = count
 	mov ax, bx
@@ -301,10 +301,10 @@ console_write_ls16_idx :
 ; cl <- row
 ; ch <- column
 ; si <- address of ls16
-console_write_ls16 :
+consoleWriteList16 :
 	pusha
 	CONSOLE_RC2IDX cl, ch
-	call console_write_ls16_idx
+	call consoleWriteList16Index
 	popa
 	ret
 ; write subset of ls16 to location using index
@@ -312,7 +312,7 @@ console_write_ls16 :
 ; ah <- end (exclusive)
 ; bx <- index
 ; si <- address of ls16
-console_write_ls16_sub_idx :
+consoleWriteSubList16Index :
 	pusha
 	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
 	ja .end
@@ -350,16 +350,16 @@ console_write_ls16_sub_idx :
 ; cl <- row
 ; ch <- column
 ; si <- address of ls16
-console_write_ls16_sub :
+consoleWriteSubList16 :
 	pusha
 	CONSOLE_RC2IDX cl, ch
-	call console_write_ls16_sub_idx
+	call consoleWriteSubList16Index
 	popa
 	ret
 ; write attributed string to location using index
 ; bx <- index
 ; si <- attributed string
-console_write_astr_idx :
+consoleWriteAttributedStringIndex :
 	pusha
 	push es
 	mov ax, CONSOLE_DUMP_SEG
@@ -381,17 +381,17 @@ console_write_astr_idx :
 ; cl <- row
 ; ch <- column
 ; si <- attributed string
-console_write_astr :
+consoleWriteAttributedString :
 	pusha
 	CONSOLE_RC2IDX cl, ch
-	call console_write_astr_idx
+	call consoleWriteAttributedStringIndex
 	popa
 	ret
 ; write uint (always 5 digits) to location by index
 ; ah <- attribute
 ; bx <- index
 ; dx <- number
-console_write_uint_idx :
+consoleWriteUintIndex :
 	pusha
 	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
 	ja .end
@@ -424,7 +424,7 @@ console_write_uint_idx :
 ; print uint
 ; ah <- attribute
 ; dx <- number
-console_print_uint :
+consolePrintUint :
 	pusha
 	push dx
 	GET_CURSOR
@@ -433,10 +433,10 @@ console_print_uint :
 	push dx
 	mov dx, bx
 	mov cx, 5
-	call console_make_space
+	call consoleMakeSpace
 	mov bx, dx
 	pop dx
-	call console_write_uint_idx
+	call consoleWriteUintIndex
 	add bx, 5
 	CONSOLE_IDX2RC bx
 	SET_CURSOR
@@ -447,7 +447,7 @@ console_print_uint :
 ; bx <- index
 ; cx <- length
 ; si <- string
-console_write_strn_idx :
+consoleWriteStrnIndex :
 	pusha
 	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
 	ja .end ; exceed video dump
@@ -473,16 +473,16 @@ console_write_strn_idx :
 ; ah <- attribute
 ; cx <- length
 ; si <- string
-console_print_strn :
+consolePrintStrn :
 	pusha
 	push cx
 	GET_CURSOR
 	CONSOLE_RC2IDX dh, dl
 	pop cx
 	mov dx, bx
-	call console_make_space ; dx = new starting index
+	call consoleMakeSpace ; dx = new starting index
 	mov bx, dx
-	call console_write_strn_idx
+	call consoleWriteStrnIndex
 	add bx, cx
 	CONSOLE_IDX2RC bx
 	SET_CURSOR
@@ -492,7 +492,7 @@ console_print_strn :
 ; cx <- length of text will be printed, it will calculate rows to be scrolled for the text
 ; dx <- starting index of screen for text to be printed
 ; dx -> new starting index after scroll
-console_make_space :
+consoleMakeSpace :
 	push cx
 	push bx
 	add cx, dx
@@ -505,14 +505,14 @@ console_make_space :
 	sub cx, CONSOLE_WIDTH
 	jmp .count_loop
 .count_loop_end :
-	call console_scroll_up
+	call consoleScrollUp
 	pop bx
 	pop cx
 	ret
 ; read line from console
 ; si <- ls16 for storing output
 ; bx <- painter function that colorize the the input. It won 't be called if it is 0.
-console_read_line :
+consoleReadLine :
 	pusha
 	LS16_CLEAR
 	push bx
@@ -572,7 +572,7 @@ console_read_line :
 .handle_bs :
 	cmp cx, dx
 	je .reject_handle ; cursor index at begining
-	call _clear_input_line
+	call consoleClearInputLine
 	pusha
 	sub cx, dx
 	dec cx ; cx = index of character to be erased, right before cursor
@@ -585,7 +585,7 @@ console_read_line :
 	je .no_painter_handle_bs
 	call bx
 .no_painter_handle_bs :
-	call _update_input_line
+	call consoleUpdateInputLine
 	CURSOR_BACKWARD
 	jmp .loop
 ; ax <- scancode
@@ -606,7 +606,7 @@ console_read_line :
 	je .no_painter_handle_normal
 	call bx
 .no_painter_handle_normal :
-	call _update_input_line
+	call consoleUpdateInputLine
 	CURSOR_FORWARD
 	jmp .loop
 .reject_handle :
@@ -619,20 +619,20 @@ console_read_line :
 ; si <- ls16 buffer
 ; dx <- starting index
 ; dx -> updated starting index (if scroll)
-_update_input_line :
+consoleUpdateInputLine :
 	push cx
 	push bx
 	LS16_GET_COUNT ; cx = count
-	call console_make_space
+	call consoleMakeSpace
 	mov bx, dx
-	call console_write_ls16_idx
+	call consoleWriteList16Index
 	pop bx
 	pop cx
 	ret
 ; clear region in console that is written with ls16 user input buffer
 ; si <- ls16 buffer
 ; dx <- starting index
-_clear_input_line :
+consoleClearInputLine :
 	pusha
 	LS16_GET_COUNT ; cx = count
 	mov bx, dx

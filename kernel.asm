@@ -57,7 +57,7 @@ main :
 ; print greeting
 	mov si, kernel_data.greeting
 	xor cx, cx
-	call console_write_astr
+	call consoleWriteAttributedString
 	PRINT_NL
 .loop :
 	mov si, kernel_data.input_buffer
@@ -65,7 +65,7 @@ main :
 	PRINT_CHAR '>'
 	PRINT_CHAR ' '
 	mov bx, interpreter_paint
-	call console_read_line
+	call consoleReadLine
 	PRINT_NL
 	mov di, kernel_data.raw_buffer
 	call ls16_take_lower

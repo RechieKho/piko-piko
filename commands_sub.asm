@@ -229,7 +229,7 @@ commands_data :
 	add di, ax ; di = variable address
 	mov si, commands_data.read_buffer
 	xor bx, bx
-	call console_read_line
+	call consoleReadLine
 	call ls16_take_lower
 	PRINT_NL
 	clc
@@ -738,7 +738,7 @@ commands_data :
 	je .list_loop_end
 	cmp dx, BUFFER_HEIGHT
 	jae .list_loop_end
-	call console_print_uint
+	call consolePrintUint
 	PRINT_CHAR ' '
 	pusha
 	push es
@@ -950,7 +950,7 @@ commands_data :
 	je .newline_loop
 	mov si, bx
 .print_strn :
-	call console_print_strn
+	call consolePrintStrn
 .newline_loop :
 	cmp al, 0
 	je .end
@@ -1082,7 +1082,7 @@ commands_err :
 	call print_str
 	mov ah, MAGENTA
 	mov dx, [commands_data.executing_row]
-	call console_print_uint
+	call consolePrintUint
 	PRINT_CHAR ']'
 	PRINT_NL
 	jmp .end
