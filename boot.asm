@@ -14,7 +14,8 @@
 %include "print_sub.asm"
 ; --- data ---
 boot_data :
-	.disk_read_err_str : db "Fail to read disk, error code: ", 0
+.disk_read_err_str :
+	db "Fail to read disk, error code: ", 0
 ; --- subroutine ---
 main :
 ; load kernel
