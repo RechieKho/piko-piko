@@ -881,7 +881,7 @@ commands_data :
 ; n <- ignored
 @byeCommand :
 	mov bx, commands_data.shutdown_str
-	call print_str
+	call printStr
 	PRINT_NL
 	mov ax, 0x5307
 	mov cx, 0x03
@@ -949,7 +949,7 @@ commands_data :
 	cmp cx, 0
 	je .newline_loop
 	mov si, bx
-.print_strn :
+.printStrn :
 	call consolePrintStrn
 .newline_loop :
 	cmp al, 0
@@ -1076,10 +1076,10 @@ commands_err :
 	mov byte al, [commands_data.is_buffer_executing]
 	cmp al, 0
 	je .not_running_buffer
-	call print_err
+	call printError
 	PRINT_CHAR ' '
 	mov bx, commands_data.debug_show_row_str
-	call print_str
+	call printStr
 	mov ah, MAGENTA
 	mov dx, [commands_data.executing_row]
 	call consolePrintUint
@@ -1087,7 +1087,7 @@ commands_err :
 	PRINT_NL
 	jmp .end
 .not_running_buffer :
-	call print_err_ln
+	call printErrorLine
 .end :
 	stc
 	ret

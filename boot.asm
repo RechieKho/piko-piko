@@ -33,7 +33,7 @@ main :
 boot_err :
 .read_disk_err :
 	mov bx, boot_data.disk_read_err_str
-	call print_err
+	call printError
 	PRINT_BYTE ah
 	PRINT_CHAR '.'
 .jam :

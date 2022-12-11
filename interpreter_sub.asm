@@ -74,7 +74,7 @@ interpreterPrintMarks :
 	add si, 2
 	mov word bx, [si] ; bx = string
 	add si, 2
-	call print_n_str
+	call printStrn
 	pop cx
 	PRINT_CHAR ','
 	dec cx

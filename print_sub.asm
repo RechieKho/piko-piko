@@ -1,8 +1,8 @@
 %ifndef _PRINT_SUB_ASM_
 %define _PRINT_SUB_ASM_
 ; --- data ---
-str_sub_data :
-.err :
+print_data :
+.error_prefix :
 	db "ERROR: ", 0
 ; --- macros ---
 ; print a character and advance the cursor
@@ -76,7 +76,7 @@ str_sub_data :
 ; --- subroutines ---
 ; print string to console
 ; bx <- string
-print_str :
+printStr :
 	pusha
 .loop :
 	mov al, [bx]
@@ -92,7 +92,7 @@ print_str :
 ; print n characters from string to console
 ; bx <- string
 ; cx <- count
-print_n_str :
+printStrn :
 	pusha
 .loop :
 	cmp cx, 0
@@ -108,19 +108,19 @@ print_n_str :
 	ret
 ; print error (message are prefix with "ERROR: " )
 ; bx <- error message
-print_err :
+printError :
 	pusha
 	push bx
-	mov bx, str_sub_data.err
-	call print_str
+	mov bx, print_data.error_prefix
+	call printStr
 	pop bx
-	call print_str
+	call printStr
 	popa
 	ret
 ; print error in one line
 ; bx <- err message
-print_err_ln :
-	call print_err
+printErrorLine :
+	call printError
 	PRINT_NL
 	ret
 %endif ; _PRINT_SUB_ASM_
