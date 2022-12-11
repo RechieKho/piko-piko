@@ -4,7 +4,7 @@
 ; si <- string
 ; al <- character
 ; cf -> set if it contains the character
-str_has_char :
+strHasChar :
 	pusha
 	mov cl, [si]
 .loop :
@@ -27,7 +27,7 @@ str_has_char :
 ; si <- string
 ; cx <- length
 ; cf -> set if it is an unsigned interger
-strn_is_uint :
+strnIsUint :
 	pusha
 	cmp cx, 0
 	je .not_uint
@@ -51,13 +51,13 @@ strn_is_uint :
 ; cx <- length
 ; dx -> unsigned interger
 ; cf -> set if it is invalid (not unsigned int or too big)
-strn_to_uint :
+strnToUint :
 	push ax
 	push bx
 	push cx
 	push si
 	push di
-	call strn_is_uint
+	call strnIsUint
 	jc .invalid_uint
 	xor bx, bx
 	xor di, di
@@ -103,7 +103,7 @@ strn_to_uint :
 ; Turn uint to strn (always 5 digits)
 ; ax <- number
 ; di <- location to be written to
-uint_to_strn :
+uintToStrn :
 	pusha
 	mov cx, 5
 	mov bx, 10

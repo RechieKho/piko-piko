@@ -54,7 +54,7 @@
 	LS8_GET_COUNT
 	add si, 2
 	clc
-	call strn_to_uint
+	call strnToUint
 	pop si
 	jc commands_err.invalid_uint_err
 %endmacro
@@ -128,7 +128,7 @@
 	jc %%end
 	mov si, bx
 	clc
-	call strn_to_uint
+	call strnToUint
 %%end :
 	pop si
 	pop cx
@@ -323,14 +323,14 @@ commands_data :
 	inc di
 	mov byte [di], 5
 	inc di
-	call uint_to_strn
+	call uintToStrn
 	mov di, bx
 	xor ax, ax
 	mov al, dh
 	inc di
 	mov byte [di], 5
 	inc di
-	call uint_to_strn
+	call uintToStrn
 	clc
 	ret
 @mulCommand_name :
@@ -359,7 +359,7 @@ commands_data :
 	inc di
 	mov byte [di], 5
 	inc di
-	call uint_to_strn
+	call uintToStrn
 	clc
 	ret
 @subCommand_name :
@@ -386,7 +386,7 @@ commands_data :
 	inc di
 	mov byte [di], 5
 	inc di
-	call uint_to_strn
+	call uintToStrn
 	clc
 	ret
 @addCommand_name :
@@ -413,7 +413,7 @@ commands_data :
 	inc di
 	mov byte [di], 5
 	inc di
-	call uint_to_strn
+	call uintToStrn
 	clc
 	ret
 @jumpUintLessEqualCommand_name :
@@ -721,7 +721,7 @@ commands_data :
 	jc .list_count_read_strn_fail_err
 	mov si, bx
 	clc
-	call strn_to_uint
+	call strnToUint
 .list_count_read_strn_fail_err :
 	pop si
 	jc commands_err.invalid_uint_err
@@ -981,7 +981,7 @@ commandsReadStrn :
 	inc si
 	dec cx
 	clc
-	call strn_to_uint
+	call strnToUint
 	jc .fail
 	cmp dx, VARIABLE_COUNT
 	jae .fail

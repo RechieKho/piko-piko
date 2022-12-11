@@ -193,13 +193,13 @@ interpreterMarkStrn :
 .not_processing_str :
 	push si ; >> BEGIN SWITCH <<
 	mov si, interpreter_data.splitting_chars
-	call str_has_char
+	call strHasChar
 	jc .is_splitting_char
 	mov si, interpreter_data.standalone_chars
-	call str_has_char
+	call strHasChar
 	jc .is_standalone_char
 	mov si, interpreter_data.str_chars
-	call str_has_char
+	call strHasChar
 	jc .is_str_char
 	inc dx
 	jmp .switch_end
@@ -260,7 +260,7 @@ interpreterMarkStrn :
 	xor dx, dx
 	jmp .switch_end
 .switch_end :
-	clc ; clear flag set by str_has_char
+	clc ; clear flag set by strHasChar
 	pop si ; >> END SWITCH <<
 .skip_switch :
 	dec cx
@@ -313,10 +313,10 @@ interpreterPaint :
 .not_processing_str :
 	push di ; >> BEGIN SWITCH <<
 	mov si, interpreter_data.standalone_chars
-	call str_has_char
+	call strHasChar
 	jc .is_standalone_char
 	mov si, interpreter_data.str_chars
-	call str_has_char
+	call strHasChar
 	jc .is_str_char
 	jmp .is_normal_char
 .is_standalone_char :
