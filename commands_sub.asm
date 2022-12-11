@@ -77,7 +77,7 @@
 ; cx -> string length
 ; si -> next mark
 %macro COMMANDS_CONSUME_MARK_READ_STRN 0
-	call commands_consume_mark
+	call commandsConsumeMark
 	clc
 	call commandsReadStrn
 	jc commands_err.invalid_variable_err
@@ -90,7 +90,7 @@
 %macro COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8 0
 	push bx
 	push cx
-	call commands_consume_mark
+	call commandsConsumeMark
 	clc
 	call commandsReadStrn
 	jc %%fail
@@ -121,7 +121,7 @@
 %macro COMMANDS_CONSUME_MARK_READ_UINT 0
 	push bx
 	push cx
-	call commands_consume_mark
+	call commandsConsumeMark
 	push si
 	clc
 	call commandsReadStrn
@@ -565,7 +565,7 @@ commands_data :
 .set_seg :
 	cmp dx, BUFFER_HEIGHT
 	jae commands_err.invalid_buffer_row_err
-	call commands_set_executing_seg
+	call commandsSetExecutingSegment
 	clc
 	ret
 @runBufferCommand_name :
@@ -715,7 +715,7 @@ commands_data :
 .list_with_count :
 	push si
 	add si, 10 ; the third arg
-	call commands_consume_mark
+	call commandsConsumeMark
 	clc
 	call commandsReadStrn
 	jc .list_count_read_strn_fail_err
@@ -1011,7 +1011,7 @@ commandsReadStrn :
 	ret
 ; Set executing row together with its corresponding executing segment.
 ; dx <- executing row
-commands_set_executing_seg :
+commandsSetExecutingSegment :
 	push ax
 	push dx
 	mov word [commands_data.executing_row], dx
@@ -1026,7 +1026,7 @@ commands_set_executing_seg :
 ; bx -> address of argument
 ; cx -> length of argument
 ; si -> next mark
-commands_consume_mark :
+commandsConsumeMark :
 	mov word cx, [si]
 	add si, 2
 	mov word bx, [si]
