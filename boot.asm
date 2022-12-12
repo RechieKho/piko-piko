@@ -14,7 +14,7 @@
 %include "print_sub.asm"
 ; --- data ---
 boot_data :
-.disk_read_err_str :
+.disk_read_error_c_string :
 	db "Fail to read disk, error code: ", 0
 ; --- subroutine ---
 main :
@@ -32,7 +32,7 @@ main :
 	jmp KERNEL_CODE_BEGIN_SEG : 0
 boot_err :
 .read_disk_err :
-	mov bx, boot_data.disk_read_err_str
+	mov bx, boot_data.disk_read_error_c_string
 	call printError
 	PRINT_BYTE ah
 	PRINT_CHAR '.'

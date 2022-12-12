@@ -74,7 +74,7 @@
 ; MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN PUSH AND POP.
 ; si <- current mark
 ; bx -> string
-; cx -> string length
+; cx -> length
 ; si -> next mark
 %macro COMMANDS_CONSUME_MARK_READ_STRN 0
 	call commandConsumeMark
@@ -137,35 +137,35 @@
 %endmacro
 ; --- data ---
 command_data :
-.disk_write_err_str :
+.disk_write_error_c_string :
 	db "Fail to write disk.", 0
-.disk_read_err_str :
+.disk_read_error_c_string :
 	db "Fail to read disk.", 0
-.invalid_file_err_str :
+.invalid_file_error_c_string :
 	db "Invalid file.", 0
-.stack_empty_err_str :
+.stack_empty_error_c_string :
 	db "Stack is empty.", 0
-.stack_full_err_str :
+.stack_full_error_c_string :
 	db "Stack is full.", 0
-.value_too_big_err_str :
+.value_too_big_error_c_string :
 	db "Value too big.", 0
-.invalid_value_err_str :
+.invalid_value_error_c_string :
 	db "Invalid value.", 0
-.invalid_variable_err_str :
+.invalid_variable_error_c_string :
 	db "Invalid variable.", 0
-.invalid_buffer_err_str :
+.invalid_buffer_error_c_string :
 	db "Invalid buffer.", 0
-.invalid_buffer_row_err_str :
+.invalid_buffer_row_error_c_string :
 	db "Invalid buffer row.", 0
-.invalid_arg_num_err_str :
+.invalid_arg_num_error_c_string :
 	db "Invalid number of arguments.", 0
-.not_running_buffer_err_str :
+.not_running_buffer_error_c_string :
 	db "Not running in the buffer.", 0
-.invalid_uint_err_str :
+.invalid_uint_error_c_string :
 	db "Invalid number.", 0
-.debug_show_row_str :
+.debug_show_row_c_string :
 	db "[line ", 0
-.shutdown_str :
+.bye_c_string :
 	db "Shutting down... Wait, I am still alive? Maybe holding down the power button will completely kill me.", 0
 .variables :
 %rep VARIABLE_COUNT
@@ -880,7 +880,7 @@ command_data :
 	db "bye", 0
 ; n <- ignored
 @byeCommand :
-	mov bx, command_data.shutdown_str
+	mov bx, command_data.bye_c_string
 	call printCString
 	PRINT_NL
 	mov ax, 0x5307
@@ -891,7 +891,7 @@ command_data :
 	ret
 @sayCommand_name :
 	db "say", 0
-; -1 <- string to be printed
+; -1 <- message to be printed
 ; 1? <- options
 @sayCommand :
 	LIST32_GET_COUNT
@@ -963,9 +963,9 @@ command_data :
 ; --- subroutine ---
 ; Read string (accept variable referencing).
 ; bx <- string
-; cx <- string length
+; cx <- length
 ; bx -> string
-; cx -> string length
+; cx -> length
 ; cf -> set if fail
 commandReadString :
 	push ax
@@ -975,7 +975,7 @@ commandReadString :
 	je .success
 	mov byte al, [bx]
 	cmp al, '$'
-	jne .literal_string
+	jne .string_literal
 ; variable referencing
 	mov si, bx
 	inc si
@@ -993,7 +993,7 @@ commandReadString :
 	mov bx, si
 	add bx, 2
 	jmp .success
-.literal_string :
+.string_literal :
 	cmp al, '\'
 	jne .success
 	inc bx
@@ -1035,50 +1035,50 @@ commandConsumeMark :
 ; There is so many repeating lines of code for handling err so I just put it all in one place.
 command_err :
 .disk_write_err :
-	mov bx, command_data.disk_write_err_str
+	mov bx, command_data.disk_write_error_c_string
 	jmp .print
 .disk_read_err :
-	mov bx, command_data.disk_read_err_str
+	mov bx, command_data.disk_read_error_c_string
 	jmp .print
 .invalid_file_err :
-	mov bx, command_data.invalid_file_err_str
+	mov bx, command_data.invalid_file_error_c_string
 	jmp .print
 .value_too_big_err :
-	mov bx, command_data.value_too_big_err_str
+	mov bx, command_data.value_too_big_error_c_string
 	jmp .print
 .invalid_arg_num_err :
-	mov bx, command_data.invalid_arg_num_err_str
+	mov bx, command_data.invalid_arg_num_error_c_string
 	jmp .print
 .stack_full_err :
-	mov bx, command_data.stack_full_err_str
+	mov bx, command_data.stack_full_error_c_string
 	jmp .print
 .stack_empty_err :
-	mov bx, command_data.stack_empty_err_str
+	mov bx, command_data.stack_empty_error_c_string
 	jmp .print
 .invalid_value_err :
-	mov bx, command_data.invalid_value_err_str
+	mov bx, command_data.invalid_value_error_c_string
 	jmp .print
 .invalid_variable_err :
-	mov bx, command_data.invalid_variable_err_str
+	mov bx, command_data.invalid_variable_error_c_string
 	jmp .print
 .invalid_buffer_err :
-	mov bx, command_data.invalid_buffer_err_str
+	mov bx, command_data.invalid_buffer_error_c_string
 	jmp .print
 .invalid_buffer_row_err :
-	mov bx, command_data.invalid_buffer_row_err_str
+	mov bx, command_data.invalid_buffer_row_error_c_string
 	jmp .print
 .not_running_buffer_err :
-	mov bx, command_data.not_running_buffer_err_str
+	mov bx, command_data.not_running_buffer_error_c_string
 	jmp .print
 .invalid_uint_err :
-	mov bx, command_data.invalid_uint_err_str
+	mov bx, command_data.invalid_uint_error_c_string
 .print :
 	mov byte al, [command_data.is_buffer_executing]
 	cmp al, 0
 	je .not_running_buffer
 	call printError
 	PRINT_CHAR ' '
-	mov bx, command_data.debug_show_row_str
+	mov bx, command_data.debug_show_row_c_string
 	call printCString
 	mov ah, MAGENTA
 	mov dx, [command_data.executing_row]

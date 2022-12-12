@@ -22,7 +22,7 @@ interpreter_data :
 	db " ", 0
 .standalone_chars : ; character that is always alone
 	db "=", 0
-.str_chars : ; character that initiate or terminate strings
+.string_literal_chars : ; character that initiate or terminate strings
 	db 0x22, 0x27, 0x60, 0
 .command_table :
 ; address to the command name and its corresponding function
@@ -56,7 +56,7 @@ interpreter_data :
 	dw @loadCommand_name, @loadCommand
 	dw @byeCommand_name, @byeCommand
 	dw 0
-.invalid_command_err_str :
+.invalid_command_error_c_string :
 	db "Invalid command.", 0
 ; --- subroutines ---
 ; print marks
@@ -154,7 +154,7 @@ interpreterExecutreMark :
 	jmp .loop_command_table
 .invalid_command_err :
 ; print error
-	mov bx, interpreter_data.invalid_command_err_str
+	mov bx, interpreter_data.invalid_command_error_c_string
 	call command_err.print ; jmping to label from other files : 0
 .end :
 	popa
@@ -168,13 +168,13 @@ interpreterMarkString :
 	LIST32_INIT
 	mov bx, si ; bx = address of begining of sub-string
 	xor dx, dx ; dx = length of sub-string
-	xor ah, ah ; ah = current str char
+	xor ah, ah ; ah = current string literal char
 .loop :
 	cmp cx, 0
 	je .loop_end
 	mov al, [si] ; al = current character
 	cmp ah, 0
-	je .not_processing_str
+	je .not_processing_string_literal
 	cmp ah, al
 	je .str_end
 	inc dx
@@ -190,7 +190,7 @@ interpreterMarkString :
 	xor ax, ax
 	xor dx, dx
 	jmp .skip_switch
-.not_processing_str :
+.not_processing_string_literal :
 	push si ; >> BEGIN SWITCH <<
 	mov si, interpreter_data.splitting_chars
 	call cStringHasChar
@@ -198,9 +198,9 @@ interpreterMarkString :
 	mov si, interpreter_data.standalone_chars
 	call cStringHasChar
 	jc .is_standalone_char
-	mov si, interpreter_data.str_chars
+	mov si, interpreter_data.string_literal_chars
 	call cStringHasChar
-	jc .is_str_char
+	jc .is_string_literal_char
 	inc dx
 	jmp .switch_end
 .is_splitting_char :
@@ -239,17 +239,17 @@ interpreterMarkString :
 	inc bx
 	xor dx, dx
 	jmp .switch_end
-.is_str_char :
+.is_string_literal_char :
 	mov si, interpreter_data.marks
-; write sub-string before str char into marks
+; write sub-string before string literal char into marks
 	cmp dx, 0
-	je .start_str
+	je .start_string_literal
 	push ax
 	mov ax, bx
 	LIST32_APPEND dx, ax
 	pop ax
-; set current str char
-.start_str :
+; set current string literal char
+.start_string_literal :
 	push bx
 	mov bh, al
 	mov ah, bh
@@ -294,36 +294,36 @@ interpreterPaint :
 	LIST16_GET_COUNT ; cx = count
 	mov di, si
 	add di, 2 ; di = begining of buffer
-	xor bl, bl ; bl = current str char
+	xor bl, bl ; bl = current string literal char
 .loop :
 	cmp cx, 0
 	je .loop_end
 	mov byte al, [di] ; al = current character
 	cmp bl, 0
-	je .not_processing_str
+	je .not_processing_string_literal
 	cmp bl, al
-	jne .not_str_end
+	jne .not_string_literal_end
 	xor bl, bl
-.not_str_end :
+.not_string_literal_end :
 	push di
 	inc di ; move to attribute
 	mov byte [di], STRING_COLOR
 	pop di
 	jmp .continue
-.not_processing_str :
+.not_processing_string_literal :
 	push di ; >> BEGIN SWITCH <<
 	mov si, interpreter_data.standalone_chars
 	call cStringHasChar
 	jc .is_standalone_char
-	mov si, interpreter_data.str_chars
+	mov si, interpreter_data.string_literal_chars
 	call cStringHasChar
-	jc .is_str_char
+	jc .is_string_literal_char
 	jmp .is_normal_char
 .is_standalone_char :
 	inc di ; move to attribute
 	mov byte [di], SYMBOL_COLOR
 	jmp .switch_end
-.is_str_char :
+.is_string_literal_char :
 	mov bl, al
 	inc di ; move to attribute
 	mov byte [di], STRING_COLOR

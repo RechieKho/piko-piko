@@ -74,8 +74,8 @@ print_data :
 	popa
 %endmacro
 ; --- subroutines ---
-; print string to console
-; bx <- string
+; print c string to console
+; bx <- c string
 printCString :
 	pusha
 .loop :
@@ -89,7 +89,7 @@ printCString :
 .loop_end :
 	popa
 	ret
-; print n characters from string to console
+; print string to console
 ; bx <- string
 ; cx <- count
 printCStringing :

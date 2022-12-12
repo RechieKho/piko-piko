@@ -356,10 +356,10 @@ consoleWriteSubList16 :
 	call consoleWriteSubList16Index
 	popa
 	ret
-; write attributed string to location using index
+; write attributed c string to location using index
 ; bx <- index
-; si <- attributed string
-consoleWriteAttributedStringIndex :
+; si <- attributed c string
+consoleWriteAttributedCStringIndex :
 	pusha
 	push es
 	mov ax, CONSOLE_DUMP_SEG
@@ -377,14 +377,14 @@ consoleWriteAttributedStringIndex :
 	pop es
 	popa
 	ret
-; write attributed string to location
+; write attributed c string to location
 ; cl <- row
 ; ch <- column
-; si <- attributed string
-consoleWriteAttributedString :
+; si <- attributed c string
+consoleWriteAttributedCString :
 	pusha
 	CONSOLE_RC2IDX cl, ch
-	call consoleWriteAttributedStringIndex
+	call consoleWriteAttributedCStringIndex
 	popa
 	ret
 ; write uint (always 5 digits) to location by index

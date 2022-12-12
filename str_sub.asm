@@ -1,7 +1,7 @@
 %ifndef _STR_SUB_ASM_
 %define _STR_SUB_ASM_
 ; check if string contains character
-; si <- string
+; si <- c string
 ; al <- character
 ; cf -> set if it contains the character
 cStringHasChar :

@@ -57,7 +57,7 @@ main :
 ; print greeting
 	mov si, kernel_data.greeting
 	xor cx, cx
-	call consoleWriteAttributedString
+	call consoleWriteAttributedCString
 	PRINT_NL
 .loop :
 	mov si, kernel_data.input_buffer
