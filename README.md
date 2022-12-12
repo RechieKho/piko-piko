@@ -1,4 +1,5 @@
 # Piko-piko OS
+[![justforfunnoreally.dev badge](https://img.shields.io/badge/justforfunnoreally-dev-9ff)](https://justforfunnoreally.dev)
 
 > A simplistic, minimalistic, 16-bit toy OS.
 > Perfect for entertainment & education. 
