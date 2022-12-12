@@ -84,13 +84,13 @@ interpreterPrintMarks :
 	popa
 	ret
 ; execute command string
-; si <- address of string (list 8)
+; si <- list 8
 interpreterExecute :
 	call interpreterMark
 	call interpreterExecutreMark
 	ret
 ; execute command string
-; si <- address of string
+; si <- string
 ; cx <- length of string
 interpreterExecuteString :
 	call interpreterMarkString
@@ -160,13 +160,13 @@ interpreterExecutreMark :
 	popa
 	ret
 ; mark the subs-strings in the string given, output into interpreter_data.marks
-; si <- address of string
+; si <- string
 ; cx <- length of string
 interpreterMarkString :
 	pusha
 	mov di, interpreter_data.marks
 	LIST32_INIT
-	mov bx, si ; bx = address of begining of sub-string
+	mov bx, si ; bx = address of sub-string
 	xor dx, dx ; dx = length of sub-string
 	xor ah, ah ; ah = current string literal char
 .loop :
@@ -278,8 +278,8 @@ interpreterMarkString :
 .cleaned_buffer :
 	popa
 	ret
-; mark the sub-strings in the string (list 8) given, output into interpreter_data.marks
-; si <- address of string (list 8)
+; mark the sub-strings in the list 8 given, output into interpreter_data.marks
+; si <- list 8
 interpreterMark :
 	pusha
 	LIST8_GET_COUNT ; cx = count of chars
@@ -288,7 +288,7 @@ interpreterMark :
 	popa
 	ret
 ; paint the list 16 buffer
-; si <- list 16 buffer
+; si <- address of list 16 buffer
 interpreterPaint :
 	pusha
 	LIST16_GET_COUNT ; cx = count

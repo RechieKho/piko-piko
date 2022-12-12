@@ -510,7 +510,7 @@ consoleMakeSpace :
 	pop cx
 	ret
 ; read line from console
-; si <- list 16 for storing output
+; si <- address of list 16 for storing output
 ; bx <- painter function that colorize the the input. It won 't be called if it is 0.
 consoleReadLine :
 	pusha
@@ -535,7 +535,7 @@ consoleReadLine :
 ; ah = scan code {update per loop}
 ; al = ascii character {update per loop}
 ; cx = current cursor index (during a keystroke detected) {update per loop}
-; si = list 16 buffer
+; si = address of list 16 buffer
 ; dx = starting cursor index
 ; bx = painter function
 ; classify
@@ -616,7 +616,7 @@ consoleReadLine :
 	popa
 	ret
 ; update region in console with list 16 user input buffer
-; si <- list 16 buffer
+; si <- address of list 16 buffer
 ; dx <- starting index
 ; dx -> updated starting index (if scroll)
 consoleUpdateInputLine :
@@ -630,7 +630,7 @@ consoleUpdateInputLine :
 	pop cx
 	ret
 ; clear region in console that is written with list 16 user input buffer
-; si <- list 16 buffer
+; si <- address of list 16 buffer
 ; dx <- starting index
 consoleClearInputLine :
 	pusha

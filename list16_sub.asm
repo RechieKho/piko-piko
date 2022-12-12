@@ -211,7 +211,7 @@ list16Insert :
 list16TakeLower :
 	pusha
 	LIST16_GET_COUNT ; cx = count
-	xchg si, di ; di = list 16 ; si = list 8
+	xchg si, di ; di = address of list 16 ; si = address of list 8
 	LIST8_CLEAR
 	add di, 2
 .loop :

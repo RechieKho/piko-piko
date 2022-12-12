@@ -2,7 +2,7 @@
 %define _COMMANDS_SUB_ASM_
 ; NOTE : YOU MUST COMMANDS_INIT BEFORE USING ANYTHING IN THIS MODULE
 ; each command expecting :
-; si <- list 32 of marks point to the arguments
+; si <- address of list 32 of marks point to the arguments
 ; COMMANDS RETURN WITH CARRY FLAG SET WILL CANCEL RUNNING BUFFER.
 ; COMMANDS SHOULD NOT PUSHA/POPA AT THE BEGINING AND ENDING OF COMMANDS.
 ; --- modules ---
@@ -47,7 +47,7 @@
 %endmacro
 ; Read list 8 as uint. MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN
 ; PUSH AND POP.
-; si <- list 8
+; si <- address of list 8
 ; dx -> uint
 %macro COMMANDS_LIST82UINT 0
 	push si
@@ -85,7 +85,7 @@
 ; Consume mark and read as string save it to list 8 (accept variable referencing).
 ; MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN PUSH AND POP.
 ; si <- current_mark
-; di <- list 8 to output to
+; di <- address of list 8 to output to
 ; si -> next mark
 %macro COMMANDS_CONSUME_MARK_READ_STRN_TO_LIST8 0
 	push bx
