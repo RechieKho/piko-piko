@@ -2,13 +2,13 @@
 %define _COMMANDS_SUB_ASM_
 ; NOTE : YOU MUST COMMANDS_INIT BEFORE USING ANYTHING IN THIS MODULE
 ; each command expecting :
-; si <- ls32 of marks point to the arguments
+; si <- list 32 of marks point to the arguments
 ; COMMANDS RETURN WITH CARRY FLAG SET WILL CANCEL RUNNING BUFFER.
 ; COMMANDS SHOULD NOT PUSHA/POPA AT THE BEGINING AND ENDING OF COMMANDS.
 ; --- modules ---
 %include "print_sub.asm"
-%include "ls32_sub.asm"
-%include "ls8_sub.asm"
+%include "list32_sub.asm"
+%include "list8_sub.asm"
 %include "str_sub.asm"
 %include "type_macros.asm"
 %include "console_sub.asm"
@@ -45,13 +45,13 @@
 	pop es
 	popa
 %endmacro
-; Read ls8 as uint. MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN
+; Read list 8 as uint. MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN
 ; PUSH AND POP.
-; si <- ls8
+; si <- list 8
 ; dx -> uint
-%macro COMMANDS_LS82UINT 0
+%macro COMMANDS_LIST82UINT 0
 	push si
-	LS8_GET_COUNT
+	LIST8_GET_COUNT
 	add si, 2
 	clc
 	call stringToUint
@@ -65,10 +65,10 @@
 ; ~si
 %macro COMMANDS_COMBUF2UINT 0
 	mov si, command_data.compare_buffer_a
-	COMMANDS_LS82UINT
+	COMMANDS_LIST82UINT
 	mov ax, dx ; ax = uint of first compare buffer
 	mov si, command_data.compare_buffer_b
-	COMMANDS_LS82UINT
+	COMMANDS_LIST82UINT
 %endmacro
 ; Consume mark and read as string (accept variable referencing).
 ; MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN PUSH AND POP.
@@ -82,12 +82,12 @@
 	call commandReadString
 	jc command_err.invalid_variable_err
 %endmacro
-; Consume mark and read as string save it to ls8 (accept variable referencing).
+; Consume mark and read as string save it to list 8 (accept variable referencing).
 ; MUST ONLY BE CALLED IN COMMANDS AND SHOULD NOT BE IN BETWEEN PUSH AND POP.
 ; si <- current_mark
-; di <- ls8 to output to
+; di <- list 8 to output to
 ; si -> next mark
-%macro COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8 0
+%macro COMMANDS_CONSUME_MARK_READ_STRN_TO_LIST8 0
 	push bx
 	push cx
 	call commandConsumeMark
@@ -179,25 +179,25 @@ command_data :
 .active_buffer :
 	dw BUFFER_BEGIN_SEG
 .is_buffer_executing :
-	db 0 ; 0 = false, else = true
+	db 0 ; 0 = falist e, elist e = true
 .executing_row : ; Current executing row in buffer.
 	dw 0
 .executing_seg : ; basically executing_row but in segment unit
 	dw 0
 .execution_buffer : ; Buffer for saving row to be executed.
 	times BUFFER_WIDTH db 0
-.compare_buffer_a : ; A ls8 buffer for value to be compared (to compare_buffer_b).
+.compare_buffer_a : ; A list 8 buffer for value to be compared (to compare_buffer_b).
 	db COMPARE_BUFFER_CAPACITY, 0
 	times (COMPARE_BUFFER_CAPACITY) db 0
-.compare_buffer_b : ; A ls8 buffer for value to be compared (to compare_buffer_a).
+.compare_buffer_b : ; A list 8 buffer for value to be compared (to compare_buffer_a).
 	db COMPARE_BUFFER_CAPACITY, 0
 	times (COMPARE_BUFFER_CAPACITY) db 0
-.read_buffer : ; A ls16 buffer for read command.
+.read_buffer : ; A list 16 buffer for read command.
 	db VARIABLE_SIZE, 0
 	times (VARIABLE_SIZE) dw 0
 ; --- command ---
 @clearConsoleCommand_name :
-	db "cls", 0
+	db "clist ", 0
 ; n <- ignored
 @clearConsoleCommand :
 	push es
@@ -216,7 +216,7 @@ command_data :
 	db "read", 0
 ; 1 <- nth variable
 @readCommand :
-	LS32_GET_COUNT ; cx = args count
+	LIST32_GET_COUNT ; cx = args count
 	cmp cx, 2
 	jne command_err.invalid_arg_num_err
 	add si, 6
@@ -238,7 +238,7 @@ command_data :
 	db "save", 0
 ; 1 <- file index
 @saveCommand :
-	LS32_GET_COUNT
+	LIST32_GET_COUNT
 	cmp cx, 2
 	jne command_err.invalid_arg_num_err
 	add si, 6
@@ -264,7 +264,7 @@ command_data :
 	db "load", 0
 ; 1 <- file index
 @loadCommand :
-	LS32_GET_COUNT
+	LIST32_GET_COUNT
 	cmp cx, 2
 	jne command_err.invalid_arg_num_err
 	add si, 6
@@ -293,7 +293,7 @@ command_data :
 ; 3 <- dividend
 ; 4 <- divisor
 @divCommand :
-	LS32_GET_COUNT
+	LIST32_GET_COUNT
 	cmp cx, 5
 	jne command_err.invalid_arg_num_err
 	add si, 6
@@ -339,7 +339,7 @@ command_data :
 ; 2 <- first value
 ; 3 <- second value
 @mulCommand :
-	LS32_GET_COUNT
+	LIST32_GET_COUNT
 	cmp cx, 4
 	jne command_err.invalid_arg_num_err
 	add si, 6
@@ -368,7 +368,7 @@ command_data :
 ; 2 <- value to be subtracted
 ; 3 <- subtracted value
 @subCommand :
-	LS32_GET_COUNT
+	LIST32_GET_COUNT
 	cmp cx, 4
 	jne command_err.invalid_arg_num_err
 	add si, 6
@@ -395,7 +395,7 @@ command_data :
 ; 2 <- first value
 ; 3 <- second value
 @addCommand :
-	LS32_GET_COUNT
+	LIST32_GET_COUNT
 	cmp cx, 4
 	jne command_err.invalid_arg_num_err
 	add si, 6
@@ -515,14 +515,14 @@ command_data :
 ; 1 <- value a
 ; 2 <- value b
 @compareCommand :
-	LS32_GET_COUNT ; cx = args count
+	LIST32_GET_COUNT ; cx = args count
 	cmp cx, 3
 	jne command_err.invalid_arg_num_err
 	add si, 6
 	mov di, command_data.compare_buffer_a
-	COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8
+	COMMANDS_CONSUME_MARK_READ_STRN_TO_LIST8
 	mov di, command_data.compare_buffer_b
-	COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8
+	COMMANDS_CONSUME_MARK_READ_STRN_TO_LIST8
 	clc
 	ret
 @jumpCommand_name :
@@ -533,7 +533,7 @@ command_data :
 	mov byte al, [command_data.is_buffer_executing]
 	cmp al, 0
 	je command_err.not_running_buffer_err ; command can only run in buffer
-	LS32_GET_COUNT
+	LIST32_GET_COUNT
 	add si, 6
 	cmp cx, 2
 	je .absolute
@@ -649,7 +649,7 @@ command_data :
 	db "stb", 0
 ; 1 <- buffer to be set
 @setActiveBufferCommand :
-	LS32_GET_COUNT ; cx = args count
+	LIST32_GET_COUNT ; cx = args count
 	cmp cx, 2
 	jne command_err.invalid_arg_num_err
 	add si, 6
@@ -667,7 +667,7 @@ command_data :
 ; 1 <- row to be set
 ; 2 <- new row
 @setRowCommand :
-	LS32_GET_COUNT ; cx = args count
+	LIST32_GET_COUNT ; cx = args count
 	cmp cx, 3 ; no args
 	jne command_err.invalid_arg_num_err
 	add si, 6
@@ -698,11 +698,11 @@ command_data :
 	clc
 	ret
 @listBufferCommand_name :
-	db "lsb", 0
+	db "list b", 0
 ; 1? <- starting row
 ; 2? <- count
 @listBufferCommand :
-	LS32_GET_COUNT ; cx = args count
+	LIST32_GET_COUNT ; cx = args count
 	xor dx, dx ; default 1st arg
 	mov ax, 5 ; default 2nd arg
 	cmp cx, 1 ; no args
@@ -789,7 +789,7 @@ command_data :
 	db "pop", 0
 ; n <- variables to be popped
 @popStackCommand :
-	LS32_GET_COUNT ; cx = args count
+	LIST32_GET_COUNT ; cx = args count
 	cmp cx, 1
 	jbe .end
 	dec cx ; cx = args count exluding the command
@@ -826,7 +826,7 @@ command_data :
 	db "push", 0
 ; n <- variables to be pushed
 @pushStackCommand :
-	LS32_GET_COUNT ; cx = args count
+	LIST32_GET_COUNT ; cx = args count
 	cmp cx, 1
 	jbe .end
 	dec cx ; cx = args count excluding the command
@@ -862,7 +862,7 @@ command_data :
 ; 1 <- nth variable
 ; 2 <- value
 @setCommand :
-	LS32_GET_COUNT ; cx = args count
+	LIST32_GET_COUNT ; cx = args count
 	cmp cx, 3
 	jne command_err.invalid_arg_num_err
 	add si, 6
@@ -873,7 +873,7 @@ command_data :
 	mul dl
 	mov di, command_data.variables
 	add di, ax ; di = variable address
-	COMMANDS_CONSUME_MARK_READ_STRN_TO_LS8
+	COMMANDS_CONSUME_MARK_READ_STRN_TO_LIST8
 	clc
 	ret
 @byeCommand_name :
@@ -894,7 +894,7 @@ command_data :
 ; -1 <- string to be printed
 ; 1? <- options
 @sayCommand :
-	LS32_GET_COUNT
+	LIST32_GET_COUNT
 	mov ah, GREY ; ah = text color
 	xor al, al ; al = number of new lines after print.
 	add si, 6
@@ -989,7 +989,7 @@ commandReadString :
 	mul dl
 	mov si, command_data.variables
 	add si, ax
-	LS8_GET_COUNT
+	LIST8_GET_COUNT
 	mov bx, si
 	add bx, 2
 	jmp .success

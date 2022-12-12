@@ -1,9 +1,9 @@
 %ifndef _INTERPRETER_SUB_ASM_
 %define _INTERPRETER_SUB_ASM_
 ; --- modules ---
-%include "ls32_sub.asm"
-%include "ls8_sub.asm"
-%include "ls16_sub.asm"
+%include "list32_sub.asm"
+%include "list8_sub.asm"
+%include "list16_sub.asm"
 %include "str_sub.asm"
 %include "print_sub.asm"
 %include "command_sub.asm"
@@ -15,9 +15,9 @@
 ; --- data ---
 interpreter_data :
 .marks :
-; a ls32. each slot stores address to the begining of sub-string and the length
+; a list 32. each slot stores address to the begining of sub-string and the length
 	times 1 dw 0
-	times LS32_MAX dd 0
+	times LIST32_MAX dd 0
 .splitting_chars : ; characters that splits string into sub-strings (separator)
 	db " ", 0
 .standalone_chars : ; character that is always alone
@@ -63,7 +63,7 @@ interpreter_data :
 interpreterPrintMarks :
 	pusha
 	mov si, interpreter_data.marks
-	LS32_GET_COUNT ; cx = count of marks
+	LIST32_GET_COUNT ; cx = count of marks
 	add si, 2 ; si = begining of marks
 	PRINT_CHAR '['
 .loop :
@@ -84,7 +84,7 @@ interpreterPrintMarks :
 	popa
 	ret
 ; execute command string
-; si <- address of string (ls8)
+; si <- address of string (list 8)
 interpreterExecute :
 	call interpreterMark
 	call interpreterExecutreMark
@@ -100,7 +100,7 @@ interpreterExecuteString :
 interpreterExecutreMark :
 	pusha
 	mov si, interpreter_data.marks
-	LS32_GET_COUNT
+	LIST32_GET_COUNT
 	cmp cx, 0
 	je .end ; No argument, just end it.
 	add si, 2
@@ -165,7 +165,7 @@ interpreterExecutreMark :
 interpreterMarkString :
 	pusha
 	mov di, interpreter_data.marks
-	LS32_INIT
+	LIST32_INIT
 	mov bx, si ; bx = address of begining of sub-string
 	xor dx, dx ; dx = length of sub-string
 	xor ah, ah ; ah = current str char
@@ -183,7 +183,7 @@ interpreterMarkString :
 	push si
 	mov si, interpreter_data.marks
 	mov ax, bx
-	LS32_APPEND dx, ax
+	LIST32_APPEND dx, ax
 	pop si
 	add bx, dx
 	inc bx
@@ -210,7 +210,7 @@ interpreterMarkString :
 	je .empty_mark
 	push ax
 	mov ax, bx
-	LS32_APPEND dx, ax
+	LIST32_APPEND dx, ax
 	pop ax
 ; update state
 .empty_mark :
@@ -225,7 +225,7 @@ interpreterMarkString :
 	je .mark_standalone_char
 	push ax
 	mov ax, bx
-	LS32_APPEND dx, ax
+	LIST32_APPEND dx, ax
 	pop ax
 ; write the standalone char into marks
 .mark_standalone_char :
@@ -233,7 +233,7 @@ interpreterMarkString :
 	push ax
 	mov ax, bx
 	mov dx, 1
-	LS32_APPEND dx, ax
+	LIST32_APPEND dx, ax
 	pop ax
 ; update states
 	inc bx
@@ -246,7 +246,7 @@ interpreterMarkString :
 	je .start_str
 	push ax
 	mov ax, bx
-	LS32_APPEND dx, ax
+	LIST32_APPEND dx, ax
 	pop ax
 ; set current str char
 .start_str :
@@ -274,24 +274,24 @@ interpreterMarkString :
 .uncleaned_buffer :
 	mov si, interpreter_data.marks
 	mov ax, bx
-	LS32_APPEND dx, bx
+	LIST32_APPEND dx, bx
 .cleaned_buffer :
 	popa
 	ret
-; mark the sub-strings in the string (ls8) given, output into interpreter_data.marks
-; si <- address of string (ls8)
+; mark the sub-strings in the string (list 8) given, output into interpreter_data.marks
+; si <- address of string (list 8)
 interpreterMark :
 	pusha
-	LS8_GET_COUNT ; cx = count of chars
+	LIST8_GET_COUNT ; cx = count of chars
 	add si, 2 ; si = begining of string
 	call interpreterMarkString
 	popa
 	ret
-; paint the ls16 buffer
-; si <- ls16 buffer
+; paint the list 16 buffer
+; si <- list 16 buffer
 interpreterPaint :
 	pusha
-	LS16_GET_COUNT ; cx = count
+	LIST16_GET_COUNT ; cx = count
 	mov di, si
 	add di, 2 ; di = begining of buffer
 	xor bl, bl ; bl = current str char

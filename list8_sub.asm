@@ -1,50 +1,50 @@
-%ifndef _LS8_SUB_ASM_
-%define _LS8_SUB_ASM_
-; ls8 - list of 8 bits
+%ifndef _LIST8_SUB_ASM_
+%define _LIST8_SUB_ASM_
+; list 8 - list of 8 bits
 ; structure diagram :
 ; | max (1B) | count (1B) | elements (1B each element) |
 ; --- modules ---
 %include "print_sub.asm"
 ; --- macros ---
-%define LS8_MAX 0xff
-; initialize ls8
+%define LIST8_MAX 0xff
+; initialize list 8
 ; %1 <- max count of the element (excluding the header) {1B, !di}
-; di <- address of ls8
-%macro LS8_INIT 0-1 LS8_MAX
+; di <- address of list 8
+%macro LIST8_INIT 0-1 LIST8_MAX
 	push di
 	mov byte [di], %1
 	inc di
 	mov byte [di], 0
 	pop di
 %endmacro
-; get info from ls8
-; si <- address of ls8
-; cl -> max count of ls8
-; ch -> count of ls8
-%define LS8_GET_INFO mov word cx, [si]
-; get count of ls8
-; si <- address of ls8
-; cx -> count of ls8
-%macro LS8_GET_COUNT 0
+; get info from list 8
+; si <- address of list 8
+; cl -> max count of list 8
+; ch -> count of list 8
+%define LIST8_GET_INFO mov word cx, [si]
+; get count of list 8
+; si <- address of list 8
+; cx -> count of list 8
+%macro LIST8_GET_COUNT 0
 	push ax
-	LS8_GET_INFO
+	LIST8_GET_INFO
 	movzx ax, ch
 	mov cx, ax ; cx = count
 	pop ax
 %endmacro
-; clear ls8
-; si <- address of ls8
-%macro LS8_CLEAR 0
+; clear list 8
+; si <- address of list 8
+%macro LIST8_CLEAR 0
 	pusha
-	LS8_GET_INFO
+	LIST8_GET_INFO
 	mov ch, 0
 	mov word [si], cx
 	popa
 %endmacro
-; append to ls8
+; append to list 8
 ; %1 <- element to be appended {1B, !al}
-; si <- address of ls8
-%macro LS8_APPEND 1
+; si <- address of list 8
+%macro LIST8_APPEND 1
 	pusha
 	inc si
 	mov byte dh, [si]
@@ -53,19 +53,19 @@
 	call list8Insert
 	popa
 %endmacro
-; prepend to ls8
+; prepend to list 8
 ; %1 <- element to be prepend {1B, !al}
-; si <- address of ls8
-%macro LS8_PREPEND 1
+; si <- address of list 8
+%macro LIST8_PREPEND 1
 	pusha
 	mov al, %1
 	mov dh, 0
 	call list8Insert
 	popa
 %endmacro
-; pop last element of ls8
-; si <- address of ls8
-%macro LS8_POP_LAST 0
+; pop last element of list 8
+; si <- address of list 8
+%macro LIST8_POP_LAST 0
 	pusha
 	inc si
 	mov byte dh, [si]
@@ -74,20 +74,20 @@
 	call list8Erase
 	popa
 %endmacro
-; pop first element of ls8
-; si <- address of ls8
-%macro LS8_POP_FIRST 0
+; pop first element of list 8
+; si <- address of list 8
+%macro LIST8_POP_FIRST 0
 	pusha
 	mov dh, 0
 	call list8Erase
 	popa
 %endmacro
 ; --- subroutine ---
-; print ls8 as ascii to console
-; si <- address of ls8
+; print list 8 as ascii to console
+; si <- address of list 8
 list8PrintAscii :
 	pusha
-	LS8_GET_COUNT ; cx = count
+	LIST8_GET_COUNT ; cx = count
 	add si, 2 ; si = begining of element
 .loop :
 	cmp cx, 0
@@ -99,17 +99,17 @@ list8PrintAscii :
 .loop_end :
 	popa
 	ret
-; check whether ls8s are equal
-; si <- address of first ls8
-; di <- address of second ls8
-; cf -> set if ls8s are not equal
+; check whether list 8s are equal
+; si <- address of first list 8
+; di <- address of second list 8
+; cf -> set if list 8s are not equal
 list8Equal :
 	pusha
 	mov word cx, [si] ; cl = max ; ch = count
 	mov word dx, [di] ; dl = max ; dh = count
 	cmp dh, ch
 	jne .not_equal
-	movzx cx, dh ; cx = count of both ls8
+	movzx cx, dh ; cx = count of both list 8
 	add si, 2 ; displace to the element
 	add di, 2 ; displace to the element
 .loop :
@@ -131,13 +131,13 @@ list8Equal :
 .end :
 	popa
 	ret
-; erase element from ls8
+; erase element from list 8
 ; dh <- index of the element to be erased
-; si <- address of ls8
-; cf -> set if element fail to be inserted (either ls8 is empty or ah (index) is invalid)
+; si <- address of list 8
+; cf -> set if element fail to be inserted (either list 8 is empty or ah (index) is invalid)
 list8Erase :
 	pusha
-	LS8_GET_INFO ; cl = max ; ch = count
+	LIST8_GET_INFO ; cl = max ; ch = count
 ; check validity
 	cmp ch, 0
 	je .empty_err ; empty element, not entertained
@@ -171,15 +171,15 @@ list8Erase :
 .success :
 	popa
 	ret
-; set the whole ls8
-; si <- address of ls8
+; set the whole list 8
+; si <- address of list 8
 ; di <- address of data
 ; cl <- count
 ; cf -> set if fail to be set (count exceed max)
 list8Set :
 	pusha
 	mov dl, cl ; dl = count
-	LS8_GET_INFO ; cl = max
+	LIST8_GET_INFO ; cl = max
 	cmp dl, cl
 	ja .exceed_max
 	mov ch, dl
@@ -198,14 +198,14 @@ list8Set :
 .end :
 	popa
 	ret
-; insert element to ls8
+; insert element to list 8
 ; al <- element to be inserted
-; si <- address of ls8
+; si <- address of list 8
 ; dh <- index of the element to be inserted
-; cf -> set if element fail to be inserted (either ls8 is full or ah (index) is invalid)
+; cf -> set if element fail to be inserted (either list 8 is full or ah (index) is invalid)
 list8Insert :
 	pusha
-	LS8_GET_INFO ; cl = max ; ch = count
+	LIST8_GET_INFO ; cl = max ; ch = count
 	cmp ch, cl
 	jae .max_err ; already max out
 	cmp dh, ch
@@ -214,9 +214,9 @@ list8Insert :
 	pusha ; > START DISPLACE <
 	movzx bx, ch
 	inc bx ; skip header
-	add si, bx ; si = address of end of ls8
+	add si, bx ; si = address of end of list 8
 	mov di, si
-	inc di ; di = address right after end of ls8
+	inc di ; di = address right after end of list 8
 	sub ch, dh
 	movzx bx, ch
 	mov cx, bx ; cx = number of elements to be displaced
@@ -245,4 +245,4 @@ list8Insert :
 .success :
 	popa
 	ret
-%endif ; _LS8_SUB_ASM_
+%endif ; _LIST8_SUB_ASM_

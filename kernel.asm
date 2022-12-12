@@ -9,8 +9,8 @@
 	jmp main
 ; --- modules ---
 %include "console_sub.asm"
-%include "ls16_sub.asm"
-%include "ls8_sub.asm"
+%include "list16_sub.asm"
+%include "list8_sub.asm"
 %include "interpreter_sub.asm"
 %include "storage_sub.asm"
 ; --- data ---
@@ -39,11 +39,11 @@ kernel_data :
 	db "!", (WHITE)
 	dw 0
 .input_buffer :
-	times 1 dw 0 ; ls16 header (max and length)
-	times BUFFER_WIDTH dw 0 ; ls16 content
+	times 1 dw 0 ; list 16 header (max and length)
+	times BUFFER_WIDTH dw 0 ; list 16 content
 .raw_buffer :
-	times 1 dw 0 ; ls8 header (max and length)
-	times BUFFER_WIDTH db 0 ; ls8 content
+	times 1 dw 0 ; list 8 header (max and length)
+	times BUFFER_WIDTH db 0 ; list 8 content
 ; --- subroutines ---
 main :
 ; initialization
@@ -51,9 +51,9 @@ main :
 	CONSOLE_INIT
 	COMMANDS_INIT
 	mov di, kernel_data.input_buffer
-	LS16_INIT BUFFER_WIDTH
+	LIST16_INIT BUFFER_WIDTH
 	mov di, kernel_data.raw_buffer
-	LS8_INIT BUFFER_WIDTH
+	LIST8_INIT BUFFER_WIDTH
 ; print greeting
 	mov si, kernel_data.greeting
 	xor cx, cx

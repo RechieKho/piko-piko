@@ -1,49 +1,49 @@
-%ifndef _LS32_SUB_ASM_
-%define _LS32_SUB_ASM_
-; ls32 - list of 32 bits
+%ifndef _LIST32_SUB_ASM_
+%define _LIST32_SUB_ASM_
+; list 32 - list of 32 bits
 ; structure diagram :
 ; | max (1B) | count (1B) | elements (4B each element) |
 ; --- macros ---
-%define LS32_MAX 0xff
-; initialize ls32
+%define LIST32_MAX 0xff
+; initialize list 32
 ; %1 <- max count of the element (excluding the header) {1B, !di}
-; di <- address of ls32
-%macro LS32_INIT 0-1 LS32_MAX
+; di <- address of list 32
+%macro LIST32_INIT 0-1 LIST32_MAX
 	push di
 	mov byte [di], %1
 	inc di
 	mov byte [di], 0
 	pop di
 %endmacro
-; get info from ls32
-; si <- address of ls32
-; cl -> max count of ls32
-; ch -> count of ls32
-%define LS32_GET_INFO mov word cx, [si]
-; get count of ls32
-; si <- address of ls32
-; cx -> count of ls32
-%macro LS32_GET_COUNT 0
+; get info from list 32
+; si <- address of list 32
+; cl -> max count of list 32
+; ch -> count of list 32
+%define LIST32_GET_INFO mov word cx, [si]
+; get count of list 32
+; si <- address of list 32
+; cx -> count of list 32
+%macro LIST32_GET_COUNT 0
 	push ax
-	LS32_GET_INFO
+	LIST32_GET_INFO
 	movzx ax, ch
 	mov cx, ax ; cx = count
 	pop ax
 %endmacro
-; clear ls32
-; si <- address of ls32
-%macro LS32_CLEAR 0
+; clear list 32
+; si <- address of list 32
+%macro LIST32_CLEAR 0
 	pusha
-	LS32_GET_INFO
+	LIST32_GET_INFO
 	mov ch, 0
 	mov word [si], cx
 	popa
 %endmacro
-; append to ls32
+; append to list 32
 ; %1 <- lower part of element to be appended {2B, !ax, !bx}
 ; %2 <- upper part of element to be appended {2B, !bx}
-; si <- address of ls32
-%macro LS32_APPEND 2
+; si <- address of list 32
+%macro LIST32_APPEND 2
 	pusha
 	mov bx, %2
 	mov ax, %1
@@ -53,11 +53,11 @@
 	call list32Insert
 	popa
 %endmacro
-; prepend to ls32
+; prepend to list 32
 ; %1 <- lower part of element to be prepend {2B, !ax, !bx}
 ; %2 <- upper part of element to be prepend {2B, !bx}
-; si <- address of ls32
-%macro LS32_PREPEND 2
+; si <- address of list 32
+%macro LIST32_PREPEND 2
 	pusha
 	mov bx, %2
 	mov ax, %1
@@ -65,9 +65,9 @@
 	call list32Insert
 	popa
 %endmacro
-; pop last element of ls32
-; si <- address of ls32
-%macro LS32_POP_LAST 0
+; pop last element of list 32
+; si <- address of list 32
+%macro LIST32_POP_LAST 0
 	pusha
 	inc si
 	mov byte dh, [si]
@@ -76,19 +76,19 @@
 	call list32Erase
 	popa
 %endmacro
-; pop first element of ls32
-; si <- address of ls32
-%macro LS32_POP_FIRST 0
+; pop first element of list 32
+; si <- address of list 32
+%macro LIST32_POP_FIRST 0
 	pusha
 	mov dh, 0
 	call list32Erase
 	popa
 %endmacro
 ; --- subroutine ---
-; check whether ls32s are equal
-; si <- address of first ls32
-; di <- address of second ls32
-; cf -> set if ls32s are not equal
+; check whether list 32s are equal
+; si <- address of first list 32
+; di <- address of second list 32
+; cf -> set if list 32s are not equal
 list32Equal :
 	pusha
 	mov word cx, [si] ; cl = max ; ch = count
@@ -96,7 +96,7 @@ list32Equal :
 	cmp dh, ch
 	jne .not_equal
 	movzx cx, dh
-	shl cx, 2 ; cx = count of words stored in both ls32
+	shl cx, 2 ; cx = count of words stored in both list 32
 	add si, 2 ; displace to the element
 	add di, 2 ; displace to the element
 .loop :
@@ -118,13 +118,13 @@ list32Equal :
 .end :
 	popa
 	ret
-; erase element from ls32
+; erase element from list 32
 ; dh <- index of the element to be erased
-; si <- address of ls32 header
-; cf -> set if element fail to be inserted (either ls32 is empty or ah (index) is invalid)
+; si <- address of list 32 header
+; cf -> set if element fail to be inserted (either list 32 is empty or ah (index) is invalid)
 list32Erase :
 	pusha
-	LS32_GET_INFO ; cl = max ; ch = count
+	LIST32_GET_INFO ; cl = max ; ch = count
 ; check validity
 	cmp ch, 0
 	je .empty_err ; empty element, not entertained
@@ -159,15 +159,15 @@ list32Erase :
 .success :
 	popa
 	ret
-; insert element to ls32
+; insert element to list 32
 ; ax <- lower part of element to be inserted
 ; bx <- upper part of element to be inserted
 ; dh <- index of the element to be inserted
-; si <- address of ls32 header
-; cf -> set if element fail to be inserted (either ls32 is full or ah (index) is invalid)
+; si <- address of list 32 header
+; cf -> set if element fail to be inserted (either list 32 is full or ah (index) is invalid)
 list32Insert :
 	pusha
-	LS32_GET_INFO ; cl = max ; ch = count
+	LIST32_GET_INFO ; cl = max ; ch = count
 	cmp ch, cl
 	jae .max_err ; already max out
 	cmp dh, ch
@@ -176,9 +176,9 @@ list32Insert :
 	pusha ; > START DISPLACE <
 	movzx ax, ch
 	shl ax, 2
-	add si, ax ; si = address of end of ls32
+	add si, ax ; si = address of end of list 32
 	mov di, si
-	add di, 4 ; di = address right after end of ls32
+	add di, 4 ; di = address right after end of list 32
 	sub ch, dh
 	movzx ax, ch
 	mov cx, ax ; cx = number of elements to be displaced
@@ -212,4 +212,4 @@ list32Insert :
 .success :
 	popa
 	ret
-%endif ; _LS32_SUB_ASM_
+%endif ; _LIST32_SUB_ASM_

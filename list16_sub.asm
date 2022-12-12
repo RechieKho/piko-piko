@@ -1,51 +1,51 @@
-%ifndef _LS16_SUB_ASM_
-%define _LS16_SUB_ASM_
-; ls16 - list of 16 bits
+%ifndef _LIST16_SUB_ASM_
+%define _LIST16_SUB_ASM_
+; list 16 - list of 16 bits
 ; structure diagram :
 ; | max (1B) | count (1B) | elements (2B each element) |
 ; --- modules ---
 %include "print_sub.asm"
-%include "ls8_sub.asm"
+%include "list8_sub.asm"
 ; --- macros ---
-%define LS16_MAX 0xff
-; initialize ls16
+%define LIST16_MAX 0xff
+; initialize list 16
 ; %1 <- max count of the element (excluding the header) {1B, !di}
-; di <- address of ls16
-%macro LS16_INIT 0-1 LS16_MAX
+; di <- address of list 16
+%macro LIST16_INIT 0-1 LIST16_MAX
 	push di
 	mov byte [di], %1
 	inc di
 	mov byte [di], 0
 	pop di
 %endmacro
-; get info from ls16
-; si <- address of ls16
-; cl -> max count of ls16
-; ch -> count of ls16
-%define LS16_GET_INFO mov word cx, [si]
-; get count of ls16
-; si <- address of ls16
-; cx -> count of ls16
-%macro LS16_GET_COUNT 0
+; get info from list 16
+; si <- address of list 16
+; cl -> max count of list 16
+; ch -> count of list 16
+%define LIST16_GET_INFO mov word cx, [si]
+; get count of list 16
+; si <- address of list 16
+; cx -> count of list 16
+%macro LIST16_GET_COUNT 0
 	push ax
-	LS16_GET_INFO
+	LIST16_GET_INFO
 	movzx ax, ch
 	mov cx, ax ; cx = count
 	pop ax
 %endmacro
-; clear ls16
-; si <- address of ls16
-%macro LS16_CLEAR 0
+; clear list 16
+; si <- address of list 16
+%macro LIST16_CLEAR 0
 	pusha
-	LS16_GET_INFO
+	LIST16_GET_INFO
 	mov ch, 0
 	mov word [si], cx
 	popa
 %endmacro
-; append to ls16
+; append to list 16
 ; %1 <- element to be appended {2B, !ax}
-; si <- address of ls16
-%macro LS16_APPEND 1
+; si <- address of list 16
+%macro LIST16_APPEND 1
 	pusha
 	inc si
 	mov byte dh, [si]
@@ -54,19 +54,19 @@
 	call list16Insert
 	popa
 %endmacro
-; prepend to ls16
+; prepend to list 16
 ; %1 <- element to be prepend {2B, !ax}
-; si <- address of ls16
-%macro LS16_PREPEND 1
+; si <- address of list 16
+%macro LIST16_PREPEND 1
 	pusha
 	mov ax, %1
 	mov dh, 0
 	call list16Insert
 	popa
 %endmacro
-; pop last element of ls16
-; si <- address of ls16
-%macro LS16_POP_LAST 0
+; pop last element of list 16
+; si <- address of list 16
+%macro LIST16_POP_LAST 0
 	pusha
 	inc si
 	mov byte dh, [si]
@@ -75,26 +75,26 @@
 	call list16Erase
 	popa
 %endmacro
-; pop first element of ls16
-; si <- address of ls16
-%macro LS16_POP_FIRST 0
+; pop first element of list 16
+; si <- address of list 16
+%macro LIST16_POP_FIRST 0
 	pusha
 	mov dh, 0
 	call list16Erase
 	popa
 %endmacro
 ; --- subroutine ---
-; check whether ls16s are equal
-; si <- address of first ls16
-; di <- address of second ls16
-; cf -> set if ls16s are not equal
+; check whether list 16s are equal
+; si <- address of first list 16
+; di <- address of second list 16
+; cf -> set if list 16s are not equal
 list16Equal :
 	pusha
 	mov word cx, [si] ; cl = max ; ch = count
 	mov word dx, [di] ; dl = max ; dh = count
 	cmp dh, ch
 	jne .not_equal
-	movzx cx, dh ; cx = count of both ls16
+	movzx cx, dh ; cx = count of both list 16
 	add si, 2 ; displace to the element
 	add di, 2 ; displace to the element
 .loop :
@@ -116,13 +116,13 @@ list16Equal :
 .end :
 	popa
 	ret
-; erase element from ls16
+; erase element from list 16
 ; dh <- index of the element to be erased
-; si <- address of ls16 header
-; cf -> set if element fail to be inserted (either ls16 is empty or ah (index) is invalid)
+; si <- address of list 16 header
+; cf -> set if element fail to be inserted (either list 16 is empty or ah (index) is invalid)
 list16Erase :
 	pusha
-	LS16_GET_INFO ; cl = max ; ch = count
+	LIST16_GET_INFO ; cl = max ; ch = count
 ; check validity
 	cmp ch, 0
 	je .empty_err ; empty element, not entertained
@@ -157,14 +157,14 @@ list16Erase :
 .success :
 	popa
 	ret
-; insert element to ls16
+; insert element to list 16
 ; ax <- element to be inserted
 ; dh <- index of the element to be inserted
-; si <- address of ls16 header
-; cf -> set if element fail to be inserted (either ls16 is full or ah (index) is invalid)
+; si <- address of list 16 header
+; cf -> set if element fail to be inserted (either list 16 is full or ah (index) is invalid)
 list16Insert :
 	pusha
-	LS16_GET_INFO ; cl = max ; ch = count
+	LIST16_GET_INFO ; cl = max ; ch = count
 	cmp ch, cl
 	jae .max_err ; already max out
 	cmp dh, ch
@@ -173,9 +173,9 @@ list16Insert :
 	pusha ; > START DISPLACE <
 	movzx bx, ch
 	shl bx, 1
-	add si, bx ; si = address of end of ls16
+	add si, bx ; si = address of end of list 16
 	mov di, si
-	add di, 2 ; di = address right after end of ls16
+	add di, 2 ; di = address right after end of list 16
 	sub ch, dh
 	movzx bx, ch
 	mov cx, bx ; cx = number of elements to be displaced
@@ -205,24 +205,24 @@ list16Insert :
 .success :
 	popa
 	ret
-; take lower byte and turn it into a ls8
-; si <- address of ls16
-; di <- address of ls8
+; take lower byte and turn it into a list 8
+; si <- address of list 16
+; di <- address of list 8
 list16TakeLower :
 	pusha
-	LS16_GET_COUNT ; cx = count
-	xchg si, di ; di = ls16 ; si = ls8
-	LS8_CLEAR
+	LIST16_GET_COUNT ; cx = count
+	xchg si, di ; di = list 16 ; si = list 8
+	LIST8_CLEAR
 	add di, 2
 .loop :
 	cmp cx, 0
 	je .loop_end
 	mov word bx, [di]
-	LS8_APPEND bl
+	LIST8_APPEND bl
 	add di, 2
 	dec cx
 	jmp .loop
 .loop_end :
 	popa
 	ret
-%endif ; _LS16_SUB_ASM_
+%endif ; _LIST16_SUB_ASM_

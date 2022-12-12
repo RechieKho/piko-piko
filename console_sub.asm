@@ -2,7 +2,7 @@
 %define _CONSLE_SUB_ASM_
 ; NOTE : YOU MUST CONSOLE_INIT BEFORE USING ANYTHING IN THIS MODULE
 ; --- modules ---
-%include "ls16_sub.asm"
+%include "list16_sub.asm"
 %include "mem_sub.asm"
 ; --- macro ---
 %define CONSOLE_VIDEO_MODE 0x03
@@ -274,12 +274,12 @@ consolePaint :
 	call consolePaintIndex
 	popa
 	ret
-; write ls16 to location using index
+; write list 16 to location using index
 ; bx <- index
-; si <- address of ls16
+; si <- address of list 16
 consoleWriteList16Index :
 	pusha
-	LS16_GET_COUNT ; cx = count
+	LIST16_GET_COUNT ; cx = count
 	mov ax, bx
 	add ax, cx
 	cmp ax, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
@@ -297,26 +297,26 @@ consoleWriteList16Index :
 	pop es
 	popa
 	ret
-; write ls16 to location
+; write list 16 to location
 ; cl <- row
 ; ch <- column
-; si <- address of ls16
+; si <- address of list 16
 consoleWriteList16 :
 	pusha
 	CONSOLE_RC2IDX cl, ch
 	call consoleWriteList16Index
 	popa
 	ret
-; write subset of ls16 to location using index
+; write subset of list 16 to location using index
 ; al <- start (inclusive)
 ; ah <- end (exclusive)
 ; bx <- index
-; si <- address of ls16
+; si <- address of list 16
 consoleWriteSubList16Index :
 	pusha
 	cmp bx, (CONSOLE_WIDTH * CONSOLE_HEIGHT - 1)
 	ja .end
-	LS16_GET_INFO ; cl = max ; ch = length
+	LIST16_GET_INFO ; cl = max ; ch = length
 	sub ah, al
 	cmp ah, ch
 	jbe .valid_length
@@ -344,12 +344,12 @@ consoleWriteSubList16Index :
 .end :
 	popa
 	ret
-; write subset of ls16 to location
+; write subset of list 16 to location
 ; al <- start (inclusive)
 ; ah <- end (exclusive)
 ; cl <- row
 ; ch <- column
-; si <- address of ls16
+; si <- address of list 16
 consoleWriteSubList16 :
 	pusha
 	CONSOLE_RC2IDX cl, ch
@@ -510,11 +510,11 @@ consoleMakeSpace :
 	pop cx
 	ret
 ; read line from console
-; si <- ls16 for storing output
+; si <- list 16 for storing output
 ; bx <- painter function that colorize the the input. It won 't be called if it is 0.
 consoleReadLine :
 	pusha
-	LS16_CLEAR
+	LIST16_CLEAR
 	push bx
 	GET_CURSOR
 	CONSOLE_RC2IDX dh, dl
@@ -535,7 +535,7 @@ consoleReadLine :
 ; ah = scan code {update per loop}
 ; al = ascii character {update per loop}
 ; cx = current cursor index (during a keystroke detected) {update per loop}
-; si = ls16 buffer
+; si = list 16 buffer
 ; dx = starting cursor index
 ; bx = painter function
 ; classify
@@ -564,7 +564,7 @@ consoleReadLine :
 .handle_right :
 	mov ax, cx ; ax = current cursor index
 	sub ax, dx ; ax = cursor pos relative to begining
-	LS16_GET_INFO ; cl = max ; ch = length
+	LIST16_GET_INFO ; cl = max ; ch = length
 	cmp al, ch
 	jae .reject_handle
 	CURSOR_FORWARD
@@ -615,26 +615,26 @@ consoleReadLine :
 .loop_end :
 	popa
 	ret
-; update region in console with ls16 user input buffer
-; si <- ls16 buffer
+; update region in console with list 16 user input buffer
+; si <- list 16 buffer
 ; dx <- starting index
 ; dx -> updated starting index (if scroll)
 consoleUpdateInputLine :
 	push cx
 	push bx
-	LS16_GET_COUNT ; cx = count
+	LIST16_GET_COUNT ; cx = count
 	call consoleMakeSpace
 	mov bx, dx
 	call consoleWriteList16Index
 	pop bx
 	pop cx
 	ret
-; clear region in console that is written with ls16 user input buffer
-; si <- ls16 buffer
+; clear region in console that is written with list 16 user input buffer
+; si <- list 16 buffer
 ; dx <- starting index
 consoleClearInputLine :
 	pusha
-	LS16_GET_COUNT ; cx = count
+	LIST16_GET_COUNT ; cx = count
 	mov bx, dx
 ; limit cx, not beyond the video dump
 	add cx, bx
