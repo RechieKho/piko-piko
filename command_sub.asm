@@ -197,7 +197,7 @@ command_data :
 	times (VARIABLE_SIZE) dw 0
 ; --- command ---
 @clearConsoleCommand_name :
-	db "clist ", 0
+	db "cls", 0
 ; n <- ignored
 @clearConsoleCommand :
 	push es
@@ -698,7 +698,7 @@ command_data :
 	clc
 	ret
 @listBufferCommand_name :
-	db "list b", 0
+	db "lsb", 0
 ; 1? <- starting row
 ; 2? <- count
 @listBufferCommand :
