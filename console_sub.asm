@@ -647,6 +647,7 @@ consoleClearInputLine :
 	mov es, dx
 	shl bx, 1
 	xor ax, ax
+	mov ah, GREY
 	call wordset
 	pop es
 	popa
