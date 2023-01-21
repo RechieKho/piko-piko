@@ -59,7 +59,7 @@ We will discuss more commands in the [wiki](https://github.com/RechieKho/piko-pi
 Software required: 
 - `make`
 - `nasm`
-- `python` (optional)
+- `python3` (optional)
 
 First, clone this project. 
 ```sh
@@ -85,7 +85,7 @@ After doing some serious assembly programming, you can format the code before co
 ```sh
 $ make fmt
 ```
-**NOTE:** This needs `python`
+**NOTE:** This needs `python3`
 
 ## Make a bootable Piko-piko USB.
 
