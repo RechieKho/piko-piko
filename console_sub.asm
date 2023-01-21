@@ -610,7 +610,6 @@ consoleReadLine :
 	CURSOR_FORWARD
 	jmp .loop
 .reject_handle :
-	PRINT_CHAR 0x07 ; ring a bell
 	jmp .loop
 .loop_end :
 	popa
