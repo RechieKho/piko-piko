@@ -165,8 +165,6 @@ command_data :
 	db "Invalid number.", 0
 .debug_show_row_c_string :
 	db "[line ", 0
-.bye_c_string :
-	db "Shutting down... Wait, I am still alive? Maybe holding down the power button will completely kill me.", 0
 .variables :
 %rep VARIABLE_COUNT
 	db VARIABLE_CAPACITY, 0
@@ -874,19 +872,6 @@ command_data :
 	mov di, command_data.variables
 	add di, ax ; di = variable address
 	COMMANDS_CONSUME_MARK_READ_STRN_TO_LIST8
-	clc
-	ret
-@byeCommand_name :
-	db "bye", 0
-; n <- ignored
-@byeCommand :
-	mov bx, command_data.bye_c_string
-	call printCString
-	PRINT_NL
-	mov ax, 0x5307
-	mov cx, 0x03
-	mov bx, 0x01
-	int 0x15
 	clc
 	ret
 ; --- subroutine ---
