@@ -1,7 +1,7 @@
 %ifndef _SET_COM_ASM_
 %define _SET_COM_ASM_
 ; --- modules ---
-%include "commands/util.asm"
+%include "commands/meta.asm"
 ; --- commands ---
 @setCommand_name :
 	db "set", 0

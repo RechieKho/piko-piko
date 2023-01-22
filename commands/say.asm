@@ -1,7 +1,7 @@
 %ifndef _SAY_COM_ASM_
 %define _SAY_COM_ASM_
 ; --- modules ---
-%include "commands/util.asm"
+%include "commands/meta.asm"
 ; --- commands ---
 @sayCommand_name :
 	db "say", 0

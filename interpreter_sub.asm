@@ -7,7 +7,7 @@
 %include "str_sub.asm"
 %include "print_sub.asm"
 %include "console_sub.asm"
-%include "commands/util.asm"
+%include "commands/meta.asm"
 %include "commands/say.asm"
 %include "commands/bye.asm"
 %include "commands/set.asm"

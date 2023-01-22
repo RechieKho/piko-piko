@@ -1,7 +1,7 @@
 %ifndef _BYE_COM_ASM_
 %define _BYE_COM_ASM_
 ; --- modules ---
-%include "commands/util.asm"
+%include "commands/meta.asm"
 ; --- data ---
 bye_com_data :
 .bye_c_string :
