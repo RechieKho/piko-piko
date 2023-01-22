@@ -8,6 +8,7 @@
 %include "print_sub.asm"
 %include "console_sub.asm"
 %include "commands/command_sub.asm"
+%include "commands/say.asm"
 ; --- macros ---
 %define NORMAL_COLOR (YELLOW)
 %define STRING_COLOR (GREEN)
