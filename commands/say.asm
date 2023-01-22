@@ -1,6 +1,6 @@
 %ifndef _SAY_COM_ASM_
 %define _SAY_COM_ASM_
-%include "commands/command_sub.asm"
+%include "commands/util.asm"
 @sayCommand_name :
 	db "say", 0
 ; -1 <- message to be printed

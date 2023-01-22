@@ -7,7 +7,7 @@
 %include "str_sub.asm"
 %include "print_sub.asm"
 %include "console_sub.asm"
-%include "commands/command_sub.asm"
+%include "commands/util.asm"
 %include "commands/say.asm"
 ; --- macros ---
 %define NORMAL_COLOR (YELLOW)

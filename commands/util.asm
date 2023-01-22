@@ -1,5 +1,5 @@
-%ifndef _COMMANDS_SUB_ASM_
-%define _COMMANDS_SUB_ASM_
+%ifndef _UTIL_COM_ASM_
+%define _UTIL_COM_ASM_
 ; NOTE : YOU MUST COMMANDS_INIT BEFORE USING ANYTHING IN THIS MODULE
 ; each command expecting :
 ; si <- address of list 32 of marks point to the arguments
@@ -1030,4 +1030,4 @@ command_err :
 %if (VARIABLE_CAPACITY < BUFFER_WIDTH)
 %error "Variable too small for buffer row."
 %endif
-%endif ; _COMMANDS_SUB_ASM_
+%endif ; _UTIL_COM_ASM_
