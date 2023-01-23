@@ -777,12 +777,6 @@ command_data :
 .end :
 	clc
 	ret
-@resetStackCommand_name :
-	db "rst", 0
-; n <- ignored
-@resetStackCommand :
-	mov word [command_data.stack_pointer], command_data.stack
-	ret
 ; --- subroutine ---
 ; Read string (accept variable referencing).
 ; bx <- string
