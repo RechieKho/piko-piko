@@ -14,6 +14,7 @@
 %include "commands/push.asm"
 %include "commands/pop.asm"
 %include "commands/rst.asm"
+%include "commands/lsb.asm"
 ; --- macros ---
 %define NORMAL_COLOR (YELLOW)
 %define STRING_COLOR (GREEN)
