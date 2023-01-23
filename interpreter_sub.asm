@@ -16,6 +16,7 @@
 %include "commands/rst.asm"
 %include "commands/lsb.asm"
 %include "commands/=.asm"
+%include "commands/stb.asm"
 ; --- macros ---
 %define NORMAL_COLOR (YELLOW)
 %define STRING_COLOR (GREEN)
