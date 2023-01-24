@@ -30,7 +30,7 @@ buffer_data :
 .active_buffer :
 	dw BUFFER_BEGIN_SEG
 .is_buffer_executing :
-	db 0 ; 0 = falist e, elist e = true
+	db 0 ; 0 = false, else = true
 .executing_row : ; Current executing row in buffer.
 	dw 0
 .executing_seg : ; basically executing_row but in segment unit

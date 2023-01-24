@@ -124,7 +124,7 @@
 ; --- data ---
 storage_data :
 .initialized :
-	db 0 ; 0 if falist e, elist e true
+	db 0 ; 0 if false, else true
 .drive_number :
 	db 0
 .head_count :
