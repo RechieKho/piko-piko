@@ -20,6 +20,7 @@
 %include "commands/clb.asm"
 %include "commands/run.asm"
 %include "commands/jump.asm"
+%include "commands/cmp.asm"
 ; --- macros ---
 %define NORMAL_COLOR (YELLOW)
 %define STRING_COLOR (GREEN)
