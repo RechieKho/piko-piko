@@ -33,7 +33,7 @@ dev-graphics: $(BIN_NAME)
 	$(QEMU) $(QEMU_FLAGS)
 
 fmt:
-	$(FORMATTER) $(wildcard *.asm) $(wildcard commands/*.asm)
+	$(FORMATTER) $(wildcard *.asm) $(wildcard commands/*.asm) $(wildcard commands/meta/*.asm)
 
 clean:
 	$(RM) -rf $(BOOT_NAME) $(KERNEL_NAME) $(BIN_NAME)
@@ -43,7 +43,7 @@ $(BIN_NAME): $(KERNEL_NAME) $(BOOT_NAME)
 	$(DD) if=boot.bin of=$@ bs=512 conv=notrunc
 	$(DD) if=kernel.bin of=$@ bs=512 seek=1 conv=notrunc
 
-$(KERNEL_NAME): kernel.asm $(wildcard *.asm) $(wildcard commands/*.asm)
+$(KERNEL_NAME): kernel.asm $(wildcard *.asm) $(wildcard commands/*.asm) $(wildcard commands/meta/*.asm)
 	$(NASM) $(NASM_FLAGS) $< -o $@
 
 $(BOOT_NAME): boot.asm disk_sub.asm print_sub.asm type_macros.asm

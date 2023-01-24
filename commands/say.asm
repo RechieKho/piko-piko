@@ -1,7 +1,5 @@
 %ifndef _SAY_COM_ASM_
 %define _SAY_COM_ASM_
-; --- modules ---
-%include "commands/meta.asm"
 ; --- commands ---
 @sayCommand_name :
 	db "say", 0
@@ -16,9 +14,9 @@
 	je .default
 	cmp cx, 3
 	je .set_option
-	jmp command_err.invalid_arg_num_err
+	jmp err.invalid_arg_num_err
 .set_option :
-	COMMANDS_CONSUME_MARK_READ_STRN
+	VAR_CONSUME_MARK_READ_STRN
 .option_detection_loop :
 	cmp cx, 0
 	je .default
@@ -59,7 +57,7 @@
 	dec cx
 	jmp .option_detection_loop
 .default :
-	COMMANDS_CONSUME_MARK_READ_STRN
+	VAR_CONSUME_MARK_READ_STRN
 	cmp cx, 0
 	je .newline_loop
 	mov si, bx

@@ -1,7 +1,5 @@
 %ifndef _CLB_COM_ASM_
 %define _CLB_COM_ASM_
-; --- modules ---
-%include "commands/clb.asm"
 ; --- commands ---
 @clearBufferCommand_name :
 	db "clb", 0
@@ -10,7 +8,7 @@
 	mov al, ' '
 	xor bx, bx
 	mov dx, BUFFER_SEC_COUNT
-	mov si, [command_data.active_buffer]
+	mov si, [buffer_data.active_buffer]
 	mov cx, SECTOR_SIZE
 .clear_loop :
 	cmp dx, 0

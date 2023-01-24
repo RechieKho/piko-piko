@@ -1,7 +1,5 @@
 %ifndef _MUL_COM_ASM_
 %define _MUL_COM_ASM_
-; --- modules ---
-%include "commands/meta.asm"
 ; --- commands ---
 @mulCommand_name :
 	db "mul", 0
@@ -11,21 +9,21 @@
 @mulCommand :
 	LIST32_GET_COUNT
 	cmp cx, 4
-	jne command_err.invalid_arg_num_err
+	jne err.invalid_arg_num_err
 	add si, 6
-	COMMANDS_CONSUME_MARK_READ_UINT
-	cmp dx, VARIABLE_COUNT
-	jae command_err.invalid_variable_err
-	mov al, VARIABLE_SIZE
+	VAR_CONSUME_MARK_READ_UINT
+	cmp dx, VAR_COUNT
+	jae err.invalid_variable_err
+	mov al, VAR_SIZE
 	mul dl
-	mov di, command_data.variables
+	mov di, var_data.variables
 	add di, ax ; di = variable address
-	COMMANDS_CONSUME_MARK_READ_UINT
+	VAR_CONSUME_MARK_READ_UINT
 	mov ax, dx ; ax = first value
-	COMMANDS_CONSUME_MARK_READ_UINT
+	VAR_CONSUME_MARK_READ_UINT
 	mul dx
 	cmp dx, 0
-	jne command_err.value_too_big_err
+	jne err.value_too_big_err
 	inc di
 	mov byte [di], 5
 	inc di

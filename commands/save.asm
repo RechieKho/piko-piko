@@ -1,7 +1,7 @@
 %ifndef _SAVE_COM_ASM_
 %define _SAVE_COM_ASM_
 ; --- modules ---
-%include "commands/meta.asm"
+%include "storage_sub.asm"
 ; --- commands ---
 @saveCommand_name :
 	db "save", 0
@@ -9,11 +9,11 @@
 @saveCommand :
 	LIST32_GET_COUNT
 	cmp cx, 2
-	jne command_err.invalid_arg_num_err
+	jne err.invalid_arg_num_err
 	add si, 6
-	COMMANDS_CONSUME_MARK_READ_UINT
+	VAR_CONSUME_MARK_READ_UINT
 	cmp dx, FILE_COUNT
-	jae command_err.invalid_file_err
+	jae err.invalid_file_err
 	mov ax, BUFFER_SEC_COUNT
 	mul dx
 	add ax, STORAGE_BEGIN_SEC
@@ -22,11 +22,11 @@
 	call storageAddCHS
 	mov ax, BUFFER_SEC_COUNT ; ax = number of sectors
 	push es
-	mov word bx, [command_data.active_buffer]
+	mov word bx, [buffer_data.active_buffer]
 	mov es, bx
 	xor bx, bx
 	call storageWrite
 	pop es
-	jc command_err.disk_write_err
+	jc err.disk_write_err
 	ret
 %endif ; _SAVE_COM_ASM_

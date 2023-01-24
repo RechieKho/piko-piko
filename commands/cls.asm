@@ -1,8 +1,6 @@
 %ifndef _CLS_COM_ASM_
 %define _CLS_COM_ASM_
-; --- modules ---
-%include "commands/meta.asm"
-; --- command ---
+; --- commands ---
 @clearConsoleCommand_name :
 	db "cls", 0
 ; n <- ignored

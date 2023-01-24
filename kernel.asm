@@ -12,7 +12,6 @@
 %include "list16_sub.asm"
 %include "list8_sub.asm"
 %include "interpreter_sub.asm"
-%include "storage_sub.asm"
 ; --- data ---
 kernel_data :
 .greeting :
@@ -49,7 +48,7 @@ main :
 ; initialization
 	STORAGE_SET_DRIVE
 	CONSOLE_INIT
-	COMMANDS_INIT
+	INTERPRETER_INIT
 	mov di, kernel_data.input_buffer
 	LIST16_INIT BUFFER_WIDTH
 	mov di, kernel_data.raw_buffer

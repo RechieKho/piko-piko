@@ -7,7 +7,12 @@
 %include "str_sub.asm"
 %include "print_sub.asm"
 %include "console_sub.asm"
-%include "commands/meta.asm"
+%include "commands/meta/var.asm"
+%include "commands/meta/stack.asm"
+%include "commands/meta/err.asm"
+%include "commands/meta/compare.asm"
+%include "commands/meta/command.asm"
+%include "commands/meta/buffer.asm"
 %include "commands/say.asm"
 %include "commands/bye.asm"
 %include "commands/set.asm"
@@ -41,6 +46,9 @@
 %define NORMAL_COLOR (YELLOW)
 %define STRING_COLOR (GREEN)
 %define SYMBOL_COLOR (WHITE)
+%macro INTERPRETER_INIT 0
+	BUFFER_INIT
+%endmacro
 ; --- data ---
 interpreter_data :
 .marks :
@@ -136,7 +144,7 @@ interpreterExecutreMark :
 	mov word cx, [si] ; cx = length of first argument
 	add si, 2
 	mov word bx, [si]
-	call commandReadString ; accept variable referencing
+	call varReadString ; accept variable referencing
 	mov si, bx ; si = address of first argument
 	mov bx, interpreter_data.command_table
 .loop_command_table :
@@ -184,7 +192,7 @@ interpreterExecutreMark :
 .invalid_command_err :
 ; print error
 	mov bx, interpreter_data.invalid_command_error_c_string
-	call command_err.print ; jmping to label from other files : 0
+	call err.print ; jmping to label from other files : 0
 .end :
 	popa
 	ret

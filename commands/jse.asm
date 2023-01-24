@@ -1,7 +1,5 @@
 %ifndef _JSE_COM_ASM_
 %define _JSE_COM_ASM_
-; --- modules ---
-%include "commands/meta.asm"
 ; --- commands ---
 @jumpStringEqualCommand_name :
 	db "jse", 0
@@ -9,8 +7,8 @@
 @jumpStringEqualCommand :
 	push si
 	push di
-	mov si, command_data.compare_buffer_a
-	mov di, command_data.compare_buffer_b
+	mov si, compare_data.compare_buffer_a
+	mov di, compare_data.compare_buffer_b
 	call list8Equal
 	pop di
 	pop si

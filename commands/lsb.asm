@@ -1,7 +1,5 @@
 %ifndef _LSB_COM_ASM_
 %define _LSB_COM_ASM_
-; --- modules ---
-%include "commands/meta.asm"
 ; --- commands ---
 @listBufferCommand_name :
 	db "lsb", 0
@@ -17,24 +15,24 @@
 	je .list_with_start
 	cmp cx, 3 ; have count
 	je .list_with_count
-	jmp command_err.invalid_arg_num_err
+	jmp err.invalid_arg_num_err
 .list_with_count :
 	push si
 	add si, 10 ; the third arg
 	call commandConsumeMark
 	clc
-	call commandReadString
+	call varReadString
 	jc .list_count_read_string_fail_err
 	mov si, bx
 	clc
 	call stringToUint
 .list_count_read_string_fail_err :
 	pop si
-	jc command_err.invalid_uint_err
+	jc err.invalid_uint_err
 	mov ax, dx ; ax = count
 .list_with_start :
 	add si, 6 ; the second arg
-	COMMANDS_CONSUME_MARK_READ_UINT ; dx = starting row
+	VAR_CONSUME_MARK_READ_UINT ; dx = starting row
 .list :
 	mov cx, ax ; cx = counter
 	mov bx, dx ; bx = starting row ; dx = current line
@@ -54,7 +52,7 @@
 	mov ax, dx
 	mov dx, BUFFER_SEG_PER_ROW
 	mul dx
-	add ax, [command_data.active_buffer]
+	add ax, [buffer_data.active_buffer]
 	mov es, ax
 	xor si, si
 ; setup destination

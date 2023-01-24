@@ -1,7 +1,5 @@
 %ifndef _PUSH_COM_ASM_
 %define _PUSH_COM_ASM_
-; --- modules ---
-%include "commands/meta.asm"
 ; --- commands ---
 @pushStackCommand_name :
 	db "push", 0
@@ -15,22 +13,22 @@
 .push_loop :
 	cmp cx, 0
 	je .end
-	mov word di, [command_data.stack_pointer] ; di = pointer to top of the stack
-	cmp di, command_data.stack_pointer
-	jae command_err.stack_full_err
-	COMMANDS_CONSUME_MARK_READ_UINT ; dx = variable
-	cmp dx, VARIABLE_COUNT
-	jae command_err.invalid_variable_err
-	mov al, VARIABLE_SIZE
+	mov word di, [stack_data.stack_pointer] ; di = pointer to top of the stack
+	cmp di, stack_data.stack_pointer
+	jae err.stack_full_err
+	VAR_CONSUME_MARK_READ_UINT ; dx = variable
+	cmp dx, VAR_COUNT
+	jae err.invalid_variable_err
+	mov al, VAR_SIZE
 	mul dl
 	push si
 	push cx
-	mov si, command_data.variables
+	mov si, var_data.variables
 	add si, ax ; si = variable address
-	mov cx, VARIABLE_SIZE
+	mov cx, VAR_SIZE
 	cld
 	rep movsb
-	mov word [command_data.stack_pointer], di
+	mov word [stack_data.stack_pointer], di
 	pop cx
 	pop si
 	dec cx
