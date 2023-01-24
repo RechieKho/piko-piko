@@ -29,6 +29,10 @@
 %include "commands/juge.asm"
 %include "commands/jul.asm"
 %include "commands/jule.asm"
+%include "commands/add.asm"
+%include "commands/sub.asm"
+%include "commands/mul.asm"
+%include "commands/div.asm"
 ; --- macros ---
 %define NORMAL_COLOR (YELLOW)
 %define STRING_COLOR (GREEN)
