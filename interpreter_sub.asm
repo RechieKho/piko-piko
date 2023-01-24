@@ -36,6 +36,7 @@
 %include "commands/load.asm"
 %include "commands/save.asm"
 %include "commands/read.asm"
+%include "commands/cls.asm"
 ; --- macros ---
 %define NORMAL_COLOR (YELLOW)
 %define STRING_COLOR (GREEN)

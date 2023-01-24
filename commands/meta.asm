@@ -193,23 +193,6 @@ command_data :
 .read_buffer : ; A list 16 buffer for read command.
 	db VARIABLE_SIZE, 0
 	times (VARIABLE_SIZE) dw 0
-; --- command ---
-@clearConsoleCommand_name :
-	db "cls", 0
-; n <- ignored
-@clearConsoleCommand :
-	push es
-	mov bx, CONSOLE_DUMP_SEG
-	mov es, bx
-	mov cx, (CONSOLE_WIDTH * CONSOLE_HEIGHT)
-	xor bx, bx
-	xor ax, ax
-	call wordset
-	pop es
-	xor dx, dx
-	SET_CURSOR
-	clc
-	ret
 ; --- subroutine ---
 ; Read string (accept variable referencing).
 ; bx <- string
