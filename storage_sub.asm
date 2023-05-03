@@ -62,7 +62,7 @@
 	add bx, ax
 	mov es, bx
 	popa
-	call storageAddCHS
+	call storageAddCHS_v2
 	sub si, ax
 	mov ax, si
 	dec di
@@ -105,7 +105,7 @@
 	add bx, ax
 	mov es, bx
 	popa
-	call storageAddCHS
+	call storageAddCHS_v2
 	sub si, ax
 	mov ax, si
 	dec di
@@ -127,11 +127,11 @@ storage_data :
 	db 0 ; 0 if false, else true
 .drive_number :
 	db 0
-.head_count :
+.head_count : ; from 0 to 255
 	db 0
-.cylinder_count :
+.cylinder_count : ; from 0 to 1024
 	dw 0
-.sector_count :
+.sector_count : ; from 1 to 63
 	db 0
 ; --- subroutine ---
 ; Read sectors into memory
@@ -163,7 +163,7 @@ storageRead :
 	dec ah
 	push ax
 	mov ax, MAX_SEC_PER_OP
-	call storageAddCHS
+	call storageAddCHS_v2
 	pop ax
 	jc .fail
 	mov bx, es
@@ -216,7 +216,7 @@ storageWrite :
 	dec ah
 	push ax
 	mov ax, MAX_SEC_PER_OP
-	call storageAddCHS
+	call storageAddCHS_v2
 	pop ax
 	jc .fail
 	mov bx, es
@@ -291,4 +291,55 @@ storageAddCHS :
 	pop bx
 	pop ax
 	ret
+; Add to CHS address
+; S < H < C
+; ax -> value added
+; cx <- cylinder sector
+; dh <- head
+; cx -> new cylinder sector
+; dh -> new head
+; cf -> set if fail
+storageAddCHS_v2 :
+    push bx
+    push ax
+	mov byte bl, [storage_data.initialized]
+	cmp bl, 0
+	je .fail
+	mov byte bl, [storage_data.sector_count] ; bx/bl = sector per track
+    push dx
+    mov dx, cx
+	and dx, 0x3f ; dx/dl = currect sector
+    add ax, dx
+    pop dx
+	div bl ; ah = new sector ; al = head to be added
+    add dh, al
+    mov byte bl, [storage_data.head_count]
+    push ax
+    movzx ax, dh
+    div bl
+    mov dx, ax ; dh = new head ; dl = cylinder to be added
+    pop ax
+    push ax
+    mov ax, cx
+	and ax, 0xffc0
+	ror ax, 8
+    movzx bx, dl
+    add ax, bx
+    mov cx, ax
+    pop ax
+    mov word bx, [storage_data.cylinder_count]
+    cmp cx, bx
+    jae .fail
+    rol cx, 8
+    xor al, al
+    shr ax, 8
+    or cx, ax
+    clc
+    jmp .end
+.fail:
+    stc
+.end:
+    pop ax
+    pop bx
+    ret
 %endif ; _STORAGE_SUB_ASM_
