@@ -124,17 +124,17 @@ interpreterPrintMarks :
 ; si <- list 8
 interpreterExecute :
 	call interpreterMark
-	call interpreterExecutreMark
+	call interpreterExecuteMark
 	ret
 ; execute command string
 ; si <- string
 ; cx <- length of string
 interpreterExecuteString :
 	call interpreterMarkString
-	call interpreterExecutreMark
+	call interpreterExecuteMark
 	ret
 ; execute command from interpreter_data.marks
-interpreterExecutreMark :
+interpreterExecuteMark :
 	pusha
 	mov si, interpreter_data.marks
 	LIST32_GET_COUNT
