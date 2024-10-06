@@ -7,7 +7,7 @@
 > Perfect for entertainment & education. 
 > 0 practicality, 100% messing around.
 >
-> *From the author, Rechie Kho*
+> *From the author, Richie Kho*
 
 Packed with a bootloader and an interpreter, it is able to run the commands like how
 BASIC does in the 80s. It is much user-unfriendly as the language is closer to
@@ -56,8 +56,6 @@ We will discuss more commands in the [wiki](https://github.com/RechieKho/piko-pi
 
 ## Build from source
 
-**NOTE:** For Windows and Mac OS, it is not tested and unsupported.(?)
-
 Software required: 
 - `make`
 - `nasm`
@@ -87,13 +85,17 @@ After doing some serious assembly programming, you can format the code before co
 ```sh
 $ make fmt
 ```
-**NOTE:** This needs `python3`
+
+> [!NOTE]
+> This needs `python3`.
 
 ## Make a bootable Piko-piko USB.
 
-**NOTE:** For Windows and Mac OS, it is not tested and unsupported.(?)
+> [!CAUTION]
+> Once you made the bootable USB, the old data in the USB will not be able to recovered. Please consider backing up the data of USB before doing such dangerous act.
 
-**WARNING:** Once you made the bootable USB, the old data in the USB will not be able to recovered. Please consider backing up the data of USB before doing such dangerous act.
+> [!NOTE]
+> The files saved inside the Piko-piko OS could not be recovered when transfered to a storage device.
 
 Piko-piko OS is an 16-bit x86 OS so it is able to boot on computer with intel-based CPU.
 
@@ -107,6 +109,7 @@ Then, directly copy it onto your USB.
 ```
 Replace `YOUR_USB` with the device file of your USB.
 
-**WARNING**: Please make sure the device file is really the USB file you are looking for, it is possible that you write to the wrong file and corrupt the hard disk. **No one wants Piko-piko as daily main OS.**
+> [!CAUTION]
+> Please make sure the device file is really the USB file you are looking for, it is possible that you write to the wrong file and corrupt the hard disk. **No one wants Piko-piko as daily main OS.**
 
 Then, you have created a bootable Piko-piko USB!
