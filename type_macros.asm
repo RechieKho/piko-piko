@@ -1,6 +1,15 @@
 %ifndef _TYPEDEF_MACROS_ASM_
 %define _TYPEDEF_MACROS_ASM_
 ; --- macros ---
+%ifndef VERSION_MAJOR
+%define VERSION_MAJOR "1"
+%endif
+%ifndef VERSION_MINOR
+%define VERSION_MINOR "0"
+%endif
+%ifndef VERSION_PATCH
+%define VERSION_PATCH "0"
+%endif
 %define SECTOR_SIZE 512
 %define FREE_BEGIN 0x7e00
 %define FREE_END 0x9fc00

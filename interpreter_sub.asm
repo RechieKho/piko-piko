@@ -42,6 +42,7 @@
 %include "commands/save.asm"
 %include "commands/read.asm"
 %include "commands/cls.asm"
+%include "commands/info.asm"
 ; --- macros ---
 %define NORMAL_COLOR (YELLOW)
 %define STRING_COLOR (GREEN)
@@ -91,6 +92,7 @@ interpreter_data :
 	dw @runBufferCommand_name, @runBufferCommand
 	dw @saveCommand_name, @saveCommand
 	dw @loadCommand_name, @loadCommand
+	dw @infoCommand_name, @infoCommand
 	dw @byeCommand_name, @byeCommand
 	dw 0
 .invalid_command_error_c_string :
