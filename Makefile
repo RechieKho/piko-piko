@@ -6,7 +6,10 @@ STORAGE_SECTOR_COUNT:=720
 
 QEMU?=qemu-system-x86_64
 QEMU_RAM_SIZE:=256M
-QEMU_FLAGS:= -m $(QEMU_RAM_SIZE) -drive file=$(BIN_NAME),format=raw
+QEMU_HD_CYLINDER_COUNT:=1024
+QEMU_HD_HEAD_COUNT:=16
+QEMU_HD_SECTOR_COUNT:=63
+QEMU_FLAGS:= -m $(QEMU_RAM_SIZE) -drive if=none,id=disk,file=$(BIN_NAME),format=raw -device ide-hd,drive=disk,cyls=$(QEMU_HD_CYLINDER_COUNT),heads=$(QEMU_HD_HEAD_COUNT),secs=$(QEMU_HD_SECTOR_COUNT)
 
 RM?=rm
 DD?=dd
