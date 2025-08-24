@@ -17,15 +17,14 @@
 	mov ax, BUFFER_SEC_COUNT
 	mul dx
 	add ax, STORAGE_BEGIN_SEC
-	xor cx, cx
-	xor dx, dx
-	call storageAddCHS
+	call storageToCHS
+	jc err.disk_write_err
 	mov ax, BUFFER_SEC_COUNT ; ax = number of sectors
 	push es
 	mov word bx, [buffer_data.active_buffer]
 	mov es, bx
 	xor bx, bx
-	call storageWrite
+	STORAGE_DISK_WRITE
 	pop es
 	jc err.disk_write_err
 	ret

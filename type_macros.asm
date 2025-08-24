@@ -5,7 +5,7 @@
 %define FREE_BEGIN 0x7e00
 %define FREE_END 0x9fc00
 %define KERNEL_CODE_BEGIN_SEG 0x1000
-%define KERNEL_CODE_BEGIN_SEC 0x02 ; sector right after boot
+%define KERNEL_CODE_BEGIN_SEC 0x02 ; sector right after boot (1 in LBA addressing)
 %ifndef KERNEL_CODE_SECTOR_COUNT
 %define KERNEL_CODE_SECTOR_COUNT 30
 %endif
@@ -15,9 +15,9 @@
 %assign KERNEL_FINAL_ADDR ((KERNEL_CODE_BEGIN_SEG << 4) + KERNEL_CODE_SIZE + KERNEL_STACK_SIZE)
 %define BUFFER_BEGIN_ADDR ((KERNEL_FINAL_ADDR + 1000) ^ ((KERNEL_FINAL_ADDR + 1000) & 0xf))
 %define BUFFER_BEGIN_SEG (BUFFER_BEGIN_ADDR >> 4)
-%define BUFFER_COUNT 3 ; {1B}
-%define BUFFER_SEG_PER_ROW 3 ; width in segment unit, segment per row
-%define BUFFER_SECT_PER_COL 5 ; height in (disk) sector unit, sector per column
+%define BUFFER_COUNT 10
+%define BUFFER_SEG_PER_ROW 2 ; width in segment unit, segment per row
+%define BUFFER_SECT_PER_COL 3 ; height in (disk) sector unit, sector per column
 %define BUFFER_WIDTH (BUFFER_SEG_PER_ROW << 4)
 %define BUFFER_HEIGHT (BUFFER_SECT_PER_COL * SECTOR_SIZE)
 %define BUFFER_SIZE (BUFFER_WIDTH * BUFFER_HEIGHT)
@@ -50,6 +50,9 @@
 %endif
 %if (BUFFER_BEGIN_ADDR + BUFFER_SIZE * BUFFER_COUNT) >= FREE_END
 %error "Buffer exceed the end of free memory."
+%endif
+%if (BUFFER_SEC_COUNT >= 128)
+%error "Buffer sector count must not larger than 128."
 %endif
 %if (FILE_COUNT > 0xff)
 %error "File count must be a byte."
