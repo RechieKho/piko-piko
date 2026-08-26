@@ -1,6 +1,6 @@
 %ifndef _TYPEDEF_MACROS_ASM_
 %define _TYPEDEF_MACROS_ASM_
-; --- macros ---
+ ; --- macros ---
 %ifndef VERSION_MAJOR
 %define VERSION_MAJOR "1"
 %endif
@@ -38,17 +38,17 @@
 %define STORAGE_BEGIN_SEC (KERNEL_CODE_END_SEC + 1)
 %define STORAGE_SIZE (STORAGE_SECTOR_COUNT * SECTOR_SIZE)
 %define FILE_COUNT (STORAGE_SIZE / BUFFER_SIZE)
-; Memory mapping :
-; high
-; ...
-; video dump
-; ...
-; buffer(s)
-; stack
-; code
-; ...
-; low
-; --- checks ---
+ ; Memory mapping : 
+ ; high
+ ; ...
+ ; video dump
+ ; ...
+ ; buffer(s)
+ ; stack
+ ; code
+ ; ...
+ ; low
+ ; --- checks ---
 %if (BUFFER_WIDTH > 0xff) && (BUFFER_COUNT > 0xff)
 %error "Buffer width and count must be a byte."
 %elif (BUFFER_SEG_PER_ROW > 0xff)

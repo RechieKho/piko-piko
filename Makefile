@@ -22,17 +22,17 @@ NASM?=nasm
 NASM_DEFINES:=KERNEL_CODE_SECTOR_COUNT=$(KERNEL_CODE_SECTOR_COUNT) STORAGE_SECTOR_COUNT=$(STORAGE_SECTOR_COUNT) VERSION_MAJOR=$(VERSION_MAJOR) VERSION_MINOR=$(VERSION_MINOR) VERSION_PATCH=$(VERSION_PATCH)
 NASM_FLAGS:= -f bin $(addprefix -D, $(NASM_DEFINES))
 
-default: dev
+default: dev-graphics
 
 .PHONY: \
 	default \
 	dev-graphics \
-	dev \
+	dev-curses \
 	fmt \
 	clean
 
-dev: QEMU_FLAGS+= -display curses
-dev: $(BIN_NAME)
+dev-curses: QEMU_FLAGS+= -display curses
+dev-curses: $(BIN_NAME)
 	$(QEMU) $(QEMU_FLAGS)
 
 dev-graphics: $(BIN_NAME)
