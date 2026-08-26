@@ -23,7 +23,7 @@ All the commands are in [the commands reference](https://github.com/RechieKho/pi
 
 You are very welcome to fork this project and add your own commands.
 
-It is written in _pure_ nasm assembly, so brace yourself.
+It is written in _pure_ [nasm](https://www.nasm.us/) assembly, so brace yourself.
 
 ## Hello world in Piko-piko
 
@@ -61,6 +61,10 @@ We will discuss more commands in the [wiki](https://github.com/RechieKho/piko-pi
 
 ## Build from source
 
+> [!NOTE]
+> Building from source expecting Unix-like environment.
+> Thus, to build on Windows, please consider use tools such as [MSYS2](https://www.msys2.org/).
+
 Software required:
 
 - `make`
@@ -91,7 +95,7 @@ To clean (remove) the generated files.
 $ make clean
 ```
 
-After doing some serious assembly programming, you can format the code before commiting.
+After doing some serious assembly programming, you can format the code before committing.
 
 ```sh
 $ make fmt
@@ -106,9 +110,9 @@ $ make fmt
 > Once you made the bootable USB, the old data in the USB will not be able to recovered. Please consider backing up the data of USB before doing such dangerous act.
 
 > [!NOTE]
-> The files saved inside the Piko-piko OS will be transfered as well!
+> The files saved inside the Piko-piko OS will be transferred as well!
 
-Piko-piko OS is an 16-bit x86 OS so it is able to boot on computer with intel-based CPU.
+Piko-piko OS is an 16-bit x86 OS so it is able to boot on computer with Intel-based CPU.
 
 To make a bootable Piko-piko USB, you'll need to have:
 
