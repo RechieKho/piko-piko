@@ -1,3 +1,5 @@
 piko-piko.bin
 boot.bin
 kernel.bin
+pikofs
+__pycache__/
