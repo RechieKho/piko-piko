@@ -14,6 +14,13 @@ QEMU_HD_HEAD_COUNT:=16
 QEMU_HD_SECTOR_COUNT:=63
 QEMU_FLAGS:= -m $(QEMU_RAM_SIZE) -drive if=none,id=disk,file=$(BIN_NAME),format=raw -device ide-hd,drive=disk,cyls=$(QEMU_HD_CYLINDER_COUNT),heads=$(QEMU_HD_HEAD_COUNT),secs=$(QEMU_HD_SECTOR_COUNT)
 
+CC?=cc
+CFLAGS?=-O2 -Wall -Wextra -Werror
+PIKOFS_NAME:=pikofs
+PIKOFS_DEFINES:=KERNEL_CODE_SECTOR_COUNT=$(KERNEL_CODE_SECTOR_COUNT) STORAGE_SECTOR_COUNT=$(STORAGE_SECTOR_COUNT)
+
+PYTHON?=python3
+
 RM?=rm
 DD?=dd
 FORMATTER:=python3 fmt.py
@@ -29,6 +36,10 @@ default: dev-graphics
 	dev-graphics \
 	dev-curses \
 	fmt \
+	tools \
+	test \
+	test-host \
+	test-qemu \
 	clean
 
 dev-curses: QEMU_FLAGS+= -display curses
@@ -42,7 +53,22 @@ fmt:
 	$(FORMATTER) $(wildcard *.asm) $(wildcard commands/*.asm) $(wildcard commands/meta/*.asm)
 
 clean:
-	$(RM) -rf $(BOOT_NAME) $(KERNEL_NAME) $(BIN_NAME)
+	$(RM) -rf $(BOOT_NAME) $(KERNEL_NAME) $(BIN_NAME) $(PIKOFS_NAME)
+
+tools: $(PIKOFS_NAME)
+
+# Host-only tests of the `pikofs` tool.
+test-host: $(PIKOFS_NAME) $(BIN_NAME)
+	sh tests/test_pikofs.sh ./$(PIKOFS_NAME) $(BIN_NAME)
+
+# End-to-end tests: boots the OS in headless QEMU (needs `qemu-system-x86_64`).
+test-qemu: $(PIKOFS_NAME) $(BIN_NAME)
+	QEMU=$(QEMU) QEMU_HD_CYLINDER_COUNT=$(QEMU_HD_CYLINDER_COUNT) QEMU_HD_HEAD_COUNT=$(QEMU_HD_HEAD_COUNT) QEMU_HD_SECTOR_COUNT=$(QEMU_HD_SECTOR_COUNT) $(PYTHON) -I tests/test_qemu.py -v
+
+test: test-host test-qemu
+
+$(PIKOFS_NAME): tools/pikofs.c Makefile
+	$(CC) $(CFLAGS) $(addprefix -D, $(PIKOFS_DEFINES)) $< -o $@
 
 $(BIN_NAME): $(KERNEL_NAME) $(BOOT_NAME)
 	$(DD) if=/dev/zero of=$@ bs=512 count=$$(( $(STORAGE_SECTOR_COUNT) + $(KERNEL_CODE_SECTOR_COUNT) + 1 ))

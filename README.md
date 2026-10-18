@@ -104,6 +104,35 @@ $ make fmt
 > [!NOTE]
 > This needs `python3`.
 
+## Move files in and out of Piko-piko
+
+Files saved with `save` live inside `piko-piko.bin`. `pikofs` is a small C tool
+that copies text files between your OS and that image. One line of text is one
+row (up to 32 columns) of a Piko-piko file.
+
+```sh
+$ make pikofs                                     # needs a C compiler
+$ ./pikofs info piko-piko.bin                     # list the files
+$ ./pikofs import piko-piko.bin 0 hello.txt       # then `load 0` in Piko-piko
+$ ./pikofs export piko-piko.bin 1 out.txt         # after `save 1` in Piko-piko
+```
+
+Leave out the file name (or use `-`) to read from stdin / write to stdout.
+
+> [!NOTE]
+> Do this while the OS is not running, otherwise it may overwrite your changes.
+
+## Run the tests
+
+```sh
+$ make test-host   # tests of pikofs
+$ make test-qemu   # boots Piko-piko in headless QEMU, drives it and checks it with pikofs
+$ make test        # both
+```
+
+> [!NOTE]
+> `test-qemu` needs `qemu-system-x86_64` and `python3`. No display is needed.
+
 ## Make a bootable Piko-piko USB.
 
 > [!CAUTION]
